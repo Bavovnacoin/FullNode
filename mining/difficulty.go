@@ -50,7 +50,7 @@ func TargetToBits(target *big.Int) string {
 		valStr = targetStr[4:6] + targetStr[:4]
 	}
 	shiftVal, _ := big.NewInt(0).SetString("1"+targetShift, 16)
-	shiftValFloat, _ := strconv.ParseFloat(shiftVal.String(), 64)
+	shiftValFloat, _ := strconv.ParseFloat(shiftVal.String(), 40)
 
 	shift := fmt.Sprintf("%x", (int(math.Log2(shiftValFloat)/8))+3)
 	return valStr + shift
