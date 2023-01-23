@@ -6,6 +6,7 @@ import (
 	"bavovnacoin/utxo"
 	"fmt"
 	"math"
+	"math/big"
 	"time"
 )
 
@@ -19,10 +20,9 @@ type Block struct {
 	Time             time.Time
 	TransactionCount uint
 	MerkleRoot       string
-	// Bits and Nonce fields - depends on Bavovnacoin concept thw will be choosen further
-	// Bits          uint
-	// Nonce         uint64
-	Transactions []transaction.Transaction
+	Bits             uint64
+	Nonce            uint64
+	Transactions     []transaction.Transaction
 }
 
 func BlockToString(block Block) string {
@@ -32,6 +32,10 @@ func BlockToString(block Block) string {
 	str += fmt.Sprint(block.Version)
 	str += block.HashPrevBlock
 	str += block.Time.String()
+	str += fmt.Sprint(block.TransactionCount)
+	str += block.MerkleRoot
+	str += fmt.Sprintf("%x", block.Bits)
+	str += fmt.Sprint(block.Nonce)
 	for i := 0; i < len(block.Transactions); i++ {
 		str += transaction.GetCatTxFields(block.Transactions[i])
 	}
@@ -43,15 +47,13 @@ func AddBlockToBlockchain(block Block) bool {
 	if isBlockValid {
 		for i := 0; i < len(block.Transactions); i++ {
 			txInpList := block.Transactions[i].Inputs
-			//transaction.PrintTransaction(block.Transactions[i])
+
 			for j := 0; j < len(txInpList); j++ {
-				//println("Del")
 				utxo.DelFromUtxo(txInpList[j].HashAdr, txInpList[j].OutInd)
 			}
 
 			txOutList := block.Transactions[i].Outputs
 			for j := 0; j < len(txOutList); j++ {
-				//println("Add")
 				utxo.AddToUtxo(txOutList[j].HashAdr, txOutList[j].Sum)
 			}
 		}
@@ -106,17 +108,18 @@ func GenMerkleRoot(transactions []transaction.Transaction) string {
 	return currLayer[0]
 }
 
-func CreateBlock(id uint, txArr []transaction.Transaction, rewardAdr string) Block {
+func CreateBlock(id uint, txArr []transaction.Transaction, rewardAdr string, miningFlag int) Block {
 	var newBlock Block
 	newBlock.Id = id
 
 	if len(Blockchain) > 0 {
 		newBlock.HashPrevBlock = hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
+		newBlock.Time = time.Now()
 	} else {
+		newBlock.Time = time.Date(2022, 12, 31, 11, 54, 22, 0, time.Local)
 		newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 	}
 
-	newBlock.Time = time.Now()
 	newBlock.Transactions = make([]transaction.Transaction, len(txArr)+1)
 
 	var coinbaseTx transaction.Transaction
@@ -129,6 +132,14 @@ func CreateBlock(id uint, txArr []transaction.Transaction, rewardAdr string) Blo
 	newBlock.MerkleRoot = GenMerkleRoot(newBlock.Transactions)
 
 	newBlock.Blocksize = uint(len(BlockToString(newBlock)))
+
+	bits := GetCurrBitsValue()
+
+	if miningFlag == 0 {
+		newBlock.Nonce = MineCommon(newBlock, bits)
+	} else {
+		newBlock.Nonce = MineAllThreads(newBlock, bits)
+	}
 	return newBlock
 }
 
@@ -136,6 +147,16 @@ func ValidateBlock(block Block) bool {
 	lastBlockHash := hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
 	merkleRoot := GenMerkleRoot(block.Transactions)
 	// Transaction are verified when added to mempool, no need to double check it
+
+	bits := GetCurrBitsValue()
+	if bits != block.Bits {
+		return false
+	}
+
+	hashNounce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(block)+fmt.Sprint(block.Nonce)), 16)
+	if BitsToTarget(block.Bits).Cmp(hashNounce) != 1 {
+		return false
+	}
 
 	if block.HashPrevBlock != lastBlockHash ||
 		block.MerkleRoot != merkleRoot {
@@ -147,7 +168,7 @@ func ValidateBlock(block Block) bool {
 
 func InitBlockchain() {
 	genesisBlock := CreateBlock(0,
-		nil, "0284cbd0bcf8a34035b71c5a72e37924cb960aaa0b69df4c41d50628734b8e1408")
-	genesisBlock.Time = time.Date(2022, 12, 31, 11, 54, 22, 0, time.Local)
+		nil, "0284cbd0bcf8a34035b71c5a72e37924cb960aaa0b69df4c41d50628734b8e1408", 1)
+
 	Blockchain = append(Blockchain, genesisBlock)
 }
