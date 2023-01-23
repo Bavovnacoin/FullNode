@@ -68,44 +68,43 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 func parallel(message string, bits string) {
 	st := time.Now()
 	allowParallelMining = true
-	thrcount := runtime.NumCPU() // Set minus for IO thread
+	thrcount := uint64(runtime.NumCPU()) // Set minus for IO thread
 	resChan := make(chan ParMineData, thrcount)
-	//var wg sync.WaitGroup
 
 	var step uint64 = 1
 	for ; allowParallelMining; step++ {
-		//wg.Add(thrcount)
-		var iterPerStep uint64 = 100000 * step // TODO: change here???
+		var iterPerStep uint64 = 10000
 
-		for i := 0; i < thrcount-1; i++ {
-			thrData := ParMineData{start: uint64(i) * iterPerStep, end: uint64(i+1) * iterPerStep,
+		var i uint64 = 0
+		for ; i < thrcount-1; i++ {
+			thrData := ParMineData{start: (uint64(i) + thrcount*(step-1)) * iterPerStep,
+				end:  (uint64(i+1) + thrcount*(step-1)) * iterPerStep,
 				bits: bits, message: message}
 			go mineParTask(thrData, resChan)
 		}
-		thrData := ParMineData{start: uint64(thrcount-1) * iterPerStep, end: uint64(thrcount) * iterPerStep,
+		thrData := ParMineData{start: (uint64(i) + thrcount*(step-1)) * iterPerStep,
+			end:  (uint64(i+1) + thrcount*(step-1)) * iterPerStep,
 			bits: bits, message: message}
 		go mineParTask(thrData, resChan)
 
-		for i := 0; i < thrcount; i++ {
+		i = 0
+		for ; i < thrcount; i++ {
 			data := <-resChan
 			if data.isFound {
 				println(data.nounce)
-				//break
 			}
 		}
 		println(fmt.Sprintf("Step %d - not found", step))
-		//wg.Wait()
 	}
-	//wg.Done()
-	//close(resChan)
+
 	elaps := time.Since(st).Milliseconds()
 	println(elaps)
 }
 
 func main() {
-	bits, _ := new(big.Int).SetString("000000000ffff000000000000000000000000000", 16)
-	// println("Common")
-	// println(mine("Hello worldd", mining.TargetToBits(bits)))
+	bits, _ := new(big.Int).SetString("00000ffff0000000000000000000000000000000", 16)
+	println("Common")
+	println(mine("Hello worldd", mining.TargetToBits(bits)))
 
 	println("\nParallel")
 	parallel("Hello worldd", mining.TargetToBits(bits))
