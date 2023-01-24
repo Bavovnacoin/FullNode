@@ -12,7 +12,8 @@ import (
 func GetCurrBitsValue() uint64 {
 	var bits uint64
 	diffChangeBlocksCount := (DIFF_CHECK_HOURS * 60 * 60) / BLOCK_CREATION_SEC
-	if len(Blockchain)%diffChangeBlocksCount == 0 {
+
+	if len(Blockchain)%diffChangeBlocksCount == 0 && len(Blockchain) != 0 {
 		bits = GenBits(Blockchain[len(Blockchain)-diffChangeBlocksCount].Time,
 			Blockchain[len(Blockchain)-1].Time, Blockchain[len(Blockchain)-1].Bits)
 	} else if len(Blockchain) == 0 {

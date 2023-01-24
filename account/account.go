@@ -34,7 +34,7 @@ func GenAccount(password string) Account {
 	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
 
 	Wallet = append(Wallet, newAcc)
-	WriteAccounts()
+	//WriteAccounts() // TODO: Enable on step 2.
 	return newAcc
 }
 
@@ -45,7 +45,7 @@ func AddKeyPairToAccount(password string) string {
 		newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 		CurrAccount.KeyPairList = append(CurrAccount.KeyPairList, newKeyPair)
 		Wallet[CurrAccount.ArrId] = CurrAccount
-		WriteAccounts()
+		//WriteAccounts() // TODO: Enable on step 2.
 	} else {
 		return "Wrong password!"
 	}

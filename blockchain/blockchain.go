@@ -137,7 +137,7 @@ func CreateBlock(id uint, txArr []transaction.Transaction, rewardAdr string, min
 
 	if miningFlag == 0 {
 		newBlock.Nonce = MineCommon(newBlock, bits)
-	} else {
+	} else if miningFlag == 1 {
 		newBlock.Nonce = MineAllThreads(newBlock, bits)
 	}
 	return newBlock
@@ -168,7 +168,10 @@ func ValidateBlock(block Block) bool {
 
 func InitBlockchain() {
 	genesisBlock := CreateBlock(0,
-		nil, "0284cbd0bcf8a34035b71c5a72e37924cb960aaa0b69df4c41d50628734b8e1408", 1)
+		nil, "e930fca003a4a70222d916a74cc851c3b3a9b050", -1)
+	genesisBlock.Nonce = 26719
 
 	Blockchain = append(Blockchain, genesisBlock)
+	utxo.UtxoList = append(utxo.UtxoList, utxo.UTXO{Address: "e930fca003a4a70222d916a74cc851c3b3a9b050",
+		Sum: genesisBlock.Transactions[genesisBlock.TransactionCount-1].Outputs[0].Sum})
 }
