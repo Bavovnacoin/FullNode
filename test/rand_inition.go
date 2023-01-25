@@ -18,15 +18,34 @@ import (
 	"time"
 )
 
-func initAccountData(leftBound int, rightBound int) {
+// func initAccountData(leftBound int, rightBound int) {
+// 	source := rand.NewSource(time.Now().Unix())
+// 	rand := rand.New(source)
+
+// 	accNum := rand.Intn(rightBound-leftBound) + leftBound
+
+// 	for i := 0; i < accNum; i++ {
+// 		newAcc := account.GenAccount(fmt.Sprint(len(network_accounts)))
+// 		network_accounts = append(network_accounts, newAcc)
+// 	}
+// }
+
+var newAccountNotFact int = 0
+var newAccountNotCome int = 0
+
+func createAccoundRandom() {
 	source := rand.NewSource(time.Now().Unix())
 	rand := rand.New(source)
 
-	accNum := rand.Intn(rightBound-leftBound) + leftBound
-
-	for i := 0; i < accNum; i++ {
+	if newAccountNotCome != newAccountNotFact {
+		newAccountNotCome++
+	} else {
 		newAcc := account.GenAccount(fmt.Sprint(len(network_accounts)))
 		network_accounts = append(network_accounts, newAcc)
+
+		newAccountNotFact = rand.Intn(600000) + 400000
+		newAccountNotCome = 0
+		println("Account created! ")
 	}
 }
 
@@ -34,18 +53,23 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 	source := rand.NewSource(time.Now().Unix())
 	rand := rand.New(source)
 
-	accNum := rand.Intn(len(network_accounts)-1) + 1
+	var accNum int
+	if len(network_accounts) == 1 {
+		accNum = rand.Intn(len(network_accounts)) + 1
+	} else {
+		accNum = rand.Intn(len(network_accounts)-1) + 1
+	}
 	var outputAddress []string
 	var outputSum []uint64
 
 	for len(outputAddress) < accNum {
-		netwAccInd := rand.Intn(len(network_accounts) - 1)
+		netwAccInd := rand.Intn(len(network_accounts))
 		netwAccAddrInd := rand.Intn(len(network_accounts[netwAccInd].KeyPairList))
 		outAddress := hashing.SHA1(network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey)
 
 		// Check if the same address is already in output of the same tx
 		for i := 0; i < len(outputAddress); i++ {
-			if outAddress == outputAddress[i] { //TODO: check is user sends his money to his address
+			if outAddress == outputAddress[i] {
 				continue
 			}
 		}
@@ -69,40 +93,98 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 	return outputAddress, outputSum
 }
 
-func createRandomTransactions() ([]transaction.Transaction, []bool) {
-	var txCorrectness []bool
-	var transactions []transaction.Transaction
-	for i := 0; i < len(network_accounts); i++ {
-		account.CurrAccount = network_accounts[i]
+// func createRandomTransactions() ([]transaction.Transaction, []bool) {
+// 	var txCorrectness []bool
+// 	var transactions []transaction.Transaction
+// 	for i := 0; i < len(network_accounts); i++ {
+// 		account.CurrAccount = network_accounts[i]
+// 		account.GetBalance()
+
+// 		if account.CurrAccount.Balance != 0 {
+// 			fee := rand.Intn(5) + 1
+
+// 			isGenLocktime := rand.Intn(5)
+// 			var locktime uint
+// 			if isGenLocktime == 1 {
+// 				locktime = uint(len(blockchain.Blockchain) + rand.Intn(3) + 1)
+// 			}
+
+// 			outAddr, outSum := getTxRandOuts(i, account.CurrAccount.Balance)
+// 			tx, mes := transaction.CreateTransaction(fmt.Sprint(i), outAddr, outSum, fee, locktime)
+
+// 			// Creation of invalid transaction
+// 			isTxInvalid := rand.Intn(5)
+// 			if isTxInvalid == 1 {
+// 				tx.Outputs[0].Sum = account.CurrAccount.Balance
+// 			}
+
+// 			transactions = append(transactions, tx)
+// 			if len(mes) == 0 && isTxInvalid != 1 {
+// 				txCorrectness = append(txCorrectness, true)
+// 			} else {
+// 				txCorrectness = append(txCorrectness, false)
+// 			}
+
+// 			network_accounts[i] = account.CurrAccount
+// 		}
+// 	}
+// 	return transactions, txCorrectness
+// }
+
+var newTransNotFact int = 0
+var newTransNotCome int = 0
+
+func createRandomTransaction() (transaction.Transaction, bool) {
+	source := rand.NewSource(time.Now().Unix())
+	rand := rand.New(source)
+	var txCorrectness bool
+	var newTx transaction.Transaction
+
+	if newTransNotCome != newTransNotFact {
+		newTransNotCome++
+	} else {
+		accInd := rand.Int() % len(network_accounts)
+		netwAccAddrInd := rand.Intn(len(network_accounts[accInd].KeyPairList))
+		accAddr := hashing.SHA1(network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey)
+		isAddrInMempool := blockchain.IsAddressInMempool(accAddr)
+
+		if isAddrInMempool {
+			return newTx, txCorrectness
+		}
+
+		account.CurrAccount = network_accounts[accInd]
 		account.GetBalance()
 
 		if account.CurrAccount.Balance != 0 {
 			fee := rand.Intn(5) + 1
-
-			isGenLocktime := rand.Intn(4)
+			isGenLocktime := rand.Intn(5)
 			var locktime uint
-			if isGenLocktime == 0 {
+			if isGenLocktime == 1 {
 				locktime = uint(len(blockchain.Blockchain) + rand.Intn(3) + 1)
 			}
 
-			outAddr, outSum := getTxRandOuts(i, account.CurrAccount.Balance)
-			tx, mes := transaction.CreateTransaction(fmt.Sprint(i), outAddr, outSum, fee, locktime)
+			outAddr, outSum := getTxRandOuts(accInd, account.CurrAccount.Balance)
+			tx, mes := transaction.CreateTransaction(fmt.Sprint(accInd), outAddr, outSum, fee, locktime)
 
-			// Creation od invalid transaction
+			// Creation of invalid transaction
 			isTxInvalid := rand.Intn(5)
-			if isTxInvalid == 0 {
+			if isTxInvalid == 1 {
 				tx.Outputs[0].Sum = account.CurrAccount.Balance
 			}
 
-			transactions = append(transactions, tx)
-			if len(mes) == 0 && isTxInvalid != 0 {
-				txCorrectness = append(txCorrectness, true)
+			newTx = tx
+			if len(mes) == 0 && isTxInvalid != 1 {
+				txCorrectness = true
 			} else {
-				txCorrectness = append(txCorrectness, false)
+				txCorrectness = false
 			}
 
-			network_accounts[i] = account.CurrAccount
+			network_accounts[accInd] = account.CurrAccount
+
+			newTransNotFact = rand.Intn(300000) + 100000
+			newTransNotCome = 0
 		}
 	}
-	return transactions, txCorrectness
+
+	return newTx, txCorrectness
 }

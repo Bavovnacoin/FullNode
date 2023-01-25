@@ -4,7 +4,6 @@ import (
 	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/ecdsa"
-	"bavovnacoin/transaction"
 	"bufio"
 	"os"
 )
@@ -29,15 +28,14 @@ func process() {
 	network_accounts = append(network_accounts, account.Account{Id: "0",
 		HashPass: "b6589fc6ab0dc82cf12099d1c2d40ab994e8410c", KeyPairList: genesisAccKeyPair})
 
-	initAccountData(6, 9)
-	transactions, isValidArray := createRandomTransactions()
-	for i := 0; i < len(transactions); i++ {
-		transaction.PrintTransaction(transactions[i])
-		println(isValidArray[i])
+	for node_working {
+		createAccoundRandom()
+		tx, _ := createRandomTransaction()
+		if tx.Inputs != nil {
+			println("Tx created!")
+		}
+		//blockchain.CreateBlock(len(blockchain.Blockchain))
 	}
-	// for node_working {
-
-	// }
 }
 
 func Test1() {

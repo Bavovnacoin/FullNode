@@ -74,12 +74,12 @@ func findIndexSorted(fee uint64, locktime uint) int {
 	return len(Mempool)
 }
 
-func GetTransactionsFromMempool() []transaction.Transaction {
+func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 	var txForBlock []transaction.Transaction
 	allSize := 0
 	MempoolInd := 0
 
-	for allSize < 1000000 && MempoolInd < len(Mempool) {
+	for allSize < 1000000-coinbaseTxSize && MempoolInd < len(Mempool) {
 		allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
 		// Check locktime
 		if Mempool[MempoolInd].Locktime < uint(len(Mempool)) {
@@ -91,4 +91,15 @@ func GetTransactionsFromMempool() []transaction.Transaction {
 		}
 	}
 	return txForBlock
+}
+
+func IsAddressInMempool(address string) bool {
+	for i := 0; i < len(Mempool); i++ {
+		for j := 0; j < len(Mempool[i].Inputs); j++ {
+			if Mempool[i].Inputs[j].HashAdr == address {
+				return true
+			}
+		}
+	}
+	return false
 }

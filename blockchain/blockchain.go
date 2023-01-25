@@ -43,7 +43,7 @@ func BlockToString(block Block) string {
 }
 
 func AddBlockToBlockchain(block Block) bool {
-	isBlockValid := ValidateBlock(block)
+	isBlockValid := ValidateBlock(block, len(Blockchain))
 	if isBlockValid {
 		for i := 0; i < len(block.Transactions); i++ {
 			txInpList := block.Transactions[i].Inputs
@@ -108,7 +108,7 @@ func GenMerkleRoot(transactions []transaction.Transaction) string {
 	return currLayer[0]
 }
 
-func CreateBlock(id uint, txArr []transaction.Transaction, rewardAdr string, miningFlag int) Block {
+func CreateBlock(id uint, rewardAdr string, miningFlag int) Block {
 	var newBlock Block
 	newBlock.Id = id
 
@@ -120,12 +120,17 @@ func CreateBlock(id uint, txArr []transaction.Transaction, rewardAdr string, min
 		newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 	}
 
-	newBlock.Transactions = make([]transaction.Transaction, len(txArr)+1)
-
 	var coinbaseTx transaction.Transaction
 	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{HashAdr: rewardAdr, Sum: GetCoinsForEmition()})
 
+	var txArr []transaction.Transaction = GetTransactionsFromMempool(transaction.ComputeTxSize(coinbaseTx))
+
+	for i := 0; i < len(txArr); i++ {
+		coinbaseTx.Outputs[0].Sum += transaction.GetTxFee(txArr[i])
+	}
+
 	txArr = append([]transaction.Transaction{coinbaseTx}, txArr...)
+	newBlock.Transactions = make([]transaction.Transaction, len(txArr))
 	copy(newBlock.Transactions, txArr)
 
 	newBlock.TransactionCount = uint(len(newBlock.Transactions))
@@ -143,21 +148,32 @@ func CreateBlock(id uint, txArr []transaction.Transaction, rewardAdr string, min
 	return newBlock
 }
 
-func ValidateBlock(block Block) bool {
+func ValidateBlock(block Block, id int) bool {
 	lastBlockHash := hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
 	merkleRoot := GenMerkleRoot(block.Transactions)
-	// Transaction are verified when added to mempool, no need to double check it
 
+	// Check bits value
 	bits := GetCurrBitsValue()
 	if bits != block.Bits {
 		return false
 	}
 
-	hashNounce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(block)+fmt.Sprint(block.Nonce)), 16)
-	if BitsToTarget(block.Bits).Cmp(hashNounce) != 1 {
+	// Check nonce
+	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(block)+fmt.Sprint(block.Nonce)), 16)
+	if BitsToTarget(block.Bits).Cmp(hashNonce) != 1 {
 		return false
 	}
 
+	// Check coinbase tx
+	var allFee uint64
+	for i := 1; i < len(block.Transactions); i++ {
+		allFee += transaction.GetTxFee(block.Transactions[i])
+	}
+	if !CheckEmitedCoins(block.Transactions[0].Outputs[0].Sum-allFee, id) {
+		return false
+	}
+
+	// Check block hash values
 	if block.HashPrevBlock != lastBlockHash ||
 		block.MerkleRoot != merkleRoot {
 		return false
@@ -168,7 +184,7 @@ func ValidateBlock(block Block) bool {
 
 func InitBlockchain() {
 	genesisBlock := CreateBlock(0,
-		nil, "e930fca003a4a70222d916a74cc851c3b3a9b050", -1)
+		"e930fca003a4a70222d916a74cc851c3b3a9b050", -1)
 	genesisBlock.Nonce = 26719
 
 	Blockchain = append(Blockchain, genesisBlock)
