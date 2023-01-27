@@ -1,6 +1,7 @@
 package ecdsa
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
@@ -9,6 +10,7 @@ import (
 func Sign(hashMes string, privKey string) string {
 	bigHash := hexToBig(hashMes)
 	prKNum := hexToBig(privKey)
+	println(fmt.Sprint(prKNum), privKey, "- private key for signature")
 	s := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(s)
 	randK := big.NewInt(0).Rand(r, n)

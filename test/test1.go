@@ -5,6 +5,7 @@ import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/ecdsa"
 	"bufio"
+	"fmt"
 	"os"
 )
 
@@ -32,9 +33,12 @@ func process() {
 		createAccoundRandom()
 		tx, _ := createRandomTransaction()
 		if tx.Inputs != nil {
-			println("Tx created!")
+			if blockchain.AddTxToMempool(tx) {
+				println("Tx added to mempool")
+				println(fmt.Sprint(len(blockchain.Mempool)) + " - mempool len")
+			}
 		}
-		//blockchain.CreateBlock(len(blockchain.Blockchain))
+		addBlock()
 	}
 }
 

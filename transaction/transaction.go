@@ -138,7 +138,7 @@ func CreateTransaction(passKey string, outAdr []string, outSumVals []uint64, fee
 	var output []Output
 	for i := 0; i < len(outAdr); i++ {
 		var outVal Output
-		outVal.HashAdr = hashing.SHA1(outAdr[i])
+		outVal.HashAdr = outAdr[i]
 		outVal.Sum = uint64(outSumVals[i])
 		output = append(output, outVal)
 	}
@@ -162,7 +162,7 @@ func CreateTransaction(passKey string, outAdr []string, outSumVals []uint64, fee
 		outTxSum = outSum
 		for i := 0; i < len(inputs); i++ {
 			var inpVal Input
-			inpVal.HashAdr = hashing.SHA1(inputs[i].Address)
+			inpVal.HashAdr = inputs[i].Address
 			inpVal.OutInd = inputs[i].Index
 
 			// Get private and public key for scriptSig generation
@@ -245,6 +245,10 @@ func VerifyTransaction(tx Transaction) bool {
 
 		// Checking signatures and unique inputs
 		for i := 0; i < len(tx.Inputs); i++ {
+			if len(tx.Inputs[i].ScriptSig) < 66 {
+				return false
+			}
+
 			pubKey := tx.Inputs[i].ScriptSig[:66]
 			sign := tx.Inputs[i].ScriptSig[66:]
 			if !ecdsa.Verify(pubKey, sign, hashMesOfTx) {

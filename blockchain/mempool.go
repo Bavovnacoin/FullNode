@@ -29,7 +29,7 @@ func ValidateTransaction(tx transaction.Transaction) bool {
 			}
 		}
 
-		if isExist {
+		if !isExist {
 			return false
 		}
 	}
@@ -81,9 +81,11 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 
 	for allSize < 1000000-coinbaseTxSize && MempoolInd < len(Mempool) {
 		allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
-		// Check locktime
-		if Mempool[MempoolInd].Locktime < uint(len(Mempool)) {
-			transaction.PrintTransaction(Mempool[MempoolInd])
+
+		if !transaction.VerifyTransaction(Mempool[MempoolInd]) {
+			println("Deleted invalid tx from mempool")
+			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
+		} else if Mempool[MempoolInd].Locktime < uint(len(Mempool)) {
 			txForBlock = append(txForBlock, Mempool[MempoolInd])
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
 		} else {

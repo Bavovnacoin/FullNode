@@ -31,11 +31,14 @@ func DelFromUtxo(address string, outind int) {
 		if UtxoList[i].Address == address {
 			if ind == outind {
 				UtxoList = append(UtxoList[:i], UtxoList[i+1:]...)
+				println("Deleted from Utxo")
 				return
 			}
 			ind++
 		}
 	}
+	println(address, outind)
+	println("ERROR! NOT DELETED!")
 }
 
 func AddToUtxo(address string, sum uint64) {

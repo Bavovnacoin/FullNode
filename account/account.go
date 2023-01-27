@@ -70,7 +70,7 @@ func GetAccUtxo() []utxo.UTXO {
 func GetBalByKeyHash(keyHash string, outInd int) uint64 {
 	ind := -1
 	for j := 0; j < len(utxo.UtxoList); j++ {
-		if keyHash == hashing.SHA1(utxo.UtxoList[j].Address) {
+		if keyHash == utxo.UtxoList[j].Address {
 			ind++
 		}
 		if ind == outInd {

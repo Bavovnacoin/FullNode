@@ -43,7 +43,7 @@ func createAccoundRandom() {
 		newAcc := account.GenAccount(fmt.Sprint(len(network_accounts)))
 		network_accounts = append(network_accounts, newAcc)
 
-		newAccountNotFact = rand.Intn(600000) + 400000
+		newAccountNotFact = rand.Intn(60000) + 100000
 		newAccountNotCome = 0
 		println("Account created! ")
 	}
@@ -66,6 +66,10 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 		netwAccInd := rand.Intn(len(network_accounts))
 		netwAccAddrInd := rand.Intn(len(network_accounts[netwAccInd].KeyPairList))
 		outAddress := hashing.SHA1(network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey)
+
+		if currInd == netwAccInd {
+			continue
+		}
 
 		// Check if the same address is already in output of the same tx
 		for i := 0; i < len(outputAddress); i++ {
@@ -92,44 +96,6 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 	}
 	return outputAddress, outputSum
 }
-
-// func createRandomTransactions() ([]transaction.Transaction, []bool) {
-// 	var txCorrectness []bool
-// 	var transactions []transaction.Transaction
-// 	for i := 0; i < len(network_accounts); i++ {
-// 		account.CurrAccount = network_accounts[i]
-// 		account.GetBalance()
-
-// 		if account.CurrAccount.Balance != 0 {
-// 			fee := rand.Intn(5) + 1
-
-// 			isGenLocktime := rand.Intn(5)
-// 			var locktime uint
-// 			if isGenLocktime == 1 {
-// 				locktime = uint(len(blockchain.Blockchain) + rand.Intn(3) + 1)
-// 			}
-
-// 			outAddr, outSum := getTxRandOuts(i, account.CurrAccount.Balance)
-// 			tx, mes := transaction.CreateTransaction(fmt.Sprint(i), outAddr, outSum, fee, locktime)
-
-// 			// Creation of invalid transaction
-// 			isTxInvalid := rand.Intn(5)
-// 			if isTxInvalid == 1 {
-// 				tx.Outputs[0].Sum = account.CurrAccount.Balance
-// 			}
-
-// 			transactions = append(transactions, tx)
-// 			if len(mes) == 0 && isTxInvalid != 1 {
-// 				txCorrectness = append(txCorrectness, true)
-// 			} else {
-// 				txCorrectness = append(txCorrectness, false)
-// 			}
-
-// 			network_accounts[i] = account.CurrAccount
-// 		}
-// 	}
-// 	return transactions, txCorrectness
-// }
 
 var newTransNotFact int = 0
 var newTransNotCome int = 0
@@ -181,10 +147,40 @@ func createRandomTransaction() (transaction.Transaction, bool) {
 
 			network_accounts[accInd] = account.CurrAccount
 
-			newTransNotFact = rand.Intn(300000) + 100000
+			newTransNotFact = rand.Intn(30000) + 10000
 			newTransNotCome = 0
+			//println(accAddr)
 		}
 	}
-
 	return newTx, txCorrectness
+}
+
+var allowCreateBlock bool = true
+var createdBlock blockchain.Block
+
+func addBlock() {
+	if allowCreateBlock {
+		go createBlockLog()
+		allowCreateBlock = false
+	}
+	if createdBlock.MerkleRoot != "" {
+		addBlockLog()
+	}
+}
+
+func createBlockLog() {
+	println("Creating a block with mempool len " + fmt.Sprint(len(blockchain.Mempool)))
+	createdBlock = blockchain.CreateBlock(len(blockchain.Blockchain), "e930fca003a4a70222d916a74cc851c3b3a9b050", 1)
+	//allowCreateBlock = false
+}
+
+func addBlockLog() {
+	if blockchain.AddBlockToBlockchain(createdBlock) {
+		println("Block is added to blockchain")
+	} else {
+		println("Block is not added")
+	}
+	println(fmt.Sprint(len(blockchain.Blockchain)) + " - blockchain length")
+	allowCreateBlock = true
+	createdBlock.MerkleRoot = ""
 }
