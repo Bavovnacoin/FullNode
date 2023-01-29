@@ -256,12 +256,6 @@ func VerifyTransaction(tx Transaction) bool {
 			}
 			curVal := account.GetBalByKeyHash(tx.Inputs[i].HashAdr, tx.Inputs[i].OutInd)
 			inpSum += curVal
-
-			for j := i + 1; j < len(tx.Inputs); j++ {
-				if tx.Inputs[j].ScriptSig == tx.Inputs[i].ScriptSig {
-					return false
-				}
-			}
 		}
 
 		var outSum uint64

@@ -67,11 +67,11 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 func MineAllThreads(block Block) uint64 {
 	println("Mining started")
 	allowParallelMining = true
-	thrcount := uint64(runtime.NumCPU() - 3)
+	thrcount := uint64(runtime.NumCPU())
 	resChan := make(chan ParMineData, thrcount)
 	var foundNounce uint64
 
-	var iterPerStep uint64 = 10000
+	var iterPerStep uint64 = 1000
 
 	var i uint64 = 0
 	for ; i < thrcount-1; i++ {

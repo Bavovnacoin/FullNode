@@ -128,6 +128,7 @@ func CreateBlock(id int, rewardAdr string, miningFlag int) Block {
 
 	var txArr []transaction.Transaction = GetTransactionsFromMempool(transaction.ComputeTxSize(coinbaseTx))
 	println(fmt.Sprint(len(txArr)) + "- in block")
+
 	var feeSum uint64 = 0
 	for i := 0; i < len(txArr); i++ {
 		feeSum += transaction.GetTxFee(txArr[i])

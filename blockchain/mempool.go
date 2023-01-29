@@ -67,7 +67,7 @@ func findIndexSorted(fee uint64, locktime uint) int {
 				return i
 			}
 		}
-		if txFee < fee { // add locktime check
+		if txFee < fee {
 			return i
 		}
 	}

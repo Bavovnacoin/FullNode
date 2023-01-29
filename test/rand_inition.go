@@ -109,11 +109,11 @@ func createTxRandom() {
 		source := rand.NewSource(time.Now().Unix())
 		rand := rand.New(source)
 
-		time.Sleep(time.Duration(sleepTimeTxCreation))
-		sleepTimeTxCreation = uint64(rand.Intn(30000)) + 7000
-
-		//var txCorrectness bool //TODO: log correctness
-		//var newTx transaction.Transaction
+		time.Sleep(time.Duration(sleepTimeTxCreation) * time.Millisecond)
+		sleepTimeTxCreation = uint64(rand.Intn(300)) + 1000
+		println(fmt.Sprint(sleepTimeTxCreation) + " next tx creation!")
+		var txCorrectness bool
+		// var newTx transaction.Transaction
 
 		accInd := rand.Int() % len(network_accounts)
 		netwAccAddrInd := rand.Intn(len(network_accounts[accInd].KeyPairList))
@@ -132,7 +132,7 @@ func createTxRandom() {
 			}
 
 			outAddr, outSum := getTxRandOuts(accInd, account.CurrAccount.Balance)
-			tx, _ := transaction.CreateTransaction(fmt.Sprint(accInd), outAddr, outSum, fee, locktime) // TODO: mes for logging
+			tx, mes := transaction.CreateTransaction(fmt.Sprint(accInd), outAddr, outSum, fee, locktime) // TODO: mes for logging
 
 			// Creation of invalid transaction
 			isTxInvalid := rand.Intn(5)
@@ -140,19 +140,18 @@ func createTxRandom() {
 				tx.Outputs[0].Sum = account.CurrAccount.Balance
 			}
 
-			// if len(mes) == 0 && isTxInvalid != 1 {
-			// 	txCorrectness = true
-			// } else {
-			// 	txCorrectness = false
-			// }
+			if len(mes) == 0 && isTxInvalid != 1 {
+				txCorrectness = true
+			} else {
+				txCorrectness = false
+			}
 
 			network_accounts[accInd] = account.CurrAccount
-
+			println(txCorrectness)
 			if tx.Inputs != nil {
 				if blockchain.AddTxToMempool(tx) {
 					println("Tx added to mempool")
 					println(fmt.Sprint(len(blockchain.Mempool)) + " - mempool len")
-					//transaction.PrintTransaction(tx)
 				}
 			}
 		}
@@ -175,7 +174,6 @@ func addBlock() {
 func createBlockLog() {
 	println("Creating a block with mempool len " + fmt.Sprint(len(blockchain.Mempool)))
 	createdBlock = blockchain.CreateBlock(len(blockchain.Blockchain), "e930fca003a4a70222d916a74cc851c3b3a9b050", 1)
-	//allowCreateBlock = false
 }
 
 func addBlockLog() {
