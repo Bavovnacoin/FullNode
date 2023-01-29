@@ -1,16 +1,19 @@
 package ecdsa
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
 )
 
 func Sign(hashMes string, privKey string) string {
-	bigHash := hexToBig(hashMes)
-	prKNum := hexToBig(privKey)
-	println(fmt.Sprint(prKNum), privKey, "- private key for signature")
+	bigHash, isHashValid := hexToBig(hashMes)
+	prKNum, isKeyValid := hexToBig(privKey)
+
+	if !isHashValid || !isKeyValid {
+		return ""
+	}
+
 	s := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(s)
 	randK := big.NewInt(0).Rand(r, n)
@@ -25,10 +28,17 @@ func Sign(hashMes string, privKey string) string {
 func Verify(pubKey string, sign string, hashMes string) bool {
 	pKey := decompressPubKey(pubKey)
 
+	if len(sign) < 78 {
+		return false
+	}
+
 	var signPoint Point
 	signPoint.x, _ = big.NewInt(0).SetString(sign[:78], 10)
 	signPoint.y, _ = big.NewInt(0).SetString(sign[78:], 10)
-	bigHash := hexToBig(hashMes)
+	bigHash, isHashValid := hexToBig(hashMes)
+	if !isHashValid {
+		return false
+	}
 
 	inv := inverse(signPoint.y, n)
 	u1 := big.NewInt(1).Mod(big.NewInt(1).Mul(bigHash, inv), n)

@@ -14,6 +14,7 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -43,7 +44,7 @@ func createAccoundRandom() {
 		newAcc := account.GenAccount(fmt.Sprint(len(network_accounts)))
 		network_accounts = append(network_accounts, newAcc)
 
-		newAccountNotFact = rand.Intn(60000) + 100000
+		newAccountNotFact = rand.Intn(60000) + 600000
 		newAccountNotCome = 0
 		println("Account created! ")
 	}
@@ -97,31 +98,32 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 	return outputAddress, outputSum
 }
 
-var newTransNotFact int = 0
-var newTransNotCome int = 0
+func txRandomCreator() {
+	go createTxRandom()
+}
 
-func createRandomTransaction() (transaction.Transaction, bool) {
-	source := rand.NewSource(time.Now().Unix())
-	rand := rand.New(source)
-	var txCorrectness bool
-	var newTx transaction.Transaction
+var sleepTimeTxCreation uint64 = 10
 
-	if newTransNotCome != newTransNotFact {
-		newTransNotCome++
-	} else {
+func createTxRandom() {
+	for node_working {
+		source := rand.NewSource(time.Now().Unix())
+		rand := rand.New(source)
+
+		time.Sleep(time.Duration(sleepTimeTxCreation))
+		sleepTimeTxCreation = uint64(rand.Intn(30000)) + 7000
+
+		//var txCorrectness bool //TODO: log correctness
+		//var newTx transaction.Transaction
+
 		accInd := rand.Int() % len(network_accounts)
 		netwAccAddrInd := rand.Intn(len(network_accounts[accInd].KeyPairList))
 		accAddr := hashing.SHA1(network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey)
 		isAddrInMempool := blockchain.IsAddressInMempool(accAddr)
 
-		if isAddrInMempool {
-			return newTx, txCorrectness
-		}
-
 		account.CurrAccount = network_accounts[accInd]
 		account.GetBalance()
 
-		if account.CurrAccount.Balance != 0 {
+		if account.CurrAccount.Balance != 0 && !isAddrInMempool {
 			fee := rand.Intn(5) + 1
 			isGenLocktime := rand.Intn(5)
 			var locktime uint
@@ -130,7 +132,7 @@ func createRandomTransaction() (transaction.Transaction, bool) {
 			}
 
 			outAddr, outSum := getTxRandOuts(accInd, account.CurrAccount.Balance)
-			tx, mes := transaction.CreateTransaction(fmt.Sprint(accInd), outAddr, outSum, fee, locktime)
+			tx, _ := transaction.CreateTransaction(fmt.Sprint(accInd), outAddr, outSum, fee, locktime) // TODO: mes for logging
 
 			// Creation of invalid transaction
 			isTxInvalid := rand.Intn(5)
@@ -138,21 +140,23 @@ func createRandomTransaction() (transaction.Transaction, bool) {
 				tx.Outputs[0].Sum = account.CurrAccount.Balance
 			}
 
-			newTx = tx
-			if len(mes) == 0 && isTxInvalid != 1 {
-				txCorrectness = true
-			} else {
-				txCorrectness = false
-			}
+			// if len(mes) == 0 && isTxInvalid != 1 {
+			// 	txCorrectness = true
+			// } else {
+			// 	txCorrectness = false
+			// }
 
 			network_accounts[accInd] = account.CurrAccount
 
-			newTransNotFact = rand.Intn(30000) + 10000
-			newTransNotCome = 0
-			//println(accAddr)
+			if tx.Inputs != nil {
+				if blockchain.AddTxToMempool(tx) {
+					println("Tx added to mempool")
+					println(fmt.Sprint(len(blockchain.Mempool)) + " - mempool len")
+					//transaction.PrintTransaction(tx)
+				}
+			}
 		}
 	}
-	return newTx, txCorrectness
 }
 
 var allowCreateBlock bool = true
@@ -180,7 +184,7 @@ func addBlockLog() {
 	} else {
 		println("Block is not added")
 	}
-	println(fmt.Sprint(len(blockchain.Blockchain)) + " - blockchain length")
+	log.Println(fmt.Sprint(len(blockchain.Blockchain)) + " - blockchain length")
 	allowCreateBlock = true
 	createdBlock.MerkleRoot = ""
 }

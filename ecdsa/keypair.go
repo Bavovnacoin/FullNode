@@ -12,9 +12,9 @@ func bigToHex(num *big.Int) string {
 	return fmt.Sprintf("%x", num)
 }
 
-func hexToBig(hex string) *big.Int {
-	val, _ := big.NewInt(1).SetString(hex, 16)
-	return val
+func hexToBig(hex string) (*big.Int, bool) {
+	val, err := big.NewInt(1).SetString(hex, 16)
+	return val, err
 }
 
 func GenPrivKey() string {
@@ -188,7 +188,10 @@ func decompressPubKey(s string) Point {
 }
 
 func GenPubKey(privK string) string {
-	privKey := hexToBig(privK)
+	privKey, isKeyValid := hexToBig(privK)
+	if !isKeyValid {
+		return ""
+	}
 	p := multiply(privKey, g)
 	return compressPubKey(p)
 }
