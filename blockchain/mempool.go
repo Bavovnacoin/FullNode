@@ -3,6 +3,7 @@ package blockchain
 import (
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
+	"log"
 )
 
 var Mempool []transaction.Transaction
@@ -83,7 +84,6 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 		allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
 
 		if !transaction.VerifyTransaction(Mempool[MempoolInd]) {
-			println("Deleted invalid tx from mempool")
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
 		} else if Mempool[MempoolInd].Locktime < uint(len(Mempool)) {
 			txForBlock = append(txForBlock, Mempool[MempoolInd])
@@ -104,4 +104,15 @@ func IsAddressInMempool(address string) bool {
 		}
 	}
 	return false
+}
+
+func PrintMempool() {
+	mempoolMes := "Mempool:"
+	if len(Mempool) == 0 {
+		mempoolMes += " empty"
+	}
+	log.Println(mempoolMes)
+	for i := 0; i < len(Mempool); i++ {
+		log.Printf("[%d]. Fee: %d, coins: %d\n", i, transaction.GetTxFee(Mempool[i]), transaction.GetOutputSum(Mempool[i].Outputs))
+	}
 }

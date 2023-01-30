@@ -2,27 +2,10 @@ package blockchain
 
 import (
 	"bavovnacoin/hashing"
+	"bavovnacoin/node_controller/command_executor"
 	"fmt"
-	"log"
 	"math/big"
-	"runtime"
 )
-
-func MineCommon(block Block) uint64 {
-	message := BlockToString(block)
-	target := BitsToTarget(block.Bits)
-
-	var nounce uint64 = 0
-	for ; true; nounce++ {
-		block.Nonce = nounce
-		hashNounce, _ := new(big.Int).SetString(hashing.SHA1(message+fmt.Sprintf("%d", nounce)), 16)
-		if target.Cmp(hashNounce) == 1 {
-			return nounce
-		}
-	}
-
-	return 0
-}
 
 var allowParallelMining bool
 
@@ -59,19 +42,19 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 				ch <- data
 				allowParallelMining = false
 			}
+			command_executor.PauseCommand()
 		}
-		log.Println(end)
 	}
 }
 
-func MineAllThreads(block Block) uint64 {
-	println("Mining started")
+func MineThreads(block Block, threadsCount uint64) uint64 {
+	fmt.Println("Mining started")
 	allowParallelMining = true
-	thrcount := uint64(runtime.NumCPU())
+	thrcount := threadsCount
 	resChan := make(chan ParMineData, thrcount)
 	var foundNounce uint64
 
-	var iterPerStep uint64 = 1000
+	var iterPerStep uint64 = 10000
 
 	var i uint64 = 0
 	for ; i < thrcount-1; i++ {
@@ -90,8 +73,6 @@ func MineAllThreads(block Block) uint64 {
 			foundNounce = data.nonce
 		}
 	}
-
-	println("Mining ended")
-	println(foundNounce)
+	fmt.Println("Mining done")
 	return foundNounce
 }

@@ -1,11 +1,8 @@
 package main
 
-import "bavovnacoin/test"
+import "bavovnacoin/testing"
 
 func main() {
-	test.Test1()
-	//var block blockchain.Block
-	//block.Time = time.Date(0, 0, 0, 0, 0, 0, 1, time.UTC)
-	//println(blockchain.MineAllThreads(block))
+	testing.Test1()
 	// TODO: Verify the first block just to check that it is corectly mines
 }

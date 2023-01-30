@@ -1,4 +1,4 @@
-package test
+package testing
 
 /*
 	STEP 1
@@ -12,9 +12,9 @@ import (
 	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/hashing"
+	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/transaction"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 )
@@ -41,13 +41,14 @@ func createAccoundRandom() {
 	if newAccountNotCome != newAccountNotFact {
 		newAccountNotCome++
 	} else {
-		newAcc := account.GenAccount(fmt.Sprint(len(network_accounts)))
-		network_accounts = append(network_accounts, newAcc)
+		newAcc := account.GenAccount(fmt.Sprint(len(command_executor.Network_accounts)))
+		command_executor.Network_accounts = append(command_executor.Network_accounts, newAcc)
 
 		newAccountNotFact = rand.Intn(60000) + 600000
 		newAccountNotCome = 0
 		println("Account created! ")
 	}
+	command_executor.PauseCommand()
 }
 
 func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
@@ -55,18 +56,18 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 	rand := rand.New(source)
 
 	var accNum int
-	if len(network_accounts) == 1 {
-		accNum = rand.Intn(len(network_accounts)) + 1
+	if len(command_executor.Network_accounts) == 1 {
+		accNum = rand.Intn(len(command_executor.Network_accounts)) + 1
 	} else {
-		accNum = rand.Intn(len(network_accounts)-1) + 1
+		accNum = rand.Intn(len(command_executor.Network_accounts)-1) + 1
 	}
 	var outputAddress []string
 	var outputSum []uint64
 
 	for len(outputAddress) < accNum {
-		netwAccInd := rand.Intn(len(network_accounts))
-		netwAccAddrInd := rand.Intn(len(network_accounts[netwAccInd].KeyPairList))
-		outAddress := hashing.SHA1(network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey)
+		netwAccInd := rand.Intn(len(command_executor.Network_accounts))
+		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[netwAccInd].KeyPairList))
+		outAddress := hashing.SHA1(command_executor.Network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey)
 
 		if currInd == netwAccInd {
 			continue
@@ -105,22 +106,22 @@ func txRandomCreator() {
 var sleepTimeTxCreation uint64 = 10
 
 func createTxRandom() {
-	for node_working {
+	for command_executor.Node_working {
 		source := rand.NewSource(time.Now().Unix())
 		rand := rand.New(source)
 
 		time.Sleep(time.Duration(sleepTimeTxCreation) * time.Millisecond)
 		sleepTimeTxCreation = uint64(rand.Intn(300)) + 1000
-		println(fmt.Sprint(sleepTimeTxCreation) + " next tx creation!")
 		var txCorrectness bool
+		println(txCorrectness)
 		// var newTx transaction.Transaction
 
-		accInd := rand.Int() % len(network_accounts)
-		netwAccAddrInd := rand.Intn(len(network_accounts[accInd].KeyPairList))
-		accAddr := hashing.SHA1(network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey)
+		accInd := rand.Int() % len(command_executor.Network_accounts)
+		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[accInd].KeyPairList))
+		accAddr := hashing.SHA1(command_executor.Network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey)
 		isAddrInMempool := blockchain.IsAddressInMempool(accAddr)
 
-		account.CurrAccount = network_accounts[accInd]
+		account.CurrAccount = command_executor.Network_accounts[accInd]
 		account.GetBalance()
 
 		if account.CurrAccount.Balance != 0 && !isAddrInMempool {
@@ -145,16 +146,15 @@ func createTxRandom() {
 			} else {
 				txCorrectness = false
 			}
-
-			network_accounts[accInd] = account.CurrAccount
-			println(txCorrectness)
+			command_executor.PauseCommand()
+			command_executor.Network_accounts[accInd] = account.CurrAccount
 			if tx.Inputs != nil {
 				if blockchain.AddTxToMempool(tx) {
-					println("Tx added to mempool")
-					println(fmt.Sprint(len(blockchain.Mempool)) + " - mempool len")
+					fmt.Println("Tx added to mempool")
 				}
 			}
 		}
+		command_executor.PauseCommand()
 	}
 }
 
@@ -169,11 +169,12 @@ func addBlock() {
 	if createdBlock.MerkleRoot != "" {
 		addBlockLog()
 	}
+	command_executor.PauseCommand()
 }
 
 func createBlockLog() {
-	println("Creating a block with mempool len " + fmt.Sprint(len(blockchain.Mempool)))
-	createdBlock = blockchain.CreateBlock(len(blockchain.Blockchain), "e930fca003a4a70222d916a74cc851c3b3a9b050", 1)
+	createdBlock = blockchain.CreateBlock("e930fca003a4a70222d916a74cc851c3b3a9b050", 1)
+	command_executor.PauseCommand()
 }
 
 func addBlockLog() {
@@ -182,7 +183,8 @@ func addBlockLog() {
 	} else {
 		println("Block is not added")
 	}
-	log.Println(fmt.Sprint(len(blockchain.Blockchain)) + " - blockchain length")
+	//log.Println(fmt.Sprint(len(blockchain.Blockchain)) + " - blockchain length")
 	allowCreateBlock = true
 	createdBlock.MerkleRoot = ""
+	command_executor.PauseCommand()
 }

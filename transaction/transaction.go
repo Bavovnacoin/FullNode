@@ -217,8 +217,7 @@ Some information is not stored in the transaction structure,
 but received in this function.
 */
 func PrintTransaction(tx Transaction) {
-	println("Transaction")
-	fmt.Printf("Version: %d\n Locktime %d\n", tx.Version, tx.Locktime)
+	fmt.Printf("Version: %d\nLocktime %d\n", tx.Version, tx.Locktime)
 	println("Inputs:")
 	var inpSum uint64
 	for i := 0; i < len(tx.Inputs); i++ {

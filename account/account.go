@@ -80,6 +80,16 @@ func GetBalByKeyHash(keyHash string, outInd int) uint64 {
 	return 0
 }
 
+func GetBalByAddress(address string) uint64 {
+	var sum uint64
+	for i := 0; i < len(utxo.UtxoList); i++ {
+		if address == utxo.UtxoList[i].Address {
+			sum += utxo.UtxoList[i].Sum
+		}
+	}
+	return sum
+}
+
 func getKeyBal(pubKey string) uint64 {
 	bal := uint64(0)
 	for j := 0; j < len(utxo.UtxoList); j++ {

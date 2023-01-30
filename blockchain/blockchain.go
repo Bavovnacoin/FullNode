@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"runtime"
 	"time"
 )
 
 var Blockchain []Block
 
 type Block struct {
-	Id               uint
 	Blocksize        uint
 	Version          uint
 	HashPrevBlock    string
@@ -27,7 +27,6 @@ type Block struct {
 
 func BlockToString(block Block) string {
 	str := ""
-	str += fmt.Sprint(block.Id)
 	str += fmt.Sprint(block.Blocksize)
 	str += fmt.Sprint(block.Version)
 	str += block.HashPrevBlock
@@ -55,13 +54,11 @@ func AddBlockToBlockchain(block Block) bool {
 
 			txOutList := block.Transactions[i].Outputs
 			for j := 0; j < len(txOutList); j++ {
-				println(txOutList[j].Sum)
 				utxo.AddToUtxo(txOutList[j].HashAdr, txOutList[j].Sum)
 			}
 		}
 		Blockchain = append(Blockchain, block)
 	}
-	println(fmt.Sprint(utxo.UtxoList) + " - utxo list")
 	return isBlockValid
 }
 
@@ -111,9 +108,8 @@ func GenMerkleRoot(transactions []transaction.Transaction) string {
 	return currLayer[0]
 }
 
-func CreateBlock(id int, rewardAdr string, miningFlag int) Block {
+func CreateBlock(rewardAdr string, miningFlag int) Block {
 	var newBlock Block
-	newBlock.Id = uint(id)
 
 	if len(Blockchain) > 0 {
 		newBlock.HashPrevBlock = hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
@@ -127,7 +123,6 @@ func CreateBlock(id int, rewardAdr string, miningFlag int) Block {
 	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{HashAdr: rewardAdr, Sum: GetCoinsForEmition()})
 
 	var txArr []transaction.Transaction = GetTransactionsFromMempool(transaction.ComputeTxSize(coinbaseTx))
-	println(fmt.Sprint(len(txArr)) + "- in block")
 
 	var feeSum uint64 = 0
 	for i := 0; i < len(txArr); i++ {
@@ -149,11 +144,10 @@ func CreateBlock(id int, rewardAdr string, miningFlag int) Block {
 	}
 
 	if miningFlag == 0 {
-		newBlock.Nonce = MineCommon(newBlock)
+		newBlock.Nonce = MineThreads(newBlock, 1)
 	} else if miningFlag == 1 {
-		newBlock.Nonce = MineAllThreads(newBlock)
+		newBlock.Nonce = MineThreads(newBlock, uint64(runtime.NumCPU()))
 	}
-	println(fmt.Sprint(len(Mempool)) + " - mempool len")
 	return newBlock
 }
 
@@ -192,12 +186,22 @@ func ValidateBlock(block Block, id int) bool {
 }
 
 func InitBlockchain() {
-	genesisBlock := CreateBlock(0,
-		"e930fca003a4a70222d916a74cc851c3b3a9b050", -1)
+	genesisBlock := CreateBlock("e930fca003a4a70222d916a74cc851c3b3a9b050", -1)
 	genesisBlock.Bits = STARTBITS
 	genesisBlock.Nonce = 26719
 
 	Blockchain = append(Blockchain, genesisBlock)
 	utxo.UtxoList = append(utxo.UtxoList, utxo.UTXO{Address: "e930fca003a4a70222d916a74cc851c3b3a9b050",
 		Sum: genesisBlock.Transactions[0].Outputs[0].Sum})
+}
+
+func PrintBlockTitle(block Block, id int) {
+	println("Block id:", id)
+	println("Version:", block.Version)
+	println("Hash of prev block:", block.HashPrevBlock)
+	println("Time:", block.Time.String())
+	println("Merkle root:", block.MerkleRoot)
+	println("Bits:", block.Bits)
+	println("Nonce:", block.Nonce)
+	println("Transaction count:", block.TransactionCount)
 }
