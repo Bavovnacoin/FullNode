@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/big"
 	"strconv"
@@ -19,7 +20,7 @@ func GetCurrBitsValue() uint64 {
 	if len(Blockchain)%BLOCK_DIFF_CHECK == 0 && len(Blockchain) != 0 {
 		bits = GenBits(Blockchain[len(Blockchain)-BLOCK_DIFF_CHECK].Time,
 			Blockchain[len(Blockchain)-1].Time, Blockchain[len(Blockchain)-1].Bits)
-		fmt.Println("Current bits value is changed to " + fmt.Sprint(bits))
+		log.Println("Current bits value is changed to " + fmt.Sprintf("%x", bits))
 	} else if len(Blockchain) != 0 {
 		bits = Blockchain[len(Blockchain)-1].Bits
 	} else {

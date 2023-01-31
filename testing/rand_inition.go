@@ -106,7 +106,7 @@ func createTxRandom() {
 		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[accInd].KeyPairList))
 		accAddr := hashing.SHA1(command_executor.Network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey)
 		isAddrInMempool := blockchain.IsAddressInMempool(accAddr)
-
+		println(accInd)
 		account.CurrAccount = command_executor.Network_accounts[accInd]
 		account.GetBalance()
 

@@ -127,6 +127,7 @@ func bcPrinter() {
 				log.Println("Blockchain from", commandValues[0], "to", commandValues[1])
 				for i := commandValues[0]; i < commandValues[1]; i++ {
 					blockchain.PrintBlockTitle(blockchain.Blockchain[i], int(i))
+					println()
 				}
 			}
 		} else {
@@ -217,7 +218,7 @@ func helpPrinter() {
 	println("showbcblocktx [block_id] [block_tx_id] - show specific transaction from a defined block")
 	println("showaccaddr [acc_id] - show addresses and balances of a specific account")
 	println("showutxo - show unspent outputs (address and sum)")
-	println("maketx - create ne transaction and send to mempool")
+	println("maketx - create new transaction and send to mempool")
 	println("showminingstats - show statistics of current mining process")
 }
 
@@ -228,6 +229,7 @@ func makeTransaction() {
 	println("Type in account id")
 	for true {
 		text, _ = reader.ReadString('\n')
+		text = strings.Trim(text, getLineSeparator())
 		if text == "stopcreation" {
 			return
 		}
@@ -247,6 +249,7 @@ func makeTransaction() {
 	println("Type in address and sum to be sent separated by a space. Or continue by typing next.")
 	for true {
 		text, _ = reader.ReadString('\n')
+		text = strings.Trim(text, getLineSeparator())
 		inputArr := strings.Split(text, " ")
 		if text == "next" {
 			break
@@ -263,9 +266,11 @@ func makeTransaction() {
 		}
 	}
 
+	println("Type in tx fee per byte.")
 	var fee int
 	for true {
 		text, _ = reader.ReadString('\n')
+		text = strings.Trim(text, getLineSeparator())
 		if text == "stopcreation" {
 			return
 		}
@@ -279,9 +284,11 @@ func makeTransaction() {
 		}
 	}
 
+	println("Type in locktime.")
 	var locktime uint64
 	for true {
 		text, _ = reader.ReadString('\n')
+		text = strings.Trim(text, getLineSeparator())
 		if text == "stopcreation" {
 			return
 		}
@@ -296,7 +303,8 @@ func makeTransaction() {
 	}
 
 	tx, mes := transaction.CreateTransaction(fmt.Sprint(accId), outAddr, outSum, fee, uint(locktime))
-	if mes != "" {
+	if mes == "" {
+		transaction.PrintTransaction(tx)
 		if blockchain.AddTxToMempool(tx) {
 			log.Println("Created transaction is sent to the mempool")
 		} else {
@@ -310,8 +318,8 @@ func makeTransaction() {
 func miningStatsPrinter() {
 	command_executor.ShowMiningStats = !command_executor.ShowMiningStats
 	if command_executor.ShowMiningStats {
-		log.Println("Mining statistics is shown")
+		log.Println("Mining statistics is enabled")
 	} else {
-		log.Println("Mining statistics is hidden")
+		log.Println("Mining statistics is disabled")
 	}
 }
