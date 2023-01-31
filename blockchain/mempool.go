@@ -85,6 +85,7 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 
 		if !transaction.VerifyTransaction(Mempool[MempoolInd]) {
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
+			log.Println("Deleted wrong transaction from mempool.")
 		} else if Mempool[MempoolInd].Locktime < uint(len(Mempool)) {
 			txForBlock = append(txForBlock, Mempool[MempoolInd])
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
@@ -113,6 +114,7 @@ func PrintMempool() {
 	}
 	log.Println(mempoolMes)
 	for i := 0; i < len(Mempool); i++ {
-		log.Printf("[%d]. Fee: %d, coins: %d\n", i, transaction.GetTxFee(Mempool[i]), transaction.GetOutputSum(Mempool[i].Outputs))
+		log.Printf("[%d]. Fee: %d, coins: %d, locktime: %d\n", i, transaction.GetTxFee(Mempool[i]),
+			transaction.GetOutputSum(Mempool[i].Outputs), Mempool[i].Locktime)
 	}
 }

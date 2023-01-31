@@ -4,7 +4,9 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
 	"fmt"
+	"log"
 	"math/big"
+	"runtime"
 )
 
 var allowParallelMining bool
@@ -20,12 +22,11 @@ type ParMineData struct {
 
 func mineParTask(data ParMineData, ch chan ParMineData) {
 	target := BitsToTarget(data.bits)
-	//var nonce uint64 = data.start
-
 	var step uint64 = 1
+	var start uint64 = (uint64(data.thrId) + data.thrCount*(step-1)) * data.iterPerStep
+	var end uint64 = (uint64(data.thrId+1) + data.thrCount*(step-1)) * data.iterPerStep
+
 	for ; allowParallelMining; step++ {
-		start := (uint64(data.thrId) + data.thrCount*(step-1)) * data.iterPerStep
-		end := (uint64(data.thrId+1) + data.thrCount*(step-1)) * data.iterPerStep
 		var nonce uint64 = start
 
 		for ; nonce < end; nonce++ {
@@ -44,13 +45,29 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 			}
 			command_executor.PauseCommand()
 		}
+
+		start = (uint64(data.thrId) + data.thrCount*(step-1)) * data.iterPerStep
+		end = (uint64(data.thrId+1) + data.thrCount*(step-1)) * data.iterPerStep
+		if command_executor.ShowMiningStats {
+			fmt.Printf("Mining stats. Thread [%d] is done. Now mining in range [%d - %d]\n", data.thrCount, start, end)
+		}
 	}
 }
 
 func MineThreads(block Block, threadsCount uint64) uint64 {
-	fmt.Println("Mining started")
+	log.Println("Mining started")
 	allowParallelMining = true
-	thrcount := threadsCount
+	var thrcount uint64
+	if threadsCount+4 > uint64(runtime.NumCPU()) && uint64(runtime.NumCPU())-4 >= 1 {
+		thrcount = uint64(runtime.NumCPU()) - 4
+		log.Println("Threads for mining are limited to " + fmt.Sprint(thrcount))
+	} else if uint64(runtime.NumCPU())-4 < 1 {
+		thrcount = 1
+		log.Println("Threads for mining are limited to 1")
+	} else {
+		thrcount = threadsCount
+	}
+
 	resChan := make(chan ParMineData, thrcount)
 	var foundNounce uint64
 
@@ -73,6 +90,6 @@ func MineThreads(block Block, threadsCount uint64) uint64 {
 			foundNounce = data.nonce
 		}
 	}
-	fmt.Println("Mining done")
+	log.Println("Mining done")
 	return foundNounce
 }

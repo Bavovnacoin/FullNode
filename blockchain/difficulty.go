@@ -9,19 +9,21 @@ import (
 	"time"
 )
 
-var DIFF_CHECK_HOURS int = 24
+var BLOCK_DIFF_CHECK int = 3
 var BLOCK_CREATION_SEC int = 60
 var STARTBITS uint64 = 0xffff12
 
 func GetCurrBitsValue() uint64 {
 	var bits uint64
-	diffChangeBlocksCount := (DIFF_CHECK_HOURS * 60 * 60) / BLOCK_CREATION_SEC
 
-	if len(Blockchain)%diffChangeBlocksCount == 0 && len(Blockchain) != 0 {
-		bits = GenBits(Blockchain[len(Blockchain)-diffChangeBlocksCount].Time,
+	if len(Blockchain)%BLOCK_DIFF_CHECK == 0 && len(Blockchain) != 0 {
+		bits = GenBits(Blockchain[len(Blockchain)-BLOCK_DIFF_CHECK].Time,
 			Blockchain[len(Blockchain)-1].Time, Blockchain[len(Blockchain)-1].Bits)
-	} else {
+		fmt.Println("Current bits value is changed to " + fmt.Sprint(bits))
+	} else if len(Blockchain) != 0 {
 		bits = Blockchain[len(Blockchain)-1].Bits
+	} else {
+		bits = STARTBITS
 	}
 	return bits
 }
@@ -29,7 +31,7 @@ func GetCurrBitsValue() uint64 {
 // Difficulty changes every 24h
 func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint64 {
 	spentTimeSec := secBlockTime.Unix() - frstBlockTime.Unix()
-	expextTimeSec := DIFF_CHECK_HOURS * 60 * BLOCK_CREATION_SEC // expected time for one day change
+	expextTimeSec := BLOCK_DIFF_CHECK * BLOCK_CREATION_SEC
 	coef := float64(expextTimeSec) / float64(spentTimeSec)
 	target := BitsToTarget(bits)
 	target = target.Mul(target, big.NewInt(int64(coef*100)))

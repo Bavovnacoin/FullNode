@@ -53,14 +53,16 @@ func CommandHandler() {
 			ifPauseFunction(mempoolTxPrinter, "showmemptx")
 		} else if len(text) >= 6 && text[:6] == "showbc" {
 			ifPauseFunction(bcPrinter, "showbc")
-		} else if len(text) >= 13 && text[:13] == "showbcblocktx" {
-			ifPauseFunction(blockTxPrinter, "showbcblocktx")
+		} else if len(text) >= 11 && text[:11] == "showblocktx" {
+			ifPauseFunction(blockTxPrinter, "showblocktx")
 		} else if len(text) >= 11 && text[:11] == "showaccaddr" {
 			ifPauseFunction(accAddressesPrinter, "showaccaddr")
 		} else if text == "showutxo" {
 			ifPauseFunction(utxoPrinter, "showutxo")
 		} else if text == "maketx" {
 			ifPauseFunction(makeTransaction, "showutxo")
+		} else if text == "showminingstats" {
+			miningStatsPrinter()
 		} else if text != "" {
 			fmt.Printf("Command '%s' is unknown\n", text)
 		}
@@ -113,7 +115,7 @@ func bcPrinter() {
 		if err == nil {
 			if len(commandValues) == 2 {
 				if commandValues[0] < 0 || commandValues[1] < 0 ||
-					commandValues[0] > commandValues[1] || commandValues[0] < int64(len(blockchain.Blockchain)) {
+					commandValues[0] > commandValues[1] || commandValues[0] > int64(len(blockchain.Blockchain)) {
 					log.Println("Error. You typped in wrong index.")
 					return
 				}
@@ -149,7 +151,7 @@ func blockTxPrinter() {
 			if len(commandValues) == 2 {
 				if commandValues[0] < 0 || commandValues[1] < 0 ||
 					commandValues[0] > int64(len(blockchain.Blockchain)) ||
-					commandValues[1] < int64(blockchain.Blockchain[commandValues[0]].TransactionCount) {
+					commandValues[1] >= int64(blockchain.Blockchain[commandValues[0]].TransactionCount) {
 					log.Println("Error. You typped in wrong index.")
 					return
 				}
@@ -175,17 +177,21 @@ func accAddressesPrinter() {
 	for i := 1; i < len(command); i++ {
 		ind, err := strconv.ParseInt(command[i], 10, 64)
 		if err == nil {
-			if ind >= int64(len(blockchain.Mempool)) || ind < 0 {
+			if ind >= int64(len(command_executor.Network_accounts)) || ind < 0 {
 				log.Println("Error. You typed wrong tx index. Must be between 0 and", len(command_executor.Network_accounts)-1)
 				break
 			}
 
 			log.Println("Address of account index", ind)
 			acc := command_executor.Network_accounts[ind]
+			var sum uint64
 			for i := 0; i < len(acc.KeyPairList); i++ {
 				accAddress := hashing.SHA1(acc.KeyPairList[i].PublKey)
-				fmt.Printf("[%d]. %s, balance: %d", i, accAddress, account.GetBalByAddress(accAddress))
+				bal := account.GetBalByAddress(accAddress)
+				sum += bal
+				fmt.Printf("[%d]. %s, balance: %d\n", i, accAddress, bal)
 			}
+			fmt.Printf("Total sum: %d\n", sum)
 			break
 		} else {
 			log.Println("Error. Expected numerical type as a parameter")
@@ -211,6 +217,8 @@ func helpPrinter() {
 	println("showbcblocktx [block_id] [block_tx_id] - show specific transaction from a defined block")
 	println("showaccaddr [acc_id] - show addresses and balances of a specific account")
 	println("showutxo - show unspent outputs (address and sum)")
+	println("maketx - create ne transaction and send to mempool")
+	println("showminingstats - show statistics of current mining process")
 }
 
 func makeTransaction() {
@@ -227,9 +235,10 @@ func makeTransaction() {
 		accIdInp, err := strconv.ParseUint(text, 10, 64)
 		if err == nil {
 			accId = accIdInp
+			account.CurrAccount = command_executor.Network_accounts[accId]
 			break
 		} else {
-			println("Error. Expecten numerical value.")
+			println("Error. Expected numerical value.")
 		}
 	}
 
@@ -266,7 +275,7 @@ func makeTransaction() {
 			fee = int(feeInp)
 			break
 		} else {
-			println("Error. Expecten numerical value.")
+			println("Error. Expected numerical value.")
 		}
 	}
 
@@ -282,7 +291,7 @@ func makeTransaction() {
 			locktime = locktimeInp
 			break
 		} else {
-			println("Error. Expecten numerical value.")
+			println("Error. Expected numerical value.")
 		}
 	}
 
@@ -295,5 +304,14 @@ func makeTransaction() {
 		}
 	} else {
 		println(mes)
+	}
+}
+
+func miningStatsPrinter() {
+	command_executor.ShowMiningStats = !command_executor.ShowMiningStats
+	if command_executor.ShowMiningStats {
+		log.Println("Mining statistics is shown")
+	} else {
+		log.Println("Mining statistics is hidden")
 	}
 }

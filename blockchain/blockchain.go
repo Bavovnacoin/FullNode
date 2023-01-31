@@ -5,6 +5,7 @@ import (
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
 	"fmt"
+	"log"
 	"math"
 	"math/big"
 	"runtime"
@@ -113,12 +114,10 @@ func CreateBlock(rewardAdr string, miningFlag int) Block {
 
 	if len(Blockchain) > 0 {
 		newBlock.HashPrevBlock = hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
-		newBlock.Time = time.Now()
 	} else {
-		newBlock.Time = time.Date(2022, 12, 31, 11, 54, 22, 0, time.Local)
 		newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 	}
-
+	newBlock.Time = time.Now()
 	var coinbaseTx transaction.Transaction
 	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{HashAdr: rewardAdr, Sum: GetCoinsForEmition()})
 
@@ -136,6 +135,7 @@ func CreateBlock(rewardAdr string, miningFlag int) Block {
 
 	newBlock.TransactionCount = uint(len(newBlock.Transactions))
 	newBlock.MerkleRoot = GenMerkleRoot(newBlock.Transactions)
+	log.Println("New block transaction count: " + fmt.Sprint(newBlock.TransactionCount))
 
 	newBlock.Blocksize = uint(len(BlockToString(newBlock)))
 
@@ -152,7 +152,12 @@ func CreateBlock(rewardAdr string, miningFlag int) Block {
 }
 
 func ValidateBlock(block Block, id int) bool {
-	lastBlockHash := hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
+	var lastBlockHash string
+	if len(Blockchain) != 0 {
+		lastBlockHash = hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
+	} else {
+		lastBlockHash = "0000000000000000000000000000000000000000"
+	}
 	merkleRoot := GenMerkleRoot(block.Transactions)
 
 	// Check bits value
@@ -182,17 +187,25 @@ func ValidateBlock(block Block, id int) bool {
 		return false
 	}
 
+	// Check transactions
+	for i := 0; i < int(block.TransactionCount); i++ {
+		if !transaction.VerifyTransaction(block.Transactions[i]) {
+			return false
+		}
+	}
 	return true
 }
 
 func InitBlockchain() {
-	genesisBlock := CreateBlock("e930fca003a4a70222d916a74cc851c3b3a9b050", -1)
+	log.Println("Creating initial block")
+	genesisBlock := CreateBlock("e930fca003a4a70222d916a74cc851c3b3a9b050", 1)
 	genesisBlock.Bits = STARTBITS
-	genesisBlock.Nonce = 26719
 
-	Blockchain = append(Blockchain, genesisBlock)
-	utxo.UtxoList = append(utxo.UtxoList, utxo.UTXO{Address: "e930fca003a4a70222d916a74cc851c3b3a9b050",
-		Sum: genesisBlock.Transactions[0].Outputs[0].Sum})
+	if AddBlockToBlockchain(genesisBlock) {
+		log.Println("Block is added to blockchain. Current length: " + fmt.Sprint(len(Blockchain)) + "\n")
+	} else {
+		log.Println("Block is not added\n")
+	}
 }
 
 func PrintBlockTitle(block Block, id int) {

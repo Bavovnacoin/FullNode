@@ -6,6 +6,7 @@ import (
 )
 
 var Node_working bool = true
+var ShowMiningStats = false
 var Pause bool = false
 var Network_accounts []account.Account
 
