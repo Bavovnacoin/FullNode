@@ -32,7 +32,8 @@ func GetCurrBitsValue() uint64 {
 func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint64 {
 	spentTimeSec := secBlockTime.Unix() - frstBlockTime.Unix()
 	expextTimeSec := BLOCK_DIFF_CHECK * BLOCK_CREATION_SEC
-	coef := float64(expextTimeSec) / float64(spentTimeSec)
+	coef := float64(spentTimeSec) / float64(expextTimeSec)
+
 	target := BitsToTarget(bits)
 	target = target.Mul(target, big.NewInt(int64(coef*100)))
 	target = target.Div(target, big.NewInt(100))
@@ -42,6 +43,7 @@ func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint6
 		targetStr = "0" + targetStr
 	}
 	targetNum, _ := new(big.Int).SetString(targetStr[4:6]+targetStr[:4]+strings.Repeat("0", len(targetStr)-6), 16)
+
 	return TargetToBits(targetNum)
 }
 

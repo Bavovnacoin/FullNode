@@ -10,7 +10,6 @@ var Mempool []transaction.Transaction
 
 func ValidateTransaction(tx transaction.Transaction) bool {
 	if !transaction.VerifyTransaction(tx) || tx.Locktime < uint(len(Blockchain)) && tx.Locktime != 0 {
-		println("a")
 		return false
 	}
 
@@ -19,7 +18,6 @@ func ValidateTransaction(tx transaction.Transaction) bool {
 			for k := 0; k < len(Mempool[i].Inputs); k++ {
 				if Mempool[i].Inputs[k].HashAdr == tx.Inputs[j].HashAdr &&
 					Mempool[i].Inputs[k].OutInd == tx.Inputs[j].OutInd {
-					println("b")
 					return false
 				}
 			}
@@ -33,7 +31,6 @@ func ValidateTransaction(tx transaction.Transaction) bool {
 		}
 
 		if !isExist {
-			println("c")
 			return false
 		}
 	}
