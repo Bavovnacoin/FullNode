@@ -29,7 +29,6 @@ func GetCurrBitsValue() uint64 {
 	return bits
 }
 
-// Difficulty changes every 24h
 func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint64 {
 	spentTimeSec := secBlockTime.Unix() - frstBlockTime.Unix()
 	expextTimeSec := BLOCK_DIFF_CHECK * BLOCK_CREATION_SEC
