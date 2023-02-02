@@ -2,6 +2,7 @@ package node_controller
 
 import (
 	"bavovnacoin/account"
+	"bavovnacoin/address"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
@@ -187,10 +188,12 @@ func accAddressesPrinter() {
 			acc := command_executor.Network_accounts[ind]
 			var sum uint64
 			for i := 0; i < len(acc.KeyPairList); i++ {
-				accAddress := hashing.SHA1(acc.KeyPairList[i].PublKey)
+				var accAddress address.Address
+				accAddrStr := hashing.SHA1(acc.KeyPairList[i].PublKey)
+				accAddress.SetFromHexString(accAddrStr)
 				bal := account.GetBalByAddress(accAddress)
 				sum += bal
-				fmt.Printf("[%d]. %s, balance: %d\n", i, accAddress, bal)
+				fmt.Printf("[%d]. %s, balance: %d\n", i, accAddrStr, bal)
 			}
 			fmt.Printf("Total sum: %d\n", sum)
 			break
@@ -203,7 +206,7 @@ func accAddressesPrinter() {
 func utxoPrinter() {
 	log.Println("Utxo list:")
 	for i := 0; i < len(utxo.UtxoList); i++ {
-		fmt.Printf("[%d]. %s, sum: %d\n", i, utxo.UtxoList[i].Address, utxo.UtxoList[i].Sum)
+		fmt.Printf("[%d]. %s, sum: %d\n", i, utxo.UtxoList[i].Address.ToHexString(), utxo.UtxoList[i].Sum)
 	}
 }
 
@@ -244,9 +247,10 @@ func makeTransaction() {
 		}
 	}
 
-	var outAddr []string
+	var outAddr []address.Address
 	var outSum []uint64
 	println("Type in address and sum to be sent separated by a space. Or continue by typing next.")
+
 	for true {
 		text, _ = reader.ReadString('\n')
 		text = strings.Trim(text, getLineSeparator())
@@ -257,7 +261,8 @@ func makeTransaction() {
 		if text == "stopcreation" {
 			return
 		}
-		outAddr = append(outAddr, inputArr[0])
+		var inpAddr address.Address
+		inpAddr.SetFromHexString(inputArr[0])
 		for i := 1; i < len(inputArr); i++ {
 			sum, err := strconv.ParseUint(inputArr[i], 10, 64)
 			if err == nil {

@@ -18,7 +18,7 @@ func hexToBig(hex string) (*big.Int, bool) {
 }
 
 func GenPrivKey() string {
-	s := rand.NewSource(time.Now().UnixNano()) // Use entropy here
+	s := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(s)
 	rrr := big.NewInt(1).Rand(r, n)
 	return bigToHex(rrr)

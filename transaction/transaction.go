@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"bavovnacoin/account"
+	"bavovnacoin/address"
 	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
@@ -10,13 +11,13 @@ import (
 )
 
 type Input struct {
-	HashAdr   string // Hash to hide address in DB
+	Address   address.Address
 	ScriptSig string
 	OutInd    int
 }
 
 type Output struct {
-	HashAdr string // Hash value of output address. Receiver makes hash of own address and looks for his belonging coins in UTXO.
+	Address address.Address
 	Sum     uint64
 }
 
@@ -28,7 +29,7 @@ type Transaction struct {
 }
 
 type UtxoForInput struct {
-	Address string
+	Address address.Address
 	Index   int
 }
 
@@ -38,11 +39,11 @@ func GetCatTxFields(tx Transaction) string {
 	message += fmt.Sprint(tx.Version)
 	message += fmt.Sprint(tx.Locktime)
 	for i := 0; i < len(tx.Inputs); i++ {
-		message += tx.Inputs[i].HashAdr
+		message += tx.Inputs[i].Address.ToHexString()
 		message += fmt.Sprint(tx.Inputs[i].OutInd)
 	}
 	for i := 0; i < len(tx.Outputs); i++ {
-		message += tx.Outputs[i].HashAdr
+		message += tx.Outputs[i].Address.ToHexString()
 		message += fmt.Sprint(tx.Outputs[i].Sum)
 	}
 	return message
@@ -64,21 +65,21 @@ func ComputeTxSize(tx Transaction) int {
 	for i := 0; i < len(tx.Inputs); i++ {
 		size += len(tx.Inputs[i].ScriptSig)
 		size += 4 // Input out index size
-		size += len(tx.Inputs[i].HashAdr)
+		size += 20
 		size += len(tx.Inputs[i].ScriptSig)
 	}
 
 	for i := 0; i < len(tx.Outputs); i++ {
-		size += 8 // Output value
-		size += len(tx.Outputs[i].HashAdr)
+		size += 8  // Output value
+		size += 20 //len(tx.Outputs[i].Address)
 	}
 	return size
 }
 
-func getNextInpIndex(addressInp string, utxoInputs []utxo.UTXO, utxoInd int) int {
+func getNextInpIndex(addressInp address.Address, utxoInputs []utxo.UTXO, utxoInd int) int {
 	ind := -1
 	for i := 0; i <= utxoInd; i++ {
-		if utxoInputs[i].Address == addressInp {
+		if utxoInputs[i].Address.IsEqual(addressInp) {
 			ind++
 		}
 	}
@@ -99,7 +100,7 @@ func GetTransInputs(sum uint64, accUtxo []utxo.UTXO) ([]UtxoForInput, []utxo.UTX
 		accUtxo = account.GetAccUtxo()
 	}
 
-	accUtxo = append(accUtxo, utxo.UTXO{Address: "", Sum: 0}) // Stub value for searching
+	accUtxo = append(accUtxo, utxo.UTXO{}) // Stub value for searching
 	var utxoInput []UtxoForInput
 	tempSum := uint64(0)
 
@@ -117,14 +118,16 @@ func GetTransInputs(sum uint64, accUtxo []utxo.UTXO) ([]UtxoForInput, []utxo.UTX
 				continue
 			}
 		}
-		utxoInput = append(utxoInput, UtxoForInput{accUtxo[i-1].Address, getNextInpIndex(accUtxo[i-1].Address, accUtxo, i-1)})
+		utxoInput = append(utxoInput, UtxoForInput{accUtxo[i-1].Address,
+			getNextInpIndex(accUtxo[i-1].Address, accUtxo, i-1)})
 		tempSum += accUtxo[i-1].Sum
 	}
 	return nil, accUtxo, tempSum
 }
 
 // Creates transaction
-func CreateTransaction(passKey string, outAdr []string, outSumVals []uint64, feePerByte int, locktime uint) (Transaction, string) { // return Transaction
+func CreateTransaction(passKey string, outAdr []address.Address, outSumVals []uint64,
+	feePerByte int, locktime uint) (Transaction, string) {
 	var tx Transaction
 	tx.Locktime = locktime
 	txSize := 0
@@ -138,7 +141,7 @@ func CreateTransaction(passKey string, outAdr []string, outSumVals []uint64, fee
 	var output []Output
 	for i := 0; i < len(outAdr); i++ {
 		var outVal Output
-		outVal.HashAdr = outAdr[i]
+		outVal.Address = outAdr[i]
 		outVal.Sum = uint64(outSumVals[i])
 		output = append(output, outVal)
 	}
@@ -162,12 +165,14 @@ func CreateTransaction(passKey string, outAdr []string, outSumVals []uint64, fee
 		outTxSum = outSum
 		for i := 0; i < len(inputs); i++ {
 			var inpVal Input
-			inpVal.HashAdr = inputs[i].Address
+			inpVal.Address = inputs[i].Address
 			inpVal.OutInd = inputs[i].Index
 
 			// Get private and public key for scriptSig generation
 			for j := 0; j < len(kpAcc); j++ {
-				if hashing.SHA1(kpAcc[j].PublKey) == inputs[i].Address {
+				var newAddr address.Address
+				newAddr.SetFromHexString(hashing.SHA1(kpAcc[j].PublKey))
+				if newAddr.IsEqual(inputs[i].Address) {
 					kpForSign = append(kpForSign, ecdsa.KeyPair{PrivKey: kpAcc[j].PrivKey, PublKey: kpAcc[j].PublKey})
 				}
 			}
@@ -183,8 +188,8 @@ func CreateTransaction(passKey string, outAdr []string, outSumVals []uint64, fee
 	if outTxSum > genSum+uint64(txSize)*uint64(feePerByte) {
 		account.AddKeyPairToAccount(passKey) // generate new keypair for the change
 		kpLen := len(account.CurrAccount.KeyPairList)
-		tx.Outputs = append(tx.Outputs, Output{HashAdr: hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey),
-			Sum: uint64(outTxSum - (genSum + uint64(txSize)*uint64(feePerByte)))})
+		tx.Outputs = append(tx.Outputs, Output{Sum: uint64(outTxSum - (genSum + uint64(txSize)*uint64(feePerByte)))})
+		tx.Outputs[len(tx.Outputs)-1].Address.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey))
 	}
 	tx = genTxScriptSignatures(kpForSign, passKey, tx)
 	return tx, ""
@@ -193,7 +198,7 @@ func CreateTransaction(passKey string, outAdr []string, outSumVals []uint64, fee
 func GetInputSum(inp []Input) uint64 {
 	var sum uint64 = 0
 	for i := 0; i < len(inp); i++ {
-		sum += account.GetBalByKeyHash(inp[i].HashAdr, inp[i].OutInd)
+		sum += account.GetBalByIndAddr(inp[i].Address, inp[i].OutInd)
 	}
 	return sum
 }
@@ -221,16 +226,16 @@ func PrintTransaction(tx Transaction) {
 	println("Inputs:")
 	var inpSum uint64
 	for i := 0; i < len(tx.Inputs); i++ {
-		curVal := account.GetBalByKeyHash(tx.Inputs[i].HashAdr, tx.Inputs[i].OutInd)
+		curVal := account.GetBalByIndAddr(tx.Inputs[i].Address, tx.Inputs[i].OutInd)
 		inpSum += curVal
-		fmt.Printf("%d. HashAddress: %s (Bal: %d)\nOut index: %d\nScriptSig: %s\n", i, tx.Inputs[i].HashAdr, curVal,
+		fmt.Printf("%d. HashAddress: %s (Bal: %d)\nOut index: %d\nScriptSig: %s\n", i, tx.Inputs[i].Address.ToHexString(), curVal,
 			tx.Inputs[i].OutInd, tx.Inputs[i].ScriptSig)
 	}
 	println("\nOutputs:")
 	var outSum uint64
 	for i := 0; i < len(tx.Outputs); i++ {
 		outSum += tx.Outputs[i].Sum
-		fmt.Printf("%d. HashAddress: %s. Sum: %d\n", i, tx.Outputs[i].HashAdr, tx.Outputs[i].Sum)
+		fmt.Printf("%d. HashAddress: %s. Sum: %d\n", i, tx.Outputs[i].Address.ToHexString(), tx.Outputs[i].Sum)
 	}
 	print("(Fee: ")
 	println(inpSum-outSum, ")")
@@ -253,7 +258,7 @@ func VerifyTransaction(tx Transaction) bool {
 			if !ecdsa.Verify(pubKey, sign, hashMesOfTx) {
 				return false
 			}
-			curVal := account.GetBalByKeyHash(tx.Inputs[i].HashAdr, tx.Inputs[i].OutInd)
+			curVal := account.GetBalByIndAddr(tx.Inputs[i].Address, tx.Inputs[i].OutInd)
 			inpSum += curVal
 		}
 

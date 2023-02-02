@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"bavovnacoin/address"
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
@@ -50,12 +51,12 @@ func AddBlockToBlockchain(block Block) bool {
 			txInpList := block.Transactions[i].Inputs
 
 			for j := 0; j < len(txInpList); j++ {
-				utxo.DelFromUtxo(txInpList[j].HashAdr, txInpList[j].OutInd)
+				utxo.DelFromUtxo(txInpList[j].Address, txInpList[j].OutInd)
 			}
 
 			txOutList := block.Transactions[i].Outputs
 			for j := 0; j < len(txOutList); j++ {
-				utxo.AddToUtxo(txOutList[j].HashAdr, txOutList[j].Sum)
+				utxo.AddToUtxo(txOutList[j].Address, txOutList[j].Sum)
 			}
 		}
 		Blockchain = append(Blockchain, block)
@@ -109,7 +110,7 @@ func GenMerkleRoot(transactions []transaction.Transaction) string {
 	return currLayer[0]
 }
 
-func CreateBlock(rewardAdr string, miningFlag int) Block {
+func CreateBlock(rewardAdr address.Address, miningFlag int) Block {
 	var newBlock Block
 
 	if len(Blockchain) > 0 {
@@ -119,7 +120,7 @@ func CreateBlock(rewardAdr string, miningFlag int) Block {
 	}
 	newBlock.Time = time.Now()
 	var coinbaseTx transaction.Transaction
-	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{HashAdr: rewardAdr, Sum: GetCoinsForEmition()})
+	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{Address: rewardAdr, Sum: GetCoinsForEmition()})
 
 	var txArr []transaction.Transaction = GetTransactionsFromMempool(transaction.ComputeTxSize(coinbaseTx))
 
@@ -198,7 +199,10 @@ func ValidateBlock(block Block, id int) bool {
 
 func InitBlockchain() {
 	log.Println("Creating initial block")
-	genesisBlock := CreateBlock("e930fca003a4a70222d916a74cc851c3b3a9b050", 1)
+
+	var rewardAdr address.Address
+	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050")
+	genesisBlock := CreateBlock(rewardAdr, 1)
 	genesisBlock.Bits = STARTBITS
 
 	if AddBlockToBlockchain(genesisBlock) {

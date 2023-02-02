@@ -10,6 +10,7 @@ package testing
 
 import (
 	"bavovnacoin/account"
+	"bavovnacoin/address"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
@@ -40,7 +41,7 @@ func createAccoundRandom() {
 	command_executor.PauseCommand()
 }
 
-func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
+func getTxRandOuts(currInd int, balance uint64) ([]address.Address, []uint64) {
 	source := rand.NewSource(time.Now().Unix())
 	rand := rand.New(source)
 
@@ -50,13 +51,15 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 	} else {
 		accNum = rand.Intn(len(command_executor.Network_accounts)-1) + 1
 	}
-	var outputAddress []string
+	var outputAddress []address.Address
 	var outputSum []uint64
 
 	for len(outputAddress) < accNum {
 		netwAccInd := rand.Intn(len(command_executor.Network_accounts))
 		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[netwAccInd].KeyPairList))
-		outAddress := hashing.SHA1(command_executor.Network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey)
+
+		var outAddress address.Address
+		outAddress.SetFromHexString(hashing.SHA1(command_executor.Network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey))
 
 		if currInd == netwAccInd {
 			continue
@@ -64,12 +67,12 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 
 		// Check if the same address is already in output of the same tx
 		for i := 0; i < len(outputAddress); i++ {
-			if outAddress == outputAddress[i] {
+			if outAddress.IsEqual(outputAddress[i]) {
 				continue
 			}
 		}
 		var output transaction.Output
-		output.HashAdr = outAddress
+		output.Address = outAddress
 
 		// Allow spend all money on one tx
 		isAllBalanceOnTx := rand.Intn(4)
@@ -82,7 +85,7 @@ func getTxRandOuts(currInd int, balance uint64) ([]string, []uint64) {
 		} else {
 			output.Sum = uint64(float64(balance) / float64(accNum+2))
 		}
-		outputAddress = append(outputAddress, output.HashAdr)
+		outputAddress = append(outputAddress, output.Address)
 		outputSum = append(outputSum, output.Sum)
 	}
 	return outputAddress, outputSum
@@ -104,7 +107,9 @@ func createTxRandom() {
 
 		accInd := rand.Int() % len(command_executor.Network_accounts)
 		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[accInd].KeyPairList))
-		accAddr := hashing.SHA1(command_executor.Network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey)
+
+		var accAddr address.Address
+		accAddr.SetFromHexString(hashing.SHA1(command_executor.Network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey))
 		isAddrInMempool := blockchain.IsAddressInMempool(accAddr)
 
 		account.CurrAccount = command_executor.Network_accounts[accInd]
@@ -162,7 +167,9 @@ func addBlock() {
 }
 
 func createBlockLog() {
-	createdBlock = blockchain.CreateBlock("e930fca003a4a70222d916a74cc851c3b3a9b050", 1)
+	var rewardAdr address.Address
+	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050")
+	createdBlock = blockchain.CreateBlock(rewardAdr, 1)
 	command_executor.PauseCommand()
 }
 

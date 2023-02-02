@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"bavovnacoin/address"
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
 	"log"
@@ -16,7 +17,7 @@ func ValidateTransaction(tx transaction.Transaction) bool {
 	for j := 0; j < len(tx.Inputs); j++ {
 		for i := 0; i < len(Mempool); i++ { // Check same input in mempool (TODO: find more effective way)
 			for k := 0; k < len(Mempool[i].Inputs); k++ {
-				if Mempool[i].Inputs[k].HashAdr == tx.Inputs[j].HashAdr &&
+				if Mempool[i].Inputs[k].Address.IsEqual(tx.Inputs[j].Address) &&
 					Mempool[i].Inputs[k].OutInd == tx.Inputs[j].OutInd {
 					return false
 				}
@@ -25,7 +26,7 @@ func ValidateTransaction(tx transaction.Transaction) bool {
 
 		isExist := false
 		for i := 0; i < len(utxo.UtxoList); i++ {
-			if utxo.UtxoList[i].Address == tx.Inputs[j].HashAdr {
+			if utxo.UtxoList[i].Address.IsEqual(tx.Inputs[j].Address) {
 				isExist = true
 			}
 		}
@@ -96,10 +97,10 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 	return txForBlock
 }
 
-func IsAddressInMempool(address string) bool {
+func IsAddressInMempool(address address.Address) bool {
 	for i := 0; i < len(Mempool); i++ {
 		for j := 0; j < len(Mempool[i].Inputs); j++ {
-			if Mempool[i].Inputs[j].HashAdr == address {
+			if Mempool[i].Inputs[j].Address.IsEqual(address) {
 				return true
 			}
 		}
