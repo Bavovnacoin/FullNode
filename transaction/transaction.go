@@ -11,7 +11,7 @@ import (
 )
 
 type Input struct {
-	Address   byteArr.ByteArr
+	TxHash    byteArr.ByteArr
 	ScriptSig string
 	OutInd    int
 }
@@ -29,8 +29,8 @@ type Transaction struct {
 }
 
 type UtxoForInput struct {
-	Address byteArr.ByteArr
-	Index   int
+	TxHash byteArr.ByteArr
+	OutInd int
 }
 
 // Generating message for signing (SCRIPTHASH_ALL)
@@ -39,7 +39,7 @@ func GetCatTxFields(tx Transaction) string {
 	message += fmt.Sprint(tx.Version)
 	message += fmt.Sprint(tx.Locktime)
 	for i := 0; i < len(tx.Inputs); i++ {
-		message += tx.Inputs[i].Address.ToHexString()
+		message += tx.Inputs[i].TxHash.ToHexString()
 		message += fmt.Sprint(tx.Inputs[i].OutInd)
 	}
 	for i := 0; i < len(tx.Outputs); i++ {
@@ -76,10 +76,10 @@ func ComputeTxSize(tx Transaction) int {
 	return size
 }
 
-func getNextInpIndex(addressInp byteArr.ByteArr, utxoInputs []utxo.UTXO, utxoInd int) int {
+func getNextInpIndex(addressInp byteArr.ByteArr, utxoInputs []utxo.TXO, utxoInd int) int {
 	ind := -1
 	for i := 0; i <= utxoInd; i++ {
-		if utxoInputs[i].Address.IsEqual(addressInp) {
+		if utxoInputs[i].OutAddress.IsEqual(addressInp) {
 			ind++
 		}
 	}
@@ -95,31 +95,34 @@ that is higher or equal to the required sum (minus sum that we have already foun
 If a right neighbor is less than needed sum, we keep iterating, because there is a chance
 of finding better variant.
 */
-func GetTransInputs(sum uint64, accUtxo []utxo.UTXO) ([]UtxoForInput, []utxo.UTXO, uint64) {
+
+// TODO: change function according to new utxo structure
+func GetTransInputs(sum uint64, accUtxo []utxo.TXO) ([]UtxoForInput, []utxo.TXO, uint64) {
 	if accUtxo == nil {
 		accUtxo = account.GetAccUtxo()
 	}
 
-	accUtxo = append(accUtxo, utxo.UTXO{}) // Stub value for searching
+	accUtxo = append(accUtxo, utxo.TXO{}) // Stub value for searching
 	var utxoInput []UtxoForInput
 	tempSum := uint64(0)
 
+	//getNextInpIndex(accUtxo[0].OutAddress, accUtxo, 0)
 	if len(accUtxo) == 1 && accUtxo[0].Sum >= sum {
-		return append(utxoInput, UtxoForInput{accUtxo[0].Address, getNextInpIndex(accUtxo[0].Address, accUtxo, 0)}),
+		return append(utxoInput, UtxoForInput{accUtxo[0].OutTxHash, int(accUtxo[0].TxOutInd)}),
 			accUtxo, accUtxo[0].Sum
 	}
 
 	for i := 1; i < len(accUtxo); i++ {
 		if accUtxo[i-1].Sum >= sum-tempSum {
 			if sum-tempSum > accUtxo[i].Sum {
-				utxoInput = append(utxoInput, UtxoForInput{Address: accUtxo[i-1].Address, Index: getNextInpIndex(accUtxo[i-1].Address, accUtxo, i-1)})
+				utxoInput = append(utxoInput, UtxoForInput{TxHash: accUtxo[i-1].OutTxHash, OutInd: int(accUtxo[i-1].TxOutInd)})
 				return utxoInput, accUtxo, accUtxo[i-1].Sum + tempSum
 			} else {
 				continue
 			}
 		}
-		utxoInput = append(utxoInput, UtxoForInput{accUtxo[i-1].Address,
-			getNextInpIndex(accUtxo[i-1].Address, accUtxo, i-1)})
+		utxoInput = append(utxoInput, UtxoForInput{accUtxo[i-1].OutTxHash,
+			int(accUtxo[i-1].TxOutInd)})
 		tempSum += accUtxo[i-1].Sum
 	}
 	return nil, accUtxo, tempSum
@@ -165,14 +168,14 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 		outTxSum = outSum
 		for i := 0; i < len(inputs); i++ {
 			var inpVal Input
-			inpVal.Address = inputs[i].Address
-			inpVal.OutInd = inputs[i].Index
+			inpVal.TxHash = inputs[i].TxHash
+			inpVal.OutInd = inputs[i].OutInd
 
 			// Get private and public key for scriptSig generation
 			for j := 0; j < len(kpAcc); j++ {
 				var newAddr byteArr.ByteArr
 				newAddr.SetFromHexString(hashing.SHA1(kpAcc[j].PublKey), 20)
-				if newAddr.IsEqual(inputs[i].Address) {
+				if newAddr.IsEqual(inputs[i].TxHash) {
 					kpForSign = append(kpForSign, ecdsa.KeyPair{PrivKey: kpAcc[j].PrivKey, PublKey: kpAcc[j].PublKey})
 				}
 			}
@@ -198,7 +201,7 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 func GetInputSum(inp []Input) uint64 {
 	var sum uint64 = 0
 	for i := 0; i < len(inp); i++ {
-		sum += account.GetBalByIndAddr(inp[i].Address, inp[i].OutInd)
+		sum += account.GetBalHashOutInd(inp[i].TxHash, inp[i].OutInd)
 	}
 	return sum
 }
@@ -226,9 +229,9 @@ func PrintTransaction(tx Transaction) {
 	println("Inputs:")
 	var inpSum uint64
 	for i := 0; i < len(tx.Inputs); i++ {
-		curVal := account.GetBalByIndAddr(tx.Inputs[i].Address, tx.Inputs[i].OutInd)
+		curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 		inpSum += curVal
-		fmt.Printf("%d. HashAddress: %s (Bal: %d)\nOut index: %d\nScriptSig: %s\n", i, tx.Inputs[i].Address.ToHexString(), curVal,
+		fmt.Printf("%d. HashAddress: %s (Bal: %d)\nOut index: %d\nScriptSig: %s\n", i, tx.Inputs[i].TxHash.ToHexString(), curVal,
 			tx.Inputs[i].OutInd, tx.Inputs[i].ScriptSig)
 	}
 	println("\nOutputs:")
@@ -245,7 +248,9 @@ func PrintTransaction(tx Transaction) {
 func VerifyTransaction(tx Transaction) bool {
 	if tx.Version == 0 {
 		var inpSum uint64
+		var outSum uint64
 		hashMesOfTx := hashing.SHA1(GetCatTxFields(tx))
+		var txoArr []utxo.TXO
 
 		// Checking signatures and unique inputs
 		for i := 0; i < len(tx.Inputs); i++ {
@@ -258,13 +263,15 @@ func VerifyTransaction(tx Transaction) bool {
 			if !ecdsa.Verify(pubKey, sign, hashMesOfTx) {
 				return false
 			}
-			curVal := account.GetBalByIndAddr(tx.Inputs[i].Address, tx.Inputs[i].OutInd)
+			curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 			inpSum += curVal
-		}
 
-		var outSum uint64
-		for i := 0; i < len(tx.Outputs); i++ {
-			inpSum += tx.Outputs[i].Sum
+			isExists := utxo.IsUtxoExists(tx.Inputs[i].TxHash, uint64(tx.Inputs[i].OutInd))
+			if isExists {
+				outSum += txoArr[i].Sum
+			} else {
+				return false
+			}
 		}
 
 		// Checking presence of coins to be spent

@@ -203,11 +203,9 @@ func accAddressesPrinter() {
 	}
 }
 
+// TODO: change according to new utxo structutre
 func utxoPrinter() {
-	log.Println("Utxo list:")
-	for i := 0; i < len(utxo.UtxoList); i++ {
-		fmt.Printf("[%d]. %s, sum: %d\n", i, utxo.UtxoList[i].Address.ToHexString(), utxo.UtxoList[i].Sum)
-	}
+	utxo.PrintCoinDatabase()
 }
 
 func helpPrinter() {

@@ -53,14 +53,14 @@ func AddKeyPairToAccount(password string) string {
 	return ""
 }
 
-func GetAccUtxo() []utxo.UTXO {
-	var accUtxo []utxo.UTXO
+func GetAccUtxo() []utxo.TXO {
+	var accUtxo []utxo.TXO
 	for i := 0; i < len(CurrAccount.KeyPairList); i++ {
-		for j := 0; j < len(utxo.UtxoList); j++ {
+		for j := 0; j < len(utxo.CoinDatabase); j++ {
 			var currAccAddr byteArr.ByteArr
 			currAccAddr.SetFromHexString(hashing.SHA1(CurrAccount.KeyPairList[i].PublKey), 20)
-			if utxo.UtxoList[j].Address.IsEqual(currAccAddr) {
-				accUtxo = append(accUtxo, utxo.UtxoList[j])
+			if utxo.CoinDatabase[j].OutAddress.IsEqual(currAccAddr) {
+				accUtxo = append(accUtxo, utxo.CoinDatabase[j])
 			}
 		}
 	}
@@ -70,14 +70,10 @@ func GetAccUtxo() []utxo.UTXO {
 	return accUtxo
 }
 
-func GetBalByIndAddr(address byteArr.ByteArr, outInd int) uint64 {
-	ind := -1
-	for j := 0; j < len(utxo.UtxoList); j++ {
-		if address.IsEqual(utxo.UtxoList[j].Address) {
-			ind++
-		}
-		if ind == outInd {
-			return utxo.UtxoList[j].Sum
+func GetBalHashOutInd(txHash byteArr.ByteArr, outInd int) uint64 {
+	for j := 0; j < len(utxo.CoinDatabase); j++ {
+		if txHash.IsEqual(utxo.CoinDatabase[j].OutTxHash) && utxo.CoinDatabase[j].TxOutInd == uint64(outInd) {
+			return utxo.CoinDatabase[j].Sum
 		}
 	}
 	return 0
@@ -85,31 +81,21 @@ func GetBalByIndAddr(address byteArr.ByteArr, outInd int) uint64 {
 
 func GetBalByAddress(address byteArr.ByteArr) uint64 {
 	var sum uint64
-	for i := 0; i < len(utxo.UtxoList); i++ {
-		if address.IsEqual(utxo.UtxoList[i].Address) {
-			sum += utxo.UtxoList[i].Sum
+	for i := 0; i < len(utxo.CoinDatabase); i++ {
+		if address.IsEqual(utxo.CoinDatabase[i].OutAddress) {
+			sum += utxo.CoinDatabase[i].Sum
 		}
 	}
 	return sum
-}
-
-func getKeyBal(pubKey string) uint64 {
-	bal := uint64(0)
-	for j := 0; j < len(utxo.UtxoList); j++ {
-		var addr byteArr.ByteArr
-		addr.SetFromHexString(hashing.SHA1(pubKey), 20)
-		if addr.IsEqual(utxo.UtxoList[j].Address) {
-			bal += utxo.UtxoList[j].Sum
-		}
-	}
-	return bal
 }
 
 // A function counts all the UTXOs that is on specific public keys on user's account
 func GetBalance() uint64 {
 	CurrAccount.Balance = 0
 	for i := 0; i < len(CurrAccount.KeyPairList); i++ {
-		CurrAccount.Balance += getKeyBal(CurrAccount.KeyPairList[i].PublKey)
+		var address byteArr.ByteArr
+		address.SetFromHexString(hashing.SHA1(CurrAccount.KeyPairList[i].PublKey), 20)
+		CurrAccount.Balance += GetBalByAddress(address)
 	}
 	return CurrAccount.Balance
 }

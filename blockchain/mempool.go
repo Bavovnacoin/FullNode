@@ -3,7 +3,6 @@ package blockchain
 import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/transaction"
-	"bavovnacoin/utxo"
 	"log"
 )
 
@@ -17,22 +16,11 @@ func ValidateTransaction(tx transaction.Transaction) bool {
 	for j := 0; j < len(tx.Inputs); j++ {
 		for i := 0; i < len(Mempool); i++ { // Check same input in mempool (TODO: find more effective way)
 			for k := 0; k < len(Mempool[i].Inputs); k++ {
-				if Mempool[i].Inputs[k].Address.IsEqual(tx.Inputs[j].Address) &&
+				if Mempool[i].Inputs[k].TxHash.IsEqual(tx.Inputs[j].TxHash) &&
 					Mempool[i].Inputs[k].OutInd == tx.Inputs[j].OutInd {
 					return false
 				}
 			}
-		}
-
-		isExist := false
-		for i := 0; i < len(utxo.UtxoList); i++ {
-			if utxo.UtxoList[i].Address.IsEqual(tx.Inputs[j].Address) {
-				isExist = true
-			}
-		}
-
-		if !isExist {
-			return false
 		}
 	}
 	return true
@@ -100,7 +88,7 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 func IsAddressInMempool(address byteArr.ByteArr) bool {
 	for i := 0; i < len(Mempool); i++ {
 		for j := 0; j < len(Mempool[i].Inputs); j++ {
-			if Mempool[i].Inputs[j].Address.IsEqual(address) {
+			if Mempool[i].Inputs[j].TxHash.IsEqual(address) {
 				return true
 			}
 		}
