@@ -2,8 +2,8 @@ package node_controller
 
 import (
 	"bavovnacoin/account"
-	"bavovnacoin/address"
 	"bavovnacoin/blockchain"
+	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/transaction"
@@ -188,9 +188,9 @@ func accAddressesPrinter() {
 			acc := command_executor.Network_accounts[ind]
 			var sum uint64
 			for i := 0; i < len(acc.KeyPairList); i++ {
-				var accAddress address.Address
+				var accAddress byteArr.ByteArr
 				accAddrStr := hashing.SHA1(acc.KeyPairList[i].PublKey)
-				accAddress.SetFromHexString(accAddrStr)
+				accAddress.SetFromHexString(accAddrStr, 20)
 				bal := account.GetBalByAddress(accAddress)
 				sum += bal
 				fmt.Printf("[%d]. %s, balance: %d\n", i, accAddrStr, bal)
@@ -247,7 +247,7 @@ func makeTransaction() {
 		}
 	}
 
-	var outAddr []address.Address
+	var outAddr []byteArr.ByteArr
 	var outSum []uint64
 	println("Type in address and sum to be sent separated by a space. Or continue by typing next.")
 
@@ -261,8 +261,8 @@ func makeTransaction() {
 		if text == "stopcreation" {
 			return
 		}
-		var inpAddr address.Address
-		inpAddr.SetFromHexString(inputArr[0])
+		var inpAddr byteArr.ByteArr
+		inpAddr.SetFromHexString(inputArr[0], 20)
 		for i := 1; i < len(inputArr); i++ {
 			sum, err := strconv.ParseUint(inputArr[i], 10, 64)
 			if err == nil {

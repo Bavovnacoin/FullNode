@@ -1,18 +1,18 @@
 package utxo
 
 import (
-	"bavovnacoin/address"
+	"bavovnacoin/byteArr"
 	"fmt"
 )
 
 type UTXO struct {
-	Address address.Address
+	Address byteArr.ByteArr
 	Sum     uint64
 }
 
 var UtxoList []UTXO
 
-func DelFromUtxo(address address.Address, outind int) {
+func DelFromUtxo(address byteArr.ByteArr, outind int) {
 	ind := 0
 	for i := 0; i < len(UtxoList); i++ {
 		if UtxoList[i].Address.IsEqual(address) {
@@ -25,7 +25,7 @@ func DelFromUtxo(address address.Address, outind int) {
 	}
 }
 
-func AddToUtxo(address address.Address, sum uint64) {
+func AddToUtxo(address byteArr.ByteArr, sum uint64) {
 	UtxoList = append(UtxoList, UTXO{Address: address, Sum: sum})
 }
 

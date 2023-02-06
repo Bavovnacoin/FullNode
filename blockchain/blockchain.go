@@ -1,7 +1,7 @@
 package blockchain
 
 import (
-	"bavovnacoin/address"
+	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
@@ -110,7 +110,7 @@ func GenMerkleRoot(transactions []transaction.Transaction) string {
 	return currLayer[0]
 }
 
-func CreateBlock(rewardAdr address.Address, miningFlag int) Block {
+func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 	var newBlock Block
 
 	if len(Blockchain) > 0 {
@@ -200,8 +200,8 @@ func ValidateBlock(block Block, id int) bool {
 func InitBlockchain() {
 	log.Println("Creating initial block")
 
-	var rewardAdr address.Address
-	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050")
+	var rewardAdr byteArr.ByteArr
+	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050", 20)
 	genesisBlock := CreateBlock(rewardAdr, 1)
 	genesisBlock.Bits = STARTBITS
 

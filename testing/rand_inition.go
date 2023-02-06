@@ -10,8 +10,8 @@ package testing
 
 import (
 	"bavovnacoin/account"
-	"bavovnacoin/address"
 	"bavovnacoin/blockchain"
+	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/transaction"
@@ -41,7 +41,7 @@ func createAccoundRandom() {
 	command_executor.PauseCommand()
 }
 
-func getTxRandOuts(currInd int, balance uint64) ([]address.Address, []uint64) {
+func getTxRandOuts(currInd int, balance uint64) ([]byteArr.ByteArr, []uint64) {
 	source := rand.NewSource(time.Now().Unix())
 	rand := rand.New(source)
 
@@ -51,15 +51,15 @@ func getTxRandOuts(currInd int, balance uint64) ([]address.Address, []uint64) {
 	} else {
 		accNum = rand.Intn(len(command_executor.Network_accounts)-1) + 1
 	}
-	var outputAddress []address.Address
+	var outputAddress []byteArr.ByteArr
 	var outputSum []uint64
 
 	for len(outputAddress) < accNum {
 		netwAccInd := rand.Intn(len(command_executor.Network_accounts))
 		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[netwAccInd].KeyPairList))
 
-		var outAddress address.Address
-		outAddress.SetFromHexString(hashing.SHA1(command_executor.Network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey))
+		var outAddress byteArr.ByteArr
+		outAddress.SetFromHexString(hashing.SHA1(command_executor.Network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey), 20)
 
 		if currInd == netwAccInd {
 			continue
@@ -108,8 +108,8 @@ func createTxRandom() {
 		accInd := rand.Int() % len(command_executor.Network_accounts)
 		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[accInd].KeyPairList))
 
-		var accAddr address.Address
-		accAddr.SetFromHexString(hashing.SHA1(command_executor.Network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey))
+		var accAddr byteArr.ByteArr
+		accAddr.SetFromHexString(hashing.SHA1(command_executor.Network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey), 20)
 		isAddrInMempool := blockchain.IsAddressInMempool(accAddr)
 
 		account.CurrAccount = command_executor.Network_accounts[accInd]
@@ -167,8 +167,8 @@ func addBlock() {
 }
 
 func createBlockLog() {
-	var rewardAdr address.Address
-	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050")
+	var rewardAdr byteArr.ByteArr
+	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050", 20)
 	createdBlock = blockchain.CreateBlock(rewardAdr, 1)
 	command_executor.PauseCommand()
 }

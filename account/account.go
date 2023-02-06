@@ -1,7 +1,7 @@
 package account
 
 import (
-	"bavovnacoin/address"
+	"bavovnacoin/byteArr"
 	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
@@ -57,8 +57,8 @@ func GetAccUtxo() []utxo.UTXO {
 	var accUtxo []utxo.UTXO
 	for i := 0; i < len(CurrAccount.KeyPairList); i++ {
 		for j := 0; j < len(utxo.UtxoList); j++ {
-			var currAccAddr address.Address
-			currAccAddr.SetFromHexString(hashing.SHA1(CurrAccount.KeyPairList[i].PublKey))
+			var currAccAddr byteArr.ByteArr
+			currAccAddr.SetFromHexString(hashing.SHA1(CurrAccount.KeyPairList[i].PublKey), 20)
 			if utxo.UtxoList[j].Address.IsEqual(currAccAddr) {
 				accUtxo = append(accUtxo, utxo.UtxoList[j])
 			}
@@ -70,7 +70,7 @@ func GetAccUtxo() []utxo.UTXO {
 	return accUtxo
 }
 
-func GetBalByIndAddr(address address.Address, outInd int) uint64 {
+func GetBalByIndAddr(address byteArr.ByteArr, outInd int) uint64 {
 	ind := -1
 	for j := 0; j < len(utxo.UtxoList); j++ {
 		if address.IsEqual(utxo.UtxoList[j].Address) {
@@ -83,7 +83,7 @@ func GetBalByIndAddr(address address.Address, outInd int) uint64 {
 	return 0
 }
 
-func GetBalByAddress(address address.Address) uint64 {
+func GetBalByAddress(address byteArr.ByteArr) uint64 {
 	var sum uint64
 	for i := 0; i < len(utxo.UtxoList); i++ {
 		if address.IsEqual(utxo.UtxoList[i].Address) {
@@ -96,8 +96,8 @@ func GetBalByAddress(address address.Address) uint64 {
 func getKeyBal(pubKey string) uint64 {
 	bal := uint64(0)
 	for j := 0; j < len(utxo.UtxoList); j++ {
-		var addr address.Address
-		addr.SetFromHexString(hashing.SHA1(pubKey))
+		var addr byteArr.ByteArr
+		addr.SetFromHexString(hashing.SHA1(pubKey), 20)
 		if addr.IsEqual(utxo.UtxoList[j].Address) {
 			bal += utxo.UtxoList[j].Sum
 		}

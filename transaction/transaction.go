@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"bavovnacoin/account"
-	"bavovnacoin/address"
+	"bavovnacoin/byteArr"
 	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
@@ -11,13 +11,13 @@ import (
 )
 
 type Input struct {
-	Address   address.Address
+	Address   byteArr.ByteArr
 	ScriptSig string
 	OutInd    int
 }
 
 type Output struct {
-	Address address.Address
+	Address byteArr.ByteArr
 	Sum     uint64
 }
 
@@ -29,7 +29,7 @@ type Transaction struct {
 }
 
 type UtxoForInput struct {
-	Address address.Address
+	Address byteArr.ByteArr
 	Index   int
 }
 
@@ -76,7 +76,7 @@ func ComputeTxSize(tx Transaction) int {
 	return size
 }
 
-func getNextInpIndex(addressInp address.Address, utxoInputs []utxo.UTXO, utxoInd int) int {
+func getNextInpIndex(addressInp byteArr.ByteArr, utxoInputs []utxo.UTXO, utxoInd int) int {
 	ind := -1
 	for i := 0; i <= utxoInd; i++ {
 		if utxoInputs[i].Address.IsEqual(addressInp) {
@@ -126,7 +126,7 @@ func GetTransInputs(sum uint64, accUtxo []utxo.UTXO) ([]UtxoForInput, []utxo.UTX
 }
 
 // Creates transaction
-func CreateTransaction(passKey string, outAdr []address.Address, outSumVals []uint64,
+func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []uint64,
 	feePerByte int, locktime uint) (Transaction, string) {
 	var tx Transaction
 	tx.Locktime = locktime
@@ -170,8 +170,8 @@ func CreateTransaction(passKey string, outAdr []address.Address, outSumVals []ui
 
 			// Get private and public key for scriptSig generation
 			for j := 0; j < len(kpAcc); j++ {
-				var newAddr address.Address
-				newAddr.SetFromHexString(hashing.SHA1(kpAcc[j].PublKey))
+				var newAddr byteArr.ByteArr
+				newAddr.SetFromHexString(hashing.SHA1(kpAcc[j].PublKey), 20)
 				if newAddr.IsEqual(inputs[i].Address) {
 					kpForSign = append(kpForSign, ecdsa.KeyPair{PrivKey: kpAcc[j].PrivKey, PublKey: kpAcc[j].PublKey})
 				}
@@ -189,7 +189,7 @@ func CreateTransaction(passKey string, outAdr []address.Address, outSumVals []ui
 		account.AddKeyPairToAccount(passKey) // generate new keypair for the change
 		kpLen := len(account.CurrAccount.KeyPairList)
 		tx.Outputs = append(tx.Outputs, Output{Sum: uint64(outTxSum - (genSum + uint64(txSize)*uint64(feePerByte)))})
-		tx.Outputs[len(tx.Outputs)-1].Address.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey))
+		tx.Outputs[len(tx.Outputs)-1].Address.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey), 20)
 	}
 	tx = genTxScriptSignatures(kpForSign, passKey, tx)
 	return tx, ""

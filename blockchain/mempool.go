@@ -1,7 +1,7 @@
 package blockchain
 
 import (
-	"bavovnacoin/address"
+	"bavovnacoin/byteArr"
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
 	"log"
@@ -97,7 +97,7 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 	return txForBlock
 }
 
-func IsAddressInMempool(address address.Address) bool {
+func IsAddressInMempool(address byteArr.ByteArr) bool {
 	for i := 0; i < len(Mempool); i++ {
 		for j := 0; j < len(Mempool[i].Inputs); j++ {
 			if Mempool[i].Inputs[j].Address.IsEqual(address) {
