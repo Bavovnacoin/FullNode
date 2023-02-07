@@ -35,7 +35,7 @@ func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint6
 	target := BitsToTarget(bits)
 	target = target.Mul(target, big.NewInt(int64(coef*100)))
 	target = target.Div(target, big.NewInt(100))
-	targetStr := addZerToLength(fmt.Sprintf("%x", target), 6)
+	targetStr := fmt.Sprintf("%x", target)
 
 	if len(targetStr)%2 != 0 {
 		targetStr = "0" + targetStr

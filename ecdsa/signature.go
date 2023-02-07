@@ -17,7 +17,6 @@ func Sign(hashMes string, privKey string) string {
 	s := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(s)
 	randK := big.NewInt(0).Rand(r, n)
-	randK = big.NewInt(12345)
 	x := big.NewInt(0).Mod(multiply(randK, g).x, n)
 
 	hashKeyX := big.NewInt(0).Add(big.NewInt(1).Mul(prKNum, x), bigHash)
@@ -25,7 +24,7 @@ func Sign(hashMes string, privKey string) string {
 	return fillZero(x.String(), 78) + fillZero(y.String(), 78)
 }
 
-func Verify(pubKey string, sign string, hashMes string) bool {
+func Verify(pubKey, sign string, hashMes string) bool {
 	pKey := decompressPubKey(pubKey)
 
 	if len(sign) < 78 {

@@ -12,7 +12,7 @@ import (
 
 type Input struct {
 	TxHash    byteArr.ByteArr
-	ScriptSig string
+	ScriptSig byteArr.ScriptSig
 	OutInd    int
 }
 
@@ -53,7 +53,8 @@ func genTxScriptSignatures(keyPair []ecdsa.KeyPair, passKey string, tx Transacti
 	message := hashing.SHA1(GetCatTxFields(tx))
 	// Signing message
 	for i := 0; i < len(keyPair); i++ {
-		tx.Inputs[i].ScriptSig = keyPair[i].PublKey + ecdsa.Sign(message, cryption.AES_decrypt(keyPair[i].PrivKey, passKey))
+		//tx.Inputs[i].ScriptSig = keyPair[i].PublKey + ecdsa.Sign(message, cryption.AES_decrypt(keyPair[i].PrivKey, passKey))
+		tx.Inputs[i].ScriptSig.SetFromHexString(keyPair[i].PublKey+ecdsa.Sign(message, cryption.AES_decrypt(keyPair[i].PrivKey, passKey)), 111)
 	}
 
 	return tx
@@ -63,10 +64,10 @@ func ComputeTxSize(tx Transaction) int {
 	size := 0
 	size += 8 // 4 bytes for Version, 4 for locktime
 	for i := 0; i < len(tx.Inputs); i++ {
-		size += len(tx.Inputs[i].ScriptSig)
-		size += 4 // Input out index size
+		size += 111 //len(tx.Inputs[i].ScriptSig)
+		size += 4   // Input out index size
 		size += 20
-		size += len(tx.Inputs[i].ScriptSig)
+		//size += len(tx.Inputs[i].ScriptSig)
 	}
 
 	for i := 0; i < len(tx.Outputs); i++ {
@@ -262,12 +263,12 @@ func VerifyTransaction(tx Transaction) bool {
 
 		// Checking signatures and unique inputs
 		for i := 0; i < len(tx.Inputs); i++ {
-			if len(tx.Inputs[i].ScriptSig) < 66 {
+			if len(tx.Inputs[i].ScriptSig.ToHexString()) < 66 {
 				return false
 			}
 
-			pubKey := tx.Inputs[i].ScriptSig[:66]
-			sign := tx.Inputs[i].ScriptSig[66:]
+			pubKey := tx.Inputs[i].ScriptSig.GetPubKey().ToHexString()
+			sign := tx.Inputs[i].ScriptSig.GetSignature().ToHexString()
 			if !ecdsa.Verify(pubKey, sign, hashMesOfTx) {
 				return false
 			}

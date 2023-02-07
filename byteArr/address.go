@@ -16,7 +16,7 @@ func addZerosAtBeginning(val string, totalLen int) string {
 
 func (arr *ByteArr) SetFromHexString(hexVal string, length int) bool {
 	arr.byteArr = make([]byte, length)
-	hexVal = addZerosAtBeginning(hexVal, 40)
+	hexVal = addZerosAtBeginning(hexVal, length*2)
 	for i := 0; i < len(hexVal); i += 2 {
 		numVal, err := strconv.ParseUint(hexVal[i:i+2], 16, 64)
 		if err != nil {
