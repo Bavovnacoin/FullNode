@@ -127,7 +127,7 @@ func createTxRandom() {
 			tx, mes := transaction.CreateTransaction(fmt.Sprint(accInd), outAddr, outSum, fee, locktime)
 
 			// Creation of invalid transaction
-			isTxInvalid := rand.Intn(5)
+			isTxInvalid := rand.Intn(10)
 			if isTxInvalid == 1 {
 				tx.Outputs[0].Sum = account.CurrAccount.Balance
 			}

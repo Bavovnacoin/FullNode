@@ -19,7 +19,7 @@ var CoinDatabase []TXO
 
 func Spend(outTxHash byteArr.ByteArr, outind uint64) {
 	for i := 0; i < len(CoinDatabase); i++ {
-		if CoinDatabase[i].OutAddress.IsEqual(outTxHash) &&
+		if CoinDatabase[i].OutTxHash.IsEqual(outTxHash) &&
 			CoinDatabase[i].TxOutInd == outind {
 			CoinDatabase[i].IsSpent = true
 			return

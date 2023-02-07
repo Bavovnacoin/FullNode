@@ -159,8 +159,7 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 	var kpForSign []ecdsa.KeyPair
 	for outTxSum < needSum { // Looking for tx fee
 		kpForSign = []ecdsa.KeyPair{}
-		inputs, _, outSum := GetTransInputs(needSum, nil)
-
+		inputs, txo, outSum := GetTransInputs(needSum, nil)
 		if needSum > outSum {
 			return tx, "Not enough coins for payment. You need: " + fmt.Sprint(needSum) + ", you have: " + fmt.Sprint(account.GetBalance())
 		}
@@ -172,11 +171,19 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 			inpVal.OutInd = inputs[i].OutInd
 
 			// Get private and public key for scriptSig generation
+			isFound := false
 			for j := 0; j < len(kpAcc); j++ {
 				var newAddr byteArr.ByteArr
 				newAddr.SetFromHexString(hashing.SHA1(kpAcc[j].PublKey), 20)
-				if newAddr.IsEqual(inputs[i].TxHash) {
-					kpForSign = append(kpForSign, ecdsa.KeyPair{PrivKey: kpAcc[j].PrivKey, PublKey: kpAcc[j].PublKey})
+				for k := 0; k < len(txo); k++ {
+					if inputs[i].OutInd == int(txo[k].TxOutInd) && newAddr.IsEqual(txo[k].OutAddress) {
+						kpForSign = append(kpForSign, ecdsa.KeyPair{PrivKey: kpAcc[j].PrivKey, PublKey: kpAcc[j].PublKey})
+						isFound = true
+						break
+					}
+				}
+				if isFound {
+					break
 				}
 			}
 			input = append(input, inpVal)
@@ -194,6 +201,7 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 		tx.Outputs = append(tx.Outputs, Output{Sum: uint64(outTxSum - (genSum + uint64(txSize)*uint64(feePerByte)))})
 		tx.Outputs[len(tx.Outputs)-1].Address.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey), 20)
 	}
+
 	tx = genTxScriptSignatures(kpForSign, passKey, tx)
 	return tx, ""
 }
@@ -250,7 +258,7 @@ func VerifyTransaction(tx Transaction) bool {
 		var inpSum uint64
 		var outSum uint64
 		hashMesOfTx := hashing.SHA1(GetCatTxFields(tx))
-		var txoArr []utxo.TXO
+		//var txoArr []utxo.TXO
 
 		// Checking signatures and unique inputs
 		for i := 0; i < len(tx.Inputs); i++ {
@@ -266,14 +274,17 @@ func VerifyTransaction(tx Transaction) bool {
 			curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 			inpSum += curVal
 
-			isExists := utxo.IsUtxoExists(tx.Inputs[i].TxHash, uint64(tx.Inputs[i].OutInd))
-			if isExists {
-				outSum += txoArr[i].Sum
-			} else {
-				return false
-			}
+			// isExists := utxo.IsUtxoExists(tx.Inputs[i].TxHash, uint64(tx.Inputs[i].OutInd))
+			// if isExists {
+			// 	outSum += txoArr[i].Sum
+			// } else {
+			// 	return false
+			// }
 		}
 
+		for i := 0; i < len(tx.Outputs); i++ {
+			outSum += tx.Outputs[i].Sum
+		}
 		// Checking presence of coins to be spent
 		if inpSum < outSum {
 			return false

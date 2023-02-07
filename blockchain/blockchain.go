@@ -144,6 +144,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 
 	if miningFlag != -1 {
 		newBlock.Bits = GetCurrBitsValue()
+		log.Println("Current bits value is " + fmt.Sprintf("%x", newBlock.Bits))
 	}
 
 	if miningFlag == 0 {
@@ -191,7 +192,7 @@ func ValidateBlock(block Block, id int) bool {
 	}
 
 	// Check transactions
-	for i := 0; i < int(block.TransactionCount); i++ {
+	for i := 1; i < int(block.TransactionCount); i++ {
 		if !transaction.VerifyTransaction(block.Transactions[i]) {
 			return false
 		}
