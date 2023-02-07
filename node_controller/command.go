@@ -48,20 +48,20 @@ func CommandHandler() {
 			}
 		} else if text == "help" {
 			helpPrinter()
-		} else if text == "showmemp" {
-			ifPauseFunction(blockchain.PrintMempool, "showmemp")
-		} else if len(text) >= 10 && text[:10] == "showmemptx" {
-			ifPauseFunction(mempoolTxPrinter, "showmemptx")
-		} else if len(text) >= 6 && text[:6] == "showbc" {
-			ifPauseFunction(bcPrinter, "showbc")
-		} else if len(text) >= 11 && text[:11] == "showblocktx" {
-			ifPauseFunction(blockTxPrinter, "showblocktx")
-		} else if len(text) >= 11 && text[:11] == "showaccaddr" {
-			ifPauseFunction(accAddressesPrinter, "showaccaddr")
-		} else if text == "showutxo" {
-			ifPauseFunction(utxoPrinter, "showutxo")
+		} else if text == "getmemp" {
+			ifPauseFunction(blockchain.PrintMempool, "getmemp")
+		} else if len(text) >= 9 && text[:9] == "getmemptx" {
+			ifPauseFunction(mempoolTxPrinter, "getmemptx")
+		} else if len(text) >= 5 && text[:5] == "getbc" {
+			ifPauseFunction(bcPrinter, "getbc")
+		} else if len(text) >= 10 && text[:10] == "getblocktx" {
+			ifPauseFunction(blockTxPrinter, "getblocktx")
+		} else if len(text) >= 10 && text[:10] == "getaccaddr" {
+			ifPauseFunction(accAddressesPrinter, "getaccaddr")
+		} else if text == "gettxo" {
+			ifPauseFunction(utxoPrinter, "gettxo")
 		} else if text == "maketx" {
-			ifPauseFunction(makeTransaction, "showutxo")
+			ifPauseFunction(makeTransaction, "maketx")
 		} else if text == "showminingstats" {
 			miningStatsPrinter()
 		} else if text != "" {
@@ -215,8 +215,8 @@ func helpPrinter() {
 	println("help - get list of all commands")
 	println("showmemp - show mempool transactions")
 	println("showmemptx [id] - show specific mempool transaction")
-	println("showbc [start_id] [end_id] - show titles of blockchain blocks from a defined range")
-	println("showbcblocktx [block_id] [block_tx_id] - show specific transaction from a defined block")
+	println("showbc [start_height] [end_height] - show titles of blockchain blocks from a defined range")
+	println("showbcblocktx [block_height] [block_tx_id] - show specific transaction from a defined block")
 	println("showaccaddr [acc_id] - show addresses and balances of a specific account")
 	println("showutxo - show unspent outputs (address and sum)")
 	println("maketx - create new transaction and send to mempool")

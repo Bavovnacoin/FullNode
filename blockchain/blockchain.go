@@ -209,14 +209,14 @@ func InitBlockchain() {
 	genesisBlock.Bits = STARTBITS
 
 	if AddBlockToBlockchain(genesisBlock) {
-		log.Println("Block is added to blockchain. Current length: " + fmt.Sprint(len(Blockchain)) + "\n")
+		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(len(Blockchain)) + "\n")
 	} else {
 		log.Println("Block is not added\n")
 	}
 }
 
-func PrintBlockTitle(block Block, id int) {
-	println("Block id:", id)
+func PrintBlockTitle(block Block, height int) {
+	println("Block height:", height)
 	println("Version:", block.Version)
 	println("Hash of prev block:", block.HashPrevBlock)
 	println("Time:", block.Time.String())
