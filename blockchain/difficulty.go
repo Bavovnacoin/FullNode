@@ -11,7 +11,7 @@ import (
 
 var BLOCK_DIFF_CHECK int = 3
 var BLOCK_CREATION_SEC int = 60
-var STARTBITS uint64 = 0xffff12
+var STARTBITS uint64 = 0xffff13 //2
 
 func GetCurrBitsValue() uint64 {
 	var bits uint64
@@ -33,15 +33,15 @@ func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint6
 	coef := float64(spentTimeSec) / float64(expextTimeSec)
 
 	target := BitsToTarget(bits)
-	target = target.Mul(target, big.NewInt(int64(coef*100)))
-	target = target.Div(target, big.NewInt(100))
+	target = target.Mul(target, big.NewInt(int64(coef*10000)))
+	target = target.Div(target, big.NewInt(10000))
 	targetStr := fmt.Sprintf("%x", target)
 
 	if len(targetStr)%2 != 0 {
 		targetStr = "0" + targetStr
 	}
-	targetNum, _ := new(big.Int).SetString(targetStr[4:6]+targetStr[:4]+strings.Repeat("0", len(targetStr)-6), 16)
 
+	targetNum, _ := new(big.Int).SetString(targetStr[4:6]+targetStr[:4]+strings.Repeat("0", len(targetStr)-6), 16)
 	return TargetToBits(targetNum)
 }
 
@@ -51,14 +51,17 @@ func addZerToLength(mes string, length int) string {
 
 func BitsToTarget(bits uint64) *big.Int {
 	bitsStr := addZerToLength(fmt.Sprintf("%x", bits), 8)
+	println(bitsStr, "bits str")
 	shift, _ := new(big.Int).SetString(bitsStr[6:], 16)
 	shift.Sub(shift, big.NewInt(3))
 	shift.Mul(shift, big.NewInt(8))
 	powBase := big.NewInt(2)
 	shift = powBase.Exp(powBase, shift, nil)
+	println(fmt.Sprintf("%x - shift", shift))
 
 	target, _ := new(big.Int).SetString(bitsStr[2:6]+bitsStr[:2], 16)
 	target.Mul(target, shift)
+	println(fmt.Sprintf("%x - mul", target))
 	return target
 }
 

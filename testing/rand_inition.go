@@ -175,7 +175,7 @@ func createBlockLog() {
 
 func addBlockLog() {
 	if blockchain.AddBlockToBlockchain(createdBlock) {
-		log.Println("Block is added to blockchain. Current length: " + fmt.Sprint(len(blockchain.Blockchain)) + "\n")
+		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(len(blockchain.Blockchain)) + "\n")
 	} else {
 		log.Println("Block is not added\n")
 	}
