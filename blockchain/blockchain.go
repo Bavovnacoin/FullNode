@@ -5,6 +5,8 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"log"
 	"math"
@@ -224,4 +226,28 @@ func PrintBlockTitle(block Block, height int) {
 	println("Bits:", block.Bits)
 	println("Nonce:", block.Nonce)
 	println("Transaction count:", block.TransactionCount)
+}
+
+func (block *Block) ToByteArr() ([]byte, bool) {
+	var network bytes.Buffer
+	enc := gob.NewEncoder(&network)
+	err := enc.Encode(block)
+	if err != nil {
+		log.Fatal("encode error:", err)
+		return nil, false
+	}
+
+	return network.Bytes(), true
+}
+
+func (block *Block) SetFromByteArr(byteArr []byte) bool {
+	var network bytes.Buffer
+	dec := gob.NewDecoder(&network)
+	err := dec.Decode(&block)
+	if err != nil {
+		log.Fatal("decode error:", err)
+		return false
+	}
+
+	return true
 }

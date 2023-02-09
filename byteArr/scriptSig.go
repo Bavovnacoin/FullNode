@@ -6,12 +6,12 @@ type ScriptSig struct {
 
 func (scriptSig ScriptSig) GetPubKey() ByteArr {
 	var pubKey ByteArr
-	pubKey.byteArr = scriptSig.ByteArr.byteArr[:33]
+	pubKey.ByteArr = scriptSig.ByteArr.ByteArr[:33]
 	return pubKey
 }
 
 func (scriptSig ScriptSig) GetSignature() ByteArr {
 	var sign ByteArr
-	sign.byteArr = scriptSig.ByteArr.byteArr[33:]
+	sign.ByteArr = scriptSig.ByteArr.ByteArr[33:]
 	return sign
 }
