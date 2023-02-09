@@ -120,7 +120,7 @@ func createTxRandom() {
 			isGenLocktime := rand.Intn(5)
 			var locktime uint
 			if isGenLocktime == 2 {
-				locktime = uint(len(blockchain.Blockchain) + rand.Intn(3) + 1)
+				locktime = uint(int(blockchain.BcLength) + rand.Intn(3) + 1)
 			}
 
 			outAddr, outSum := getTxRandOuts(accInd, account.CurrAccount.Balance)
@@ -175,10 +175,11 @@ func createBlockLog() {
 
 func addBlockLog() {
 	if blockchain.AddBlockToBlockchain(createdBlock) {
-		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(len(blockchain.Blockchain)) + "\n")
+		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")
 	} else {
 		log.Println("Block is not added\n")
 	}
+	blockchain.IncrBcHeight()
 
 	allowCreateBlock = true
 	createdBlock.MerkleRoot = ""

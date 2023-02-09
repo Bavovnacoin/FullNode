@@ -11,16 +11,15 @@ import (
 
 var BLOCK_DIFF_CHECK int = 3
 var BLOCK_CREATION_SEC int = 60
-var STARTBITS uint64 = 0xffff13 //2
+var STARTBITS uint64 = 0xffff12
 
 func GetCurrBitsValue() uint64 {
 	var bits uint64
-
-	if len(Blockchain)%BLOCK_DIFF_CHECK == 0 && len(Blockchain) != 0 {
-		bits = GenBits(Blockchain[len(Blockchain)-BLOCK_DIFF_CHECK].Time,
-			Blockchain[len(Blockchain)-1].Time, Blockchain[len(Blockchain)-1].Bits)
-	} else if len(Blockchain) != 0 {
-		bits = Blockchain[len(Blockchain)-1].Bits
+	if int(BcLength)%BLOCK_DIFF_CHECK == 0 && BcLength != 0 {
+		blockDiff, _ := GetBlock(uint64(int(BcLength) - BLOCK_DIFF_CHECK))
+		bits = GenBits(blockDiff.Time, LastBlock.Time, LastBlock.Bits)
+	} else if BcLength != 0 {
+		bits = LastBlock.Bits
 	} else {
 		bits = STARTBITS
 	}
@@ -30,11 +29,10 @@ func GetCurrBitsValue() uint64 {
 func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint64 {
 	spentTimeSec := secBlockTime.Unix() - frstBlockTime.Unix()
 	expextTimeSec := BLOCK_DIFF_CHECK * BLOCK_CREATION_SEC
-	coef := float64(spentTimeSec) / float64(expextTimeSec)
-
+	coef := float64(expextTimeSec) / float64(spentTimeSec)
 	target := BitsToTarget(bits)
-	target = target.Mul(target, big.NewInt(int64(coef*10000)))
-	target = target.Div(target, big.NewInt(10000))
+	target = target.Mul(target, big.NewInt(int64(coef*10000000)))
+	target = target.Div(target, big.NewInt(10000000))
 	targetStr := fmt.Sprintf("%x", target)
 
 	if len(targetStr)%2 != 0 {
@@ -51,17 +49,14 @@ func addZerToLength(mes string, length int) string {
 
 func BitsToTarget(bits uint64) *big.Int {
 	bitsStr := addZerToLength(fmt.Sprintf("%x", bits), 8)
-	println(bitsStr, "bits str")
 	shift, _ := new(big.Int).SetString(bitsStr[6:], 16)
 	shift.Sub(shift, big.NewInt(3))
 	shift.Mul(shift, big.NewInt(8))
 	powBase := big.NewInt(2)
 	shift = powBase.Exp(powBase, shift, nil)
-	println(fmt.Sprintf("%x - shift", shift))
 
 	target, _ := new(big.Int).SetString(bitsStr[2:6]+bitsStr[:2], 16)
 	target.Mul(target, shift)
-	println(fmt.Sprintf("%x - mul", target))
 	return target
 }
 

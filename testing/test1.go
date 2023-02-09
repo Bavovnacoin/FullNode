@@ -9,6 +9,8 @@ import (
 )
 
 func process() {
+	blockchain.Database.OpenDb()
+	defer blockchain.Database.CloseDb()
 	blockchain.InitBlockchain()
 	var genesisAccKeyPair []ecdsa.KeyPair
 	genesisAccKeyPair = append(genesisAccKeyPair, ecdsa.KeyPair{PrivKey: "d966fded26f23d50bb1223cdc6efe4cfebc9f2d6967cb570122c040baf5d42091953a2ba6466963351a4c6bc616e1858de87de02724cc89d9306a62b6d29fab6",

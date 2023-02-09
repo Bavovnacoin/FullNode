@@ -75,7 +75,7 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 		if !transaction.VerifyTransaction(Mempool[MempoolInd]) {
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
 			log.Println("Deleted wrong transaction from mempool.")
-		} else if Mempool[MempoolInd].Locktime < uint(len(Blockchain)) {
+		} else if Mempool[MempoolInd].Locktime < uint(BcLength) {
 			txForBlock = append(txForBlock, Mempool[MempoolInd])
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
 		} else {

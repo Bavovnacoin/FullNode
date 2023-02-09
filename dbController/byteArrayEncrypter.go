@@ -1,7 +1,6 @@
 package dbController
 
 import (
-	"bavovnacoin/blockchain"
 	"bytes"
 	"encoding/gob"
 )
@@ -17,13 +16,12 @@ func ToByteArr(data any) ([]byte, bool) {
 	return buffer.Bytes(), true
 }
 
-func FromByteArr(data []byte) any {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	var decData blockchain.Block
-	err := dec.Decode(&decData)
+func FromByteArr(dataByte []byte, data interface{}) bool {
+	buf := bytes.NewBuffer(dataByte)
+	decoder := gob.NewDecoder(buf)
+	err := decoder.Decode(data)
 	if err != nil {
-		return decData
+		return false
 	}
-	return decData
+	return true
 }

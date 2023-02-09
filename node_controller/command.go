@@ -116,18 +116,19 @@ func bcPrinter() {
 		if err == nil {
 			if len(commandValues) == 2 {
 				if commandValues[0] < 0 || commandValues[1] < 0 ||
-					commandValues[0] > commandValues[1] || commandValues[0] > int64(len(blockchain.Blockchain)) {
+					commandValues[0] > commandValues[1] || commandValues[0] > int64(blockchain.BcLength) {
 					log.Println("Error. You typped in wrong index.")
 					return
 				}
 
-				if commandValues[1] > int64(len(blockchain.Blockchain)) {
-					commandValues[1] = int64(len(blockchain.Blockchain))
+				if commandValues[1] > int64(blockchain.BcLength) {
+					commandValues[1] = int64(blockchain.BcLength)
 				}
 
 				log.Println("Blockchain from", commandValues[0], "to", commandValues[1])
 				for i := commandValues[0]; i < commandValues[1]; i++ {
-					blockchain.PrintBlockTitle(blockchain.Blockchain[i], int(i))
+					block, _ := blockchain.GetBlock(uint64(i))
+					blockchain.PrintBlockTitle(block, int(i))
 					println()
 				}
 			}
@@ -151,17 +152,18 @@ func blockTxPrinter() {
 
 		if err == nil {
 			if len(commandValues) == 2 {
+				block, _ := blockchain.GetBlock(uint64(commandValues[0]))
 				if commandValues[0] < 0 || commandValues[1] < 0 ||
-					commandValues[0] > int64(len(blockchain.Blockchain)) ||
-					commandValues[1] >= int64(blockchain.Blockchain[commandValues[0]].TransactionCount) {
+					commandValues[0] > int64(blockchain.BcLength) ||
+					commandValues[1] >= int64(block.TransactionCount) {
 					log.Println("Error. You typped in wrong index.")
 					return
 				}
-				if commandValues[1] > int64(len(blockchain.Blockchain)) {
-					commandValues[1] = int64(len(blockchain.Blockchain))
+				if commandValues[1] > int64(blockchain.BcLength) {
+					commandValues[1] = int64(blockchain.BcLength)
 				}
 				log.Println("Block", commandValues[0], "- transaction", commandValues[1])
-				transaction.PrintTransaction(blockchain.Blockchain[commandValues[0]].Transactions[commandValues[1]])
+				transaction.PrintTransaction(block.Transactions[commandValues[1]])
 			}
 		} else {
 			log.Println("Error. Expected numerical type as a parameter")

@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"bavovnacoin/byteArr"
+	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
@@ -15,7 +16,12 @@ import (
 	"time"
 )
 
-var Blockchain []Block
+var Database dbController.Database
+
+var BcLength uint64
+var LastBlock Block
+
+//var Blockchain []Block // Remove
 
 type Block struct {
 	Blocksize        uint
@@ -46,7 +52,7 @@ func BlockToString(block Block) string {
 }
 
 func AddBlockToBlockchain(block Block) bool {
-	isBlockValid := ValidateBlock(block, len(Blockchain))
+	isBlockValid := ValidateBlock(block, int(BcLength))
 
 	if isBlockValid {
 		for i := 0; i < len(block.Transactions); i++ {
@@ -60,10 +66,12 @@ func AddBlockToBlockchain(block Block) bool {
 			for j := 0; j < len(txOutList); j++ {
 				var txByteArr byteArr.ByteArr
 				txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
-				utxo.AddUtxo(txByteArr, uint64(j), txOutList[j].Sum, txOutList[j].Address, uint64(len(Blockchain)))
+				utxo.AddUtxo(txByteArr, uint64(j), txOutList[j].Sum, txOutList[j].Address, uint64(int(BcLength)))
 			}
 		}
-		Blockchain = append(Blockchain, block)
+
+		LastBlock = block
+		WriteBlock(BcLength, block)
 	}
 	return isBlockValid
 }
@@ -117,8 +125,8 @@ func GenMerkleRoot(transactions []transaction.Transaction) string {
 func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 	var newBlock Block
 
-	if len(Blockchain) > 0 {
-		newBlock.HashPrevBlock = hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
+	if BcLength > 0 {
+		newBlock.HashPrevBlock = hashing.SHA1(BlockToString(LastBlock))
 	} else {
 		newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 	}
@@ -143,7 +151,6 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 	log.Println("New block transaction count: " + fmt.Sprint(newBlock.TransactionCount))
 
 	newBlock.Blocksize = uint(len(BlockToString(newBlock)))
-
 	if miningFlag != -1 {
 		newBlock.Bits = GetCurrBitsValue()
 		log.Println("Current bits value is " + fmt.Sprintf("%x", newBlock.Bits))
@@ -157,10 +164,21 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 	return newBlock
 }
 
-func ValidateBlock(block Block, id int) bool {
+func ValidateBlock(block Block, height int) bool {
 	var lastBlockHash string
-	if len(Blockchain) != 0 {
-		lastBlockHash = hashing.SHA1(BlockToString(Blockchain[len(Blockchain)-1]))
+	var prevBlock Block
+	if height == int(BcLength) {
+		prevBlock = LastBlock
+	} else {
+		var isBlockFound bool
+		prevBlock, isBlockFound = GetBlock(uint64(height))
+		if !isBlockFound {
+			return false
+		}
+	}
+
+	if int(BcLength) != 0 {
+		lastBlockHash = hashing.SHA1(BlockToString(prevBlock))
 	} else {
 		lastBlockHash = "0000000000000000000000000000000000000000"
 	}
@@ -183,7 +201,7 @@ func ValidateBlock(block Block, id int) bool {
 	for i := 1; i < len(block.Transactions); i++ {
 		allFee += transaction.GetTxFee(block.Transactions[i])
 	}
-	if !CheckEmitedCoins(block.Transactions[0].Outputs[0].Sum-allFee, id) {
+	if !CheckEmitedCoins(block.Transactions[0].Outputs[0].Sum-allFee, height) {
 		return false
 	}
 
@@ -203,6 +221,17 @@ func ValidateBlock(block Block, id int) bool {
 }
 
 func InitBlockchain() {
+	BcLength, _ = GetBcHeight()
+	if BcLength != 0 {
+		LastBlock, _ = GetBlock(BcLength - 1)
+
+		log.Println("Data is restored from db. Blockchain height:", BcLength)
+	} else {
+		FormGenesisBlock()
+	}
+}
+
+func FormGenesisBlock() {
 	log.Println("Creating initial block")
 
 	var rewardAdr byteArr.ByteArr
@@ -211,10 +240,11 @@ func InitBlockchain() {
 	genesisBlock.Bits = STARTBITS
 
 	if AddBlockToBlockchain(genesisBlock) {
-		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(len(Blockchain)) + "\n")
+		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
 		log.Println("Block is not added\n")
 	}
+	IncrBcHeight()
 }
 
 func PrintBlockTitle(block Block, height int) {
