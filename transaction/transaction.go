@@ -107,7 +107,6 @@ func GetTransInputs(sum uint64, accUtxo []utxo.TXO) ([]UtxoForInput, []utxo.TXO,
 	var utxoInput []UtxoForInput
 	tempSum := uint64(0)
 
-	//getNextInpIndex(accUtxo[0].OutAddress, accUtxo, 0)
 	if len(accUtxo) == 1 && accUtxo[0].Sum >= sum {
 		return append(utxoInput, UtxoForInput{accUtxo[0].OutTxHash, int(accUtxo[0].TxOutInd)}),
 			accUtxo, accUtxo[0].Sum
@@ -241,7 +240,7 @@ func PrintTransaction(tx Transaction) {
 		curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 		inpSum += curVal
 		fmt.Printf("%d. HashAddress: %s (Bal: %d)\nOut index: %d\nScriptSig: %s\n", i, tx.Inputs[i].TxHash.ToHexString(), curVal,
-			tx.Inputs[i].OutInd, tx.Inputs[i].ScriptSig)
+			tx.Inputs[i].OutInd, tx.Inputs[i].ScriptSig.ToHexString())
 	}
 	println("\nOutputs:")
 	var outSum uint64

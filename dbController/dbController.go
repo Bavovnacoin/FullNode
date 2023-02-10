@@ -38,3 +38,11 @@ func (database *Database) GetValue(key string) ([]byte, bool) {
 	}
 	return value, true
 }
+
+func (database *Database) RemoveValue(key string) bool {
+	err := database.Db.Delete([]byte(key), nil)
+	if err != nil {
+		return false
+	}
+	return true
+}

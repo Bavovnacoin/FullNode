@@ -70,6 +70,21 @@ func CommandHandler() {
 	}
 }
 
+func helpPrinter() {
+	log.Println("List of all commands:")
+	println("stop - stop node")
+	println("pause - pause node")
+	println("help - get list of all commands")
+	println("getmemp - show mempool transactions")
+	println("getmemptx [id] - show specific mempool transaction")
+	println("getbc [start_height] [end_height] - show titles of blockchain blocks from a defined range")
+	println("getblocktx [block_height] [block_tx_id] - show specific transaction from a defined block")
+	println("getaccaddr [acc_id] - show addresses and balances of a specific account")
+	println("gettxo - show unspent outputs (address and sum)")
+	println("maketx - create new transaction and send to mempool")
+	println("showminingstats - show statistics of current mining process")
+}
+
 func ifPauseFunction(function func(), command string) {
 	if command_executor.Pause {
 		function()
@@ -205,24 +220,8 @@ func accAddressesPrinter() {
 	}
 }
 
-// TODO: change according to new utxo structutre
 func utxoPrinter() {
 	utxo.PrintCoinDatabase()
-}
-
-func helpPrinter() {
-	log.Println("List of all commands:")
-	println("stop - stop node")
-	println("pause - pause node")
-	println("help - get list of all commands")
-	println("showmemp - show mempool transactions")
-	println("showmemptx [id] - show specific mempool transaction")
-	println("showbc [start_height] [end_height] - show titles of blockchain blocks from a defined range")
-	println("showbcblocktx [block_height] [block_tx_id] - show specific transaction from a defined block")
-	println("showaccaddr [acc_id] - show addresses and balances of a specific account")
-	println("showutxo - show unspent outputs (address and sum)")
-	println("maketx - create new transaction and send to mempool")
-	println("showminingstats - show statistics of current mining process")
 }
 
 func makeTransaction() {

@@ -24,7 +24,7 @@ func Sign(hashMes string, privKey string) string {
 	return fillZero(x.String(), 78) + fillZero(y.String(), 78)
 }
 
-func Verify(pubKey, sign string, hashMes string) bool {
+func Verify(pubKey, sign, hashMes string) bool {
 	pKey := decompressPubKey(pubKey)
 
 	if len(sign) < 78 {
@@ -32,8 +32,8 @@ func Verify(pubKey, sign string, hashMes string) bool {
 	}
 
 	var signPoint Point
-	signPoint.x, _ = big.NewInt(0).SetString(sign[:78], 16)
-	signPoint.y, _ = big.NewInt(0).SetString(sign[78:], 16)
+	signPoint.x, _ = big.NewInt(0).SetString(sign[:78], 10)
+	signPoint.y, _ = big.NewInt(0).SetString(sign[78:], 10)
 	bigHash, isHashValid := hexToBig(hashMes)
 	if !isHashValid {
 		return false
@@ -47,5 +47,6 @@ func Verify(pubKey, sign string, hashMes string) bool {
 	if p3.x.String() == signPoint.x.String() {
 		return true
 	}
+
 	return false
 }
