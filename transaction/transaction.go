@@ -258,7 +258,6 @@ func VerifyTransaction(tx Transaction) bool {
 		var inpSum uint64
 		var outSum uint64
 		hashMesOfTx := hashing.SHA1(GetCatTxFields(tx))
-		//var txoArr []utxo.TXO
 
 		// Checking signatures and unique inputs
 		for i := 0; i < len(tx.Inputs); i++ {
@@ -271,15 +270,9 @@ func VerifyTransaction(tx Transaction) bool {
 			if !ecdsa.Verify(pubKey, sign, hashMesOfTx) {
 				return false
 			}
+
 			curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 			inpSum += curVal
-
-			// isExists := utxo.IsUtxoExists(tx.Inputs[i].TxHash, uint64(tx.Inputs[i].OutInd))
-			// if isExists {
-			// 	outSum += txoArr[i].Sum
-			// } else {
-			// 	return false
-			// }
 		}
 
 		for i := 0; i < len(tx.Outputs); i++ {

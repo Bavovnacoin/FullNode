@@ -12,24 +12,35 @@ type TXO struct {
 	Sum         uint64
 	OutAddress  byteArr.ByteArr
 	BlockHeight uint64
-	IsSpent     bool
 }
 
 var CoinDatabase []TXO
 
 func Spend(outTxHash byteArr.ByteArr, outind uint64) {
+	var txoToSpend TXO
+
 	for i := 0; i < len(CoinDatabase); i++ {
 		if CoinDatabase[i].OutTxHash.IsEqual(outTxHash) &&
 			CoinDatabase[i].TxOutInd == outind {
-			CoinDatabase[i].IsSpent = true
+			txoToSpend = CoinDatabase[i]
+			CoinDatabase = append(CoinDatabase[:i], CoinDatabase[i+1:]...)
+			log.Println("Utxo removed array")
+			remRes := RemUtxo(outTxHash, outind, txoToSpend.TxOutInd)
+			if remRes {
+				log.Println("Utxo removed db")
+			}
 			return
 		}
+	}
+	setRes := SetTxo(txoToSpend)
+	if setRes {
+		log.Println("Utxo added to db")
 	}
 }
 
 func IsUtxoExists(txHash byteArr.ByteArr, outInd uint64) bool {
 	for i := 0; i < len(CoinDatabase); i++ {
-		if CoinDatabase[i].OutTxHash.IsEqual(txHash) && CoinDatabase[i].TxOutInd == outInd && !CoinDatabase[i].IsSpent {
+		if CoinDatabase[i].OutTxHash.IsEqual(txHash) && CoinDatabase[i].TxOutInd == outInd {
 			return true
 		}
 	}
@@ -38,22 +49,28 @@ func IsUtxoExists(txHash byteArr.ByteArr, outInd uint64) bool {
 
 func AddUtxo(outTxHash byteArr.ByteArr, txOutInd uint64, sum uint64,
 	outAddress byteArr.ByteArr, blockHeight uint64) {
-	CoinDatabase = append(CoinDatabase, TXO{OutTxHash: outTxHash, TxOutInd: txOutInd, Sum: sum, OutAddress: outAddress,
-		BlockHeight: blockHeight, IsSpent: false})
-}
-
-func isSpentToStr(isSpent bool) string {
-	if isSpent {
-		return "Spent"
+	utxo := TXO{OutTxHash: outTxHash, TxOutInd: txOutInd, Sum: sum, OutAddress: outAddress,
+		BlockHeight: blockHeight}
+	res := SetUtxo(utxo)
+	if !res {
+		log.Println("Problem when adding utxo to database")
+	} else {
+		println("Output added")
 	}
-	return "Unspent"
+	CoinDatabase = append(CoinDatabase, utxo)
 }
 
+func (txo *TXO) PrintTxo(i int) {
+	fmt.Printf("[%d]. Coins from transaction: %s (output num. %d) on address %s. Block height: %d. sum: %d\n",
+		i, txo.OutTxHash.ToHexString(), txo.TxOutInd, txo.OutAddress.ToHexString(), txo.BlockHeight, txo.Sum)
+}
+
+// TODO: print unspent and spent outputs
 func PrintCoinDatabase() {
 	log.Println("Utxo list:")
 	for i := 0; i < len(CoinDatabase); i++ {
-		fmt.Printf("[%d]. %s tx. Coins from transaction: %s (output num. %d) on address %s. Block height: %d. sum: %d\n",
-			i, isSpentToStr(CoinDatabase[i].IsSpent), CoinDatabase[i].OutTxHash.ToHexString(),
-			CoinDatabase[i].TxOutInd, CoinDatabase[i].OutAddress.ToHexString(), CoinDatabase[i].BlockHeight, CoinDatabase[i].Sum)
+		CoinDatabase[i].PrintTxo(i)
 	}
+	log.Println("Txo list:")
+
 }

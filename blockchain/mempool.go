@@ -6,7 +6,6 @@ import (
 	"log"
 )
 
-var MpLength uint64
 var Mempool []transaction.Transaction
 
 func ValidateTransaction(tx transaction.Transaction) bool {

@@ -2,6 +2,8 @@ package dbController
 
 import "github.com/syndtr/goleveldb/leveldb"
 
+var DB Database
+
 type Database struct {
 	Db *leveldb.DB
 }

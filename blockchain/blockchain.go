@@ -2,7 +2,6 @@ package blockchain
 
 import (
 	"bavovnacoin/byteArr"
-	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/utxo"
@@ -13,10 +12,9 @@ import (
 	"math"
 	"math/big"
 	"runtime"
+	"strings"
 	"time"
 )
-
-var Database dbController.Database
 
 var BcLength uint64
 var LastBlock Block
@@ -154,6 +152,8 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 	if miningFlag != -1 {
 		newBlock.Bits = GetCurrBitsValue()
 		log.Println("Current bits value is " + fmt.Sprintf("%x", newBlock.Bits))
+		target := fmt.Sprintf("%x", BitsToTarget(newBlock.Bits))
+		log.Println("Current target value is " + strings.Repeat("0", 40-len(target)) + target)
 	}
 
 	if miningFlag == 0 {

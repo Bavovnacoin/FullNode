@@ -10,7 +10,7 @@ func SetBcHeight(hgt uint64) bool {
 	if !isConv {
 		return false
 	}
-	return Database.SetValue("bcLength", byteVal)
+	return dbController.DB.SetValue("bcLength", byteVal)
 }
 
 func IncrBcHeight() {
@@ -19,7 +19,7 @@ func IncrBcHeight() {
 }
 
 func GetBcHeight() (uint64, bool) {
-	value, isGotten := Database.GetValue("bcLength")
+	value, isGotten := dbController.DB.GetValue("bcLength")
 	if !isGotten {
 		return 0, false
 	}
@@ -38,12 +38,12 @@ func WriteBlock(height uint64, block Block) bool {
 		return false
 	}
 	println("Writing block", "bc"+fmt.Sprint(height))
-	return Database.SetValue("bc"+fmt.Sprint(height), byteVal)
+	return dbController.DB.SetValue("bc"+fmt.Sprint(height), byteVal)
 }
 
 func GetBlock(height uint64) (Block, bool) {
 	var block Block
-	value, isGotten := Database.GetValue("bc" + fmt.Sprint(height))
+	value, isGotten := dbController.DB.GetValue("bc" + fmt.Sprint(height))
 	if !isGotten {
 		return block, false
 	}

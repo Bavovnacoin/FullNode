@@ -80,7 +80,7 @@ func helpPrinter() {
 	println("getbc [start_height] [end_height] - show titles of blockchain blocks from a defined range")
 	println("getblocktx [block_height] [block_tx_id] - show specific transaction from a defined block")
 	println("getaccaddr [acc_id] - show addresses and balances of a specific account")
-	println("gettxo - show unspent outputs (address and sum)")
+	println("gettxo - show all outputs")
 	println("maketx - create new transaction and send to mempool")
 	println("showminingstats - show statistics of current mining process")
 }

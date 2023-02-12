@@ -10,13 +10,14 @@ import (
 func SetMempLen(len uint64) bool {
 	byteVal, isConv := dbController.ToByteArr(len)
 	if !isConv {
+		println("ssssssssssssssssssssssss")
 		return false
 	}
-	return Database.SetValue("mpLength", byteVal)
+	return dbController.DB.SetValue("mpLength", byteVal)
 }
 
 func GetMempLen() (uint64, bool) {
-	value, isGotten := Database.GetValue("mpLength")
+	value, isGotten := dbController.DB.GetValue("mpLength")
 	if !isGotten {
 		return 0, false
 	}
@@ -35,12 +36,12 @@ func WriteTxToMempool(id uint64, tx transaction.Transaction) bool {
 		return false
 	}
 
-	return Database.SetValue("mp"+fmt.Sprint(id), byteVal)
+	return dbController.DB.SetValue("mp"+fmt.Sprint(id), byteVal)
 }
 
 func GetTxFromMempool(id uint64) (transaction.Transaction, bool) {
 	var tx transaction.Transaction
-	value, isGotten := Database.GetValue("mp" + fmt.Sprint(id))
+	value, isGotten := dbController.DB.GetValue("mp" + fmt.Sprint(id))
 	if !isGotten {
 		return tx, false
 	}
@@ -62,11 +63,12 @@ func WriteMempoolData() {
 	if oldLen > uint64(len(Mempool)) {
 		RemoveMPRange(i, oldLen)
 	}
+	SetMempLen(uint64(len(Mempool)))
 }
 
 func RemoveMPRange(start, end uint64) {
 	for ; start < end; start++ {
-		res := Database.RemoveValue("mp" + fmt.Sprint(start))
+		res := dbController.DB.RemoveValue("mp" + fmt.Sprint(start))
 		if res {
 			break
 		}
