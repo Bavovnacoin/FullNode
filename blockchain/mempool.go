@@ -26,8 +26,10 @@ func ValidateTransaction(tx transaction.Transaction) bool {
 	return true
 }
 
-func AddTxToMempool(tx transaction.Transaction) bool {
-	if ValidateTransaction(tx) {
+func AddTxToMempool(tx transaction.Transaction, allowValidate bool) bool {
+	if allowValidate && !ValidateTransaction(tx) {
+		return false
+	} else {
 		fee := transaction.GetTxFee(tx)
 		insInd := findIndexSorted(fee, tx.Locktime)
 
@@ -105,5 +107,16 @@ func PrintMempool() {
 	for i := 0; i < len(Mempool); i++ {
 		log.Printf("[%d]. Fee: %d, coins: %d, locktime: %d\n", i, transaction.GetTxFee(Mempool[i]),
 			transaction.GetOutputSum(Mempool[i].Outputs), Mempool[i].Locktime)
+	}
+}
+
+func BackTransactionsToMempool() {
+	if IsMempAdded {
+		for i := 1; i < len(BlockForMining.Transactions); i++ {
+			AddTxToMempool(BlockForMining.Transactions[i], false)
+		}
+		if len(BlockForMining.Transactions) > 1 {
+			log.Printf("%d transactions are returned back to mempool\n", len(BlockForMining.Transactions)-1)
+		}
 	}
 }

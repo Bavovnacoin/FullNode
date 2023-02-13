@@ -1,28 +1,47 @@
 package testing
 
-/*
-	STEP 1
-	Make emitation of full node work: fill it with accounts, create random transactions
-	(valid/not and miscellaneous parameters), create and validate blocks, choose best-fee
-	transactions for blocks, change difficulty, log all the information into console,
-	control the execution of test by typing in commands.
-*/
-
 import (
 	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
+	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/transaction"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
+	"strconv"
 	"time"
 )
 
 var newAccountNotFact int = 0
 var newAccountNotCome int = 0
+
+func InitAccountsData() {
+	var emptyDat []byte
+	err := account.IsWalletExists(account.WalletName)
+	if !err {
+		os.WriteFile(account.WalletName, emptyDat, 0777)
+		var genesisAccKeyPair []ecdsa.KeyPair
+		genesisAccKeyPair = append(genesisAccKeyPair, ecdsa.KeyPair{PrivKey: "d966fded26f23d50bb1223cdc6efe4cfebc9f2d6967cb570122c040baf5d42091953a2ba6466963351a4c6bc616e1858de87de02724cc89d9306a62b6d29fab6",
+			PublKey: "033361587c679cf9476949cb7cdd15c07d6f2f9674886333f667bfedb87635a4b4"})
+		account.Wallet = append(account.Wallet, account.Account{Id: "0",
+			HashPass: "b6589fc6ab0dc82cf12099d1c2d40ab994e8410c", KeyPairList: genesisAccKeyPair})
+
+		account.WriteAccounts()
+
+		log.Println("Created new wallet")
+	} else {
+		dataByte, _ := os.ReadFile(account.WalletName)
+		json.Unmarshal([]byte(dataByte), &account.Wallet)
+		account.RightBoundAccNum, _ = strconv.Atoi(account.Wallet[len(account.Wallet)-1].Id)
+
+		log.Println("Restored wallet")
+	}
+}
 
 func createAccoundRandom() {
 	source := rand.NewSource(time.Now().Unix())
@@ -31,12 +50,15 @@ func createAccoundRandom() {
 	if newAccountNotCome != newAccountNotFact {
 		newAccountNotCome++
 	} else {
-		newAcc := account.GenAccount(fmt.Sprint(len(command_executor.Network_accounts)))
-		command_executor.Network_accounts = append(command_executor.Network_accounts, newAcc)
+		newAcc := account.GenAccount(fmt.Sprint(len(account.Wallet)))
+		account.Wallet = append(account.Wallet, newAcc)
+
+		account.WriteAccounts()
 
 		newAccountNotFact = rand.Intn(2000000) + 3000000
 		newAccountNotCome = 0
-		log.Printf("Account with index %d created!\n", len(command_executor.Network_accounts)-1)
+
+		log.Printf("Account with index %d created!\n", len(account.Wallet)-1)
 	}
 	command_executor.PauseCommand()
 }
@@ -46,20 +68,20 @@ func getTxRandOuts(currInd int, balance uint64) ([]byteArr.ByteArr, []uint64) {
 	rand := rand.New(source)
 
 	var accNum int
-	if len(command_executor.Network_accounts) == 1 {
-		accNum = rand.Intn(len(command_executor.Network_accounts)) + 1
+	if len(account.Wallet) == 1 {
+		accNum = rand.Intn(len(account.Wallet)) + 1
 	} else {
-		accNum = rand.Intn(len(command_executor.Network_accounts)-1) + 1
+		accNum = rand.Intn(len(account.Wallet)-1) + 1
 	}
 	var outputAddress []byteArr.ByteArr
 	var outputSum []uint64
 
 	for len(outputAddress) < accNum {
-		netwAccInd := rand.Intn(len(command_executor.Network_accounts))
-		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[netwAccInd].KeyPairList))
+		netwAccInd := rand.Intn(len(account.Wallet))
+		netwAccAddrInd := rand.Intn(len(account.Wallet[netwAccInd].KeyPairList))
 
 		var outAddress byteArr.ByteArr
-		outAddress.SetFromHexString(hashing.SHA1(command_executor.Network_accounts[netwAccInd].KeyPairList[netwAccAddrInd].PublKey), 20)
+		outAddress.SetFromHexString(hashing.SHA1(account.Wallet[netwAccInd].KeyPairList[netwAccAddrInd].PublKey), 20)
 
 		if currInd == netwAccInd {
 			continue
@@ -105,14 +127,14 @@ func createTxRandom() {
 		time.Sleep(time.Duration(sleepTimeTxCreation) * time.Millisecond)
 		sleepTimeTxCreation = uint64(rand.Intn(300)) + 1000
 
-		accInd := rand.Int() % len(command_executor.Network_accounts)
-		netwAccAddrInd := rand.Intn(len(command_executor.Network_accounts[accInd].KeyPairList))
+		accInd := rand.Int() % len(account.Wallet)
+		netwAccAddrInd := rand.Intn(len(account.Wallet[accInd].KeyPairList))
 
 		var accAddr byteArr.ByteArr
-		accAddr.SetFromHexString(hashing.SHA1(command_executor.Network_accounts[accInd].KeyPairList[netwAccAddrInd].PublKey), 20)
+		accAddr.SetFromHexString(hashing.SHA1(account.Wallet[accInd].KeyPairList[netwAccAddrInd].PublKey), 20)
 		isAddrInMempool := blockchain.IsAddressInMempool(accAddr)
 
-		account.CurrAccount = command_executor.Network_accounts[accInd]
+		account.CurrAccount = account.Wallet[accInd]
 		account.GetBalance()
 
 		if account.CurrAccount.Balance != 0 && !isAddrInMempool {
@@ -120,7 +142,7 @@ func createTxRandom() {
 			isGenLocktime := rand.Intn(5)
 			var locktime uint
 			if isGenLocktime == 2 {
-				locktime = uint(int(blockchain.BcLength) + rand.Intn(3) + 1)
+				locktime = uint(int(blockchain.BcLength+1) + rand.Intn(3) + 1)
 			}
 
 			outAddr, outSum := getTxRandOuts(accInd, account.CurrAccount.Balance)
@@ -138,9 +160,9 @@ func createTxRandom() {
 
 			command_executor.PauseCommand()
 
-			command_executor.Network_accounts[accInd] = account.CurrAccount
+			account.Wallet[accInd] = account.CurrAccount
 			if tx.Inputs != nil {
-				if blockchain.AddTxToMempool(tx) {
+				if blockchain.AddTxToMempool(tx, true) {
 					log.Println("New tx added to mempool")
 				} else if isTxInvalid == 1 {
 					log.Println("New tx was not added to mempool")

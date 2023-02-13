@@ -18,8 +18,8 @@ import (
 
 var BcLength uint64
 var LastBlock Block
-
-//var Blockchain []Block // Remove
+var IsMempAdded bool
+var BlockForMining Block
 
 type Block struct {
 	Blocksize        uint
@@ -71,6 +71,7 @@ func AddBlockToBlockchain(block Block) bool {
 		LastBlock = block
 		WriteBlock(BcLength, block)
 	}
+	IsMempAdded = false
 	return isBlockValid
 }
 
@@ -139,7 +140,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 		feeSum += transaction.GetTxFee(txArr[i])
 	}
 	coinbaseTx.Outputs[0].Sum += uint64(feeSum)
-
+	IsMempAdded = true
 	txArr = append([]transaction.Transaction{coinbaseTx}, txArr...)
 	newBlock.Transactions = make([]transaction.Transaction, len(txArr))
 	copy(newBlock.Transactions, txArr)
@@ -155,7 +156,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 		target := fmt.Sprintf("%x", BitsToTarget(newBlock.Bits))
 		log.Println("Current target value is " + strings.Repeat("0", 40-len(target)) + target)
 	}
-
+	BlockForMining = newBlock
 	if miningFlag == 0 {
 		newBlock.Nonce = MineThreads(newBlock, 1)
 	} else if miningFlag == 1 {

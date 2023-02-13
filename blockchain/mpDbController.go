@@ -10,7 +10,6 @@ import (
 func SetMempLen(len uint64) bool {
 	byteVal, isConv := dbController.ToByteArr(len)
 	if !isConv {
-		println("ssssssssssssssssssssssss")
 		return false
 	}
 	return dbController.DB.SetValue("mpLength", byteVal)
@@ -50,6 +49,7 @@ func GetTxFromMempool(id uint64) (transaction.Transaction, bool) {
 	if !isConv {
 		return tx, false
 	}
+
 	return tx, true
 }
 
@@ -80,8 +80,8 @@ func RestoreMempool() {
 	var i uint64
 	for ; i < mempLen; i++ {
 		tx, val := GetTxFromMempool(i)
-		if val {
-			println("Problem when restoring mp")
+		if !val {
+			log.Println("Problem when restoring mp")
 			break
 		}
 		Mempool = append(Mempool, tx)

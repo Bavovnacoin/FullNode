@@ -13,14 +13,13 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"strconv"
 )
 
-var walletName string = "wallet.json"
+var WalletName string = "wallet.json"
 var RightBoundAccNum int // Accout index of the right bound
 var Wallet []Account
 
-func isWalletExists(name string) bool {
+func IsWalletExists(name string) bool {
 	file, err := os.Open(name)
 	if errors.Is(err, os.ErrNotExist) {
 		return false
@@ -29,19 +28,7 @@ func isWalletExists(name string) bool {
 	return true
 }
 
-func InitAccountsData() {
-	var emptyDat []byte
-	err := isWalletExists(walletName)
-	if !err {
-		os.WriteFile(walletName, emptyDat, 0777)
-	} else {
-		dataByte, _ := os.ReadFile(walletName)
-		json.Unmarshal([]byte(dataByte), &Wallet)
-		RightBoundAccNum, _ = strconv.Atoi(Wallet[len(Wallet)-1].Id)
-	}
-}
-
 func WriteAccounts() {
 	byteData, _ := json.MarshalIndent(Wallet, "", "    ")
-	os.WriteFile(walletName, byteData, 0777)
+	os.WriteFile(WalletName, byteData, 0777)
 }

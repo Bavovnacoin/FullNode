@@ -32,8 +32,14 @@ func Verify(pubKey, sign, hashMes string) bool {
 	}
 
 	var signPoint Point
-	signPoint.x, _ = big.NewInt(0).SetString(sign[:78], 10)
-	signPoint.y, _ = big.NewInt(0).SetString(sign[78:], 10)
+	errX := true
+	errY := true
+	signPoint.x, errX = big.NewInt(0).SetString(sign[:78], 10)
+	signPoint.y, errY = big.NewInt(0).SetString(sign[78:], 10)
+	if !errX || !errY {
+		return false
+	}
+
 	bigHash, isHashValid := hexToBig(hashMes)
 	if !isHashValid {
 		return false

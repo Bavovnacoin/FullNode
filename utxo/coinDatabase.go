@@ -29,12 +29,12 @@ func Spend(outTxHash byteArr.ByteArr, outind uint64) {
 			if remRes {
 				log.Println("Utxo removed db")
 			}
-			return
+			break
 		}
 	}
 	setRes := SetTxo(txoToSpend)
 	if setRes {
-		log.Println("Utxo added to db")
+		log.Println("Utxo has been added to db")
 	}
 }
 
@@ -54,8 +54,6 @@ func AddUtxo(outTxHash byteArr.ByteArr, txOutInd uint64, sum uint64,
 	res := SetUtxo(utxo)
 	if !res {
 		log.Println("Problem when adding utxo to database")
-	} else {
-		println("Output added")
 	}
 	CoinDatabase = append(CoinDatabase, utxo)
 }
@@ -72,5 +70,5 @@ func PrintCoinDatabase() {
 		CoinDatabase[i].PrintTxo(i)
 	}
 	log.Println("Txo list:")
-
+	PrintSpentTxOuts()
 }

@@ -77,16 +77,6 @@ func ComputeTxSize(tx Transaction) int {
 	return size
 }
 
-func getNextInpIndex(addressInp byteArr.ByteArr, utxoInputs []utxo.TXO, utxoInd int) int {
-	ind := -1
-	for i := 0; i <= utxoInd; i++ {
-		if utxoInputs[i].OutAddress.IsEqual(addressInp) {
-			ind++
-		}
-	}
-	return ind
-}
-
 /*
 Algorithm of effective transaction inputs search:
 iterate utxo of a specific account and check two neighboring values.
@@ -113,7 +103,7 @@ func GetTransInputs(sum uint64, accUtxo []utxo.TXO) ([]UtxoForInput, []utxo.TXO,
 	}
 
 	for i := 1; i < len(accUtxo); i++ {
-		if accUtxo[i-1].Sum >= sum-tempSum {
+		if accUtxo[i-1].Sum >= sum-tempSum && accUtxo[i-1].Sum != 0 {
 			if sum-tempSum > accUtxo[i].Sum {
 				utxoInput = append(utxoInput, UtxoForInput{TxHash: accUtxo[i-1].OutTxHash, OutInd: int(accUtxo[i-1].TxOutInd)})
 				return utxoInput, accUtxo, accUtxo[i-1].Sum + tempSum
@@ -278,6 +268,7 @@ func VerifyTransaction(tx Transaction) bool {
 		for i := 0; i < len(tx.Outputs); i++ {
 			outSum += tx.Outputs[i].Sum
 		}
+
 		// Checking presence of coins to be spent
 		if inpSum < outSum {
 			return false

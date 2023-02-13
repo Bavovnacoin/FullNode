@@ -37,7 +37,6 @@ func WriteBlock(height uint64, block Block) bool {
 	if !isConv {
 		return false
 	}
-	println("Writing block", "bc"+fmt.Sprint(height))
 	return dbController.DB.SetValue("bc"+fmt.Sprint(height), byteVal)
 }
 

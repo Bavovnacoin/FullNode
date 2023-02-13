@@ -34,8 +34,8 @@ func GenAccount(password string) Account {
 	RightBoundAccNum++
 	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
 
-	Wallet = append(Wallet, newAcc)
-	//WriteAccounts() // TODO: Enable on step 2.
+	// Wallet = append(Wallet, newAcc)
+	//WriteAccounts()
 	return newAcc
 }
 
@@ -45,8 +45,8 @@ func AddKeyPairToAccount(password string) string {
 		newKeyPair := ecdsa.GenKeyPair()
 		newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 		CurrAccount.KeyPairList = append(CurrAccount.KeyPairList, newKeyPair)
-		//Wallet[CurrAccount.ArrId] = CurrAccount // TODO: Enable on step 2.
-		//WriteAccounts() // TODO: Enable on step 2.
+		Wallet[CurrAccount.ArrId] = CurrAccount
+		//WriteAccounts()
 	} else {
 		return "Wrong password!"
 	}

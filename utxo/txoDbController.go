@@ -50,6 +50,7 @@ func RemUtxo(OutTxHash byteArr.ByteArr, OutTxInd, blockHeight uint64) bool {
 func SetTxo(txo TXO) bool {
 	byteVal, isConv := dbController.ToByteArr(txo)
 	if !isConv {
+		println("Problem when conversion txo")
 		return false
 	}
 	key := "txo" + hashing.SHA1(txo.OutTxHash.ToHexString()+fmt.Sprint(txo.TxOutInd)+fmt.Sprint(txo.BlockHeight))
@@ -63,6 +64,7 @@ func PrintSpentTxOuts() bool {
 		var txo TXO
 		isConv := dbController.FromByteArr(iter.Value(), &txo)
 		if !isConv {
+			println("problem here")
 			return false
 		}
 		txo.PrintTxo(i)

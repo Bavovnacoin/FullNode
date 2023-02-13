@@ -196,13 +196,13 @@ func accAddressesPrinter() {
 	for i := 1; i < len(command); i++ {
 		ind, err := strconv.ParseInt(command[i], 10, 64)
 		if err == nil {
-			if ind >= int64(len(command_executor.Network_accounts)) || ind < 0 {
-				log.Println("Error. You typed wrong tx index. Must be between 0 and", len(command_executor.Network_accounts)-1)
+			if ind >= int64(len(account.Wallet)) || ind < 0 {
+				log.Println("Error. You typed wrong tx index. Must be between 0 and", len(account.Wallet)-1)
 				break
 			}
 
 			log.Println("Address of account index", ind)
-			acc := command_executor.Network_accounts[ind]
+			acc := account.Wallet[ind]
 			var sum uint64
 			for i := 0; i < len(acc.KeyPairList); i++ {
 				var accAddress byteArr.ByteArr
@@ -239,7 +239,7 @@ func makeTransaction() {
 		accIdInp, err := strconv.ParseUint(text, 10, 64)
 		if err == nil {
 			accId = accIdInp
-			account.CurrAccount = command_executor.Network_accounts[accId]
+			account.CurrAccount = account.Wallet[accId]
 			break
 		} else {
 			println("Error. Expected numerical value.")
@@ -309,7 +309,7 @@ func makeTransaction() {
 	tx, mes := transaction.CreateTransaction(fmt.Sprint(accId), outAddr, outSum, fee, uint(locktime))
 	if mes == "" {
 		transaction.PrintTransaction(tx)
-		if blockchain.AddTxToMempool(tx) {
+		if blockchain.AddTxToMempool(tx, true) {
 			log.Println("Created transaction is sent to the mempool")
 		} else {
 			log.Println("Transaction was not added to mempool")

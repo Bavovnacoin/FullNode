@@ -32,7 +32,7 @@ func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint6
 	if spentTimeSec == 0 {
 		spentTimeSec = 1
 	}
-	coef := float64(expextTimeSec) / float64(spentTimeSec)
+	coef := float64(spentTimeSec) / float64(expextTimeSec)
 	target := BitsToTarget(bits)
 	target = target.Mul(target, big.NewInt(int64(coef*10000000)))
 	target = target.Div(target, big.NewInt(10000000))
