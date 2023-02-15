@@ -9,7 +9,7 @@ import (
 type TXO struct {
 	OutTxHash   byteArr.ByteArr
 	TxOutInd    uint64
-	Sum         uint64
+	Value       uint64
 	OutAddress  byteArr.ByteArr
 	BlockHeight uint64
 }
@@ -47,9 +47,9 @@ func IsUtxoExists(txHash byteArr.ByteArr, outInd uint64) bool {
 	return false
 }
 
-func AddUtxo(outTxHash byteArr.ByteArr, txOutInd uint64, sum uint64,
+func AddUtxo(outTxHash byteArr.ByteArr, txOutInd uint64, Value uint64,
 	outAddress byteArr.ByteArr, blockHeight uint64) {
-	utxo := TXO{OutTxHash: outTxHash, TxOutInd: txOutInd, Sum: sum, OutAddress: outAddress,
+	utxo := TXO{OutTxHash: outTxHash, TxOutInd: txOutInd, Value: Value, OutAddress: outAddress,
 		BlockHeight: blockHeight}
 	res := SetUtxo(utxo)
 	if !res {
@@ -59,8 +59,8 @@ func AddUtxo(outTxHash byteArr.ByteArr, txOutInd uint64, sum uint64,
 }
 
 func (txo *TXO) PrintTxo(i int) {
-	fmt.Printf("[%d]. Coins from transaction: %s (output num. %d) on address %s. Block height: %d. sum: %d\n",
-		i, txo.OutTxHash.ToHexString(), txo.TxOutInd, txo.OutAddress.ToHexString(), txo.BlockHeight, txo.Sum)
+	fmt.Printf("[%d]. Coins from transaction: %s (output num. %d) on address %s. Block height: %d. value: %d\n",
+		i, txo.OutTxHash.ToHexString(), txo.TxOutInd, txo.OutAddress.ToHexString(), txo.BlockHeight, txo.Value)
 }
 
 // TODO: print unspent and spent outputs

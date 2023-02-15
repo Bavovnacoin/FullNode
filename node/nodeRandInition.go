@@ -1,4 +1,4 @@
-package testing
+package node
 
 import (
 	"bavovnacoin/account"
@@ -74,7 +74,7 @@ func getTxRandOuts(currInd int, balance uint64) ([]byteArr.ByteArr, []uint64) {
 		accNum = rand.Intn(len(account.Wallet)-1) + 1
 	}
 	var outputAddress []byteArr.ByteArr
-	var outputSum []uint64
+	var outputValue []uint64
 
 	for len(outputAddress) < accNum {
 		netwAccInd := rand.Intn(len(account.Wallet))
@@ -99,18 +99,18 @@ func getTxRandOuts(currInd int, balance uint64) ([]byteArr.ByteArr, []uint64) {
 		// Allow spend all money on one tx
 		isAllBalanceOnTx := rand.Intn(4)
 		if isAllBalanceOnTx == 0 && balance%uint64(accNum) != 0 {
-			if len(outputSum)+1 != accNum { // is last output
-				output.Sum = uint64(balance / uint64(accNum))
+			if len(outputValue)+1 != accNum { // is last output
+				output.Value = uint64(balance / uint64(accNum))
 			} else {
-				output.Sum = balance - uint64(balance/uint64(accNum))*uint64(accNum)
+				output.Value = balance - uint64(balance/uint64(accNum))*uint64(accNum)
 			}
 		} else {
-			output.Sum = uint64(float64(balance) / float64(accNum+2))
+			output.Value = uint64(float64(balance) / float64(accNum+2))
 		}
 		outputAddress = append(outputAddress, output.Address)
-		outputSum = append(outputSum, output.Sum)
+		outputValue = append(outputValue, output.Value)
 	}
-	return outputAddress, outputSum
+	return outputAddress, outputValue
 }
 
 func txRandomCreator() {
@@ -145,13 +145,13 @@ func createTxRandom() {
 				locktime = uint(int(blockchain.BcLength+1) + rand.Intn(3) + 1)
 			}
 
-			outAddr, outSum := getTxRandOuts(accInd, account.CurrAccount.Balance)
-			tx, mes := transaction.CreateTransaction(fmt.Sprint(accInd), outAddr, outSum, fee, locktime)
+			outAddr, outValue := getTxRandOuts(accInd, account.CurrAccount.Balance)
+			tx, mes := transaction.CreateTransaction(fmt.Sprint(accInd), outAddr, outValue, fee, locktime)
 
 			// Creation of invalid transaction
 			isTxInvalid := rand.Intn(10)
 			if isTxInvalid == 1 {
-				tx.Outputs[0].Sum = account.CurrAccount.Balance
+				tx.Outputs[0].Value = account.CurrAccount.Balance
 			}
 
 			if len(mes) != 0 || isTxInvalid == 1 {

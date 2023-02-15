@@ -203,16 +203,16 @@ func accAddressesPrinter() {
 
 			log.Println("Address of account index", ind)
 			acc := account.Wallet[ind]
-			var sum uint64
+			var value uint64
 			for i := 0; i < len(acc.KeyPairList); i++ {
 				var accAddress byteArr.ByteArr
 				accAddrStr := hashing.SHA1(acc.KeyPairList[i].PublKey)
 				accAddress.SetFromHexString(accAddrStr, 20)
 				bal := account.GetBalByAddress(accAddress)
-				sum += bal
+				value += bal
 				fmt.Printf("[%d]. %s, balance: %d\n", i, accAddrStr, bal)
 			}
-			fmt.Printf("Total sum: %d\n", sum)
+			fmt.Printf("Total value: %d\n", value)
 			break
 		} else {
 			log.Println("Error. Expected numerical type as a parameter")
@@ -247,8 +247,8 @@ func makeTransaction() {
 	}
 
 	var outAddr []byteArr.ByteArr
-	var outSum []uint64
-	println("Type in address and sum to be sent separated by a space. Or continue by typing next.")
+	var outValue []uint64
+	println("Type in address and value to be sent separated by a space. Or continue by typing next.")
 
 	for true {
 		text, _ = reader.ReadString('\n')
@@ -263,9 +263,9 @@ func makeTransaction() {
 		var inpAddr byteArr.ByteArr
 		inpAddr.SetFromHexString(inputArr[0], 20)
 		for i := 1; i < len(inputArr); i++ {
-			sum, err := strconv.ParseUint(inputArr[i], 10, 64)
+			value, err := strconv.ParseUint(inputArr[i], 10, 64)
 			if err == nil {
-				outSum = append(outSum, sum)
+				outValue = append(outValue, value)
 			}
 		}
 	}
@@ -306,7 +306,7 @@ func makeTransaction() {
 		}
 	}
 
-	tx, mes := transaction.CreateTransaction(fmt.Sprint(accId), outAddr, outSum, fee, uint(locktime))
+	tx, mes := transaction.CreateTransaction(fmt.Sprint(accId), outAddr, outValue, fee, uint(locktime))
 	if mes == "" {
 		transaction.PrintTransaction(tx)
 		if blockchain.AddTxToMempool(tx, true) {

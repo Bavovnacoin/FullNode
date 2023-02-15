@@ -64,7 +64,7 @@ func AddBlockToBlockchain(block Block) bool {
 			for j := 0; j < len(txOutList); j++ {
 				var txByteArr byteArr.ByteArr
 				txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
-				utxo.AddUtxo(txByteArr, uint64(j), txOutList[j].Sum, txOutList[j].Address, uint64(int(BcLength)))
+				utxo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
 			}
 		}
 
@@ -131,7 +131,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 	}
 	newBlock.Time = time.Now()
 	var coinbaseTx transaction.Transaction
-	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{Address: rewardAdr, Sum: GetCoinsForEmition()})
+	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{Address: rewardAdr, Value: GetCoinsForEmition()})
 
 	var txArr []transaction.Transaction = GetTransactionsFromMempool(transaction.ComputeTxSize(coinbaseTx))
 
@@ -139,7 +139,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 	for i := 0; i < len(txArr); i++ {
 		feeSum += transaction.GetTxFee(txArr[i])
 	}
-	coinbaseTx.Outputs[0].Sum += uint64(feeSum)
+	coinbaseTx.Outputs[0].Value += uint64(feeSum)
 	IsMempAdded = true
 	txArr = append([]transaction.Transaction{coinbaseTx}, txArr...)
 	newBlock.Transactions = make([]transaction.Transaction, len(txArr))
@@ -202,7 +202,7 @@ func ValidateBlock(block Block, height int) bool {
 	for i := 1; i < len(block.Transactions); i++ {
 		allFee += transaction.GetTxFee(block.Transactions[i])
 	}
-	if !CheckEmitedCoins(block.Transactions[0].Outputs[0].Sum-allFee, height) {
+	if !CheckEmitedCoins(block.Transactions[0].Outputs[0].Value-allFee, height) {
 		return false
 	}
 

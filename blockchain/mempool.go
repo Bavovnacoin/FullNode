@@ -13,6 +13,7 @@ func ValidateTransaction(tx transaction.Transaction) bool {
 		return false
 	}
 
+	// TODO: Remove!
 	for j := 0; j < len(tx.Inputs); j++ {
 		for i := 0; i < len(Mempool); i++ { // Check same input in mempool (TODO: find more effective way)
 			for k := 0; k < len(Mempool[i].Inputs); k++ {
@@ -47,7 +48,6 @@ func AddTxToMempool(tx transaction.Transaction, allowValidate bool) bool {
 			return true
 		}
 	}
-	return false
 }
 
 // Make binary search???
@@ -106,7 +106,7 @@ func PrintMempool() {
 	log.Println(mempoolMes)
 	for i := 0; i < len(Mempool); i++ {
 		log.Printf("[%d]. Fee: %d, coins: %d, locktime: %d\n", i, transaction.GetTxFee(Mempool[i]),
-			transaction.GetOutputSum(Mempool[i].Outputs), Mempool[i].Locktime)
+			transaction.GetOutputValue(Mempool[i].Outputs), Mempool[i].Locktime)
 	}
 }
 

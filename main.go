@@ -1,7 +1,7 @@
 package main
 
-import "bavovnacoin/testing"
+import "bavovnacoin/node"
 
 func main() {
-	testing.Test1()
+	node.Launch()
 }

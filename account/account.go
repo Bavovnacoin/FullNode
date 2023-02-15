@@ -34,8 +34,6 @@ func GenAccount(password string) Account {
 	RightBoundAccNum++
 	newAcc.KeyPairList = append(newAcc.KeyPairList, newKeyPair)
 
-	// Wallet = append(Wallet, newAcc)
-	//WriteAccounts()
 	return newAcc
 }
 
@@ -46,7 +44,6 @@ func AddKeyPairToAccount(password string) string {
 		newKeyPair.PrivKey = cryption.AES_encrypt(newKeyPair.PrivKey, password)
 		CurrAccount.KeyPairList = append(CurrAccount.KeyPairList, newKeyPair)
 		Wallet[CurrAccount.ArrId] = CurrAccount
-		//WriteAccounts()
 	} else {
 		return "Wrong password!"
 	}
@@ -65,7 +62,7 @@ func GetAccUtxo() []utxo.TXO {
 		}
 	}
 	sort.Slice(accUtxo, func(i, j int) bool {
-		return accUtxo[i].Sum > accUtxo[j].Sum
+		return accUtxo[i].Value > accUtxo[j].Value
 	})
 	return accUtxo
 }
@@ -73,20 +70,20 @@ func GetAccUtxo() []utxo.TXO {
 func GetBalHashOutInd(txHash byteArr.ByteArr, outInd int) uint64 {
 	for j := 0; j < len(utxo.CoinDatabase); j++ {
 		if txHash.IsEqual(utxo.CoinDatabase[j].OutTxHash) && utxo.CoinDatabase[j].TxOutInd == uint64(outInd) {
-			return utxo.CoinDatabase[j].Sum
+			return utxo.CoinDatabase[j].Value
 		}
 	}
 	return 0
 }
 
 func GetBalByAddress(address byteArr.ByteArr) uint64 {
-	var sum uint64
+	var Value uint64
 	for i := 0; i < len(utxo.CoinDatabase); i++ {
 		if address.IsEqual(utxo.CoinDatabase[i].OutAddress) {
-			sum += utxo.CoinDatabase[i].Sum
+			Value += utxo.CoinDatabase[i].Value
 		}
 	}
-	return sum
+	return Value
 }
 
 // A function counts all the UTXOs that is on specific public keys on user's account

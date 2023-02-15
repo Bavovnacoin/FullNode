@@ -1,4 +1,4 @@
-package testing
+package node
 
 import (
 	"bavovnacoin/account"
@@ -22,7 +22,7 @@ func process() {
 	}
 }
 
-func Test1() {
+func Launch() {
 	dbController.DB.OpenDb()
 	go process()
 	node_controller.CommandHandler()

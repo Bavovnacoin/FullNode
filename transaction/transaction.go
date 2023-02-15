@@ -18,7 +18,7 @@ type Input struct {
 
 type Output struct {
 	Address byteArr.ByteArr
-	Sum     uint64
+	Value   uint64
 }
 
 type Transaction struct {
@@ -44,7 +44,7 @@ func GetCatTxFields(tx Transaction) string {
 	}
 	for i := 0; i < len(tx.Outputs); i++ {
 		message += tx.Outputs[i].Address.ToHexString()
-		message += fmt.Sprint(tx.Outputs[i].Sum)
+		message += fmt.Sprint(tx.Outputs[i].Value)
 	}
 	return message
 }
@@ -86,48 +86,46 @@ that is higher or equal to the required sum (minus sum that we have already foun
 If a right neighbor is less than needed sum, we keep iterating, because there is a chance
 of finding better variant.
 */
-
-// TODO: change function according to new utxo structure
-func GetTransInputs(sum uint64, accUtxo []utxo.TXO) ([]UtxoForInput, []utxo.TXO, uint64) {
+func GetTransInputs(value uint64, accUtxo []utxo.TXO) ([]UtxoForInput, []utxo.TXO, uint64) {
 	if accUtxo == nil {
 		accUtxo = account.GetAccUtxo()
 	}
 
 	accUtxo = append(accUtxo, utxo.TXO{}) // Stub value for searching
 	var utxoInput []UtxoForInput
-	tempSum := uint64(0)
+	tempValue := uint64(0)
 
-	if len(accUtxo) == 1 && accUtxo[0].Sum >= sum {
+	if len(accUtxo) == 1 && accUtxo[0].Value >= value {
 		return append(utxoInput, UtxoForInput{accUtxo[0].OutTxHash, int(accUtxo[0].TxOutInd)}),
-			accUtxo, accUtxo[0].Sum
+			accUtxo, accUtxo[0].Value
 	}
 
 	for i := 1; i < len(accUtxo); i++ {
-		if accUtxo[i-1].Sum >= sum-tempSum && accUtxo[i-1].Sum != 0 {
-			if sum-tempSum > accUtxo[i].Sum {
+		if accUtxo[i-1].Value >= value-tempValue && accUtxo[i-1].Value != 0 {
+			if value-tempValue > accUtxo[i].Value {
 				utxoInput = append(utxoInput, UtxoForInput{TxHash: accUtxo[i-1].OutTxHash, OutInd: int(accUtxo[i-1].TxOutInd)})
-				return utxoInput, accUtxo, accUtxo[i-1].Sum + tempSum
+				return utxoInput, accUtxo, accUtxo[i-1].Value + tempValue
 			} else {
 				continue
 			}
 		}
 		utxoInput = append(utxoInput, UtxoForInput{accUtxo[i-1].OutTxHash,
 			int(accUtxo[i-1].TxOutInd)})
-		tempSum += accUtxo[i-1].Sum
+		tempValue += accUtxo[i-1].Value
 	}
-	return nil, accUtxo, tempSum
+	return nil, accUtxo, tempValue
 }
 
 // Creates transaction
-func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []uint64,
+func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outVals []uint64,
 	feePerByte int, locktime uint) (Transaction, string) {
 	var tx Transaction
 	tx.Locktime = locktime
 	txSize := 0
 	tx.Version = 0
-	genSum := uint64(0)
-	for i := 0; i < len(outSumVals); i++ {
-		genSum += outSumVals[i]
+	genValue := uint64(0)
+	for i := 0; i < len(outVals); i++ {
+		genValue += outVals[i]
 	}
 
 	// Genereting outputs
@@ -135,7 +133,7 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 	for i := 0; i < len(outAdr); i++ {
 		var outVal Output
 		outVal.Address = outAdr[i]
-		outVal.Sum = uint64(outSumVals[i])
+		outVal.Value = uint64(outVals[i])
 		output = append(output, outVal)
 	}
 
@@ -143,18 +141,18 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 	var input []Input
 	kpAcc := make([]ecdsa.KeyPair, len(account.CurrAccount.KeyPairList))
 	copy(kpAcc, account.CurrAccount.KeyPairList)
-	outTxSum := uint64(0)
-	needSum := genSum + uint64(txSize)*uint64(feePerByte)
+	outTxValue := uint64(0)
+	needValue := genValue + uint64(txSize)*uint64(feePerByte)
 
 	var kpForSign []ecdsa.KeyPair
-	for outTxSum < needSum { // Looking for tx fee
+	for outTxValue < needValue { // Looking for tx fee
 		kpForSign = []ecdsa.KeyPair{}
-		inputs, txo, outSum := GetTransInputs(needSum, nil)
-		if needSum > outSum {
-			return tx, "Not enough coins for payment. You need: " + fmt.Sprint(needSum) + ", you have: " + fmt.Sprint(account.GetBalance())
+		inputs, txo, outInpValue := GetTransInputs(needValue, nil)
+		if needValue > outInpValue {
+			return tx, "Not enough coins for payment. You need: " + fmt.Sprint(needValue) + ", you have: " + fmt.Sprint(account.GetBalance())
 		}
 
-		outTxSum = outSum
+		outTxValue = outInpValue
 		for i := 0; i < len(inputs); i++ {
 			var inpVal Input
 			inpVal.TxHash = inputs[i].TxHash
@@ -181,14 +179,14 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 		tx.Inputs = input
 		tx.Outputs = output
 		txSize = ComputeTxSize(tx)
-		needSum = genSum + uint64(txSize)*uint64(feePerByte)
+		needValue = genValue + uint64(txSize)*uint64(feePerByte)
 	}
 
 	//Generating change output
-	if outTxSum > genSum+uint64(txSize)*uint64(feePerByte) {
+	if outTxValue > genValue+uint64(txSize)*uint64(feePerByte) {
 		account.AddKeyPairToAccount(passKey) // generate new keypair for the change
 		kpLen := len(account.CurrAccount.KeyPairList)
-		tx.Outputs = append(tx.Outputs, Output{Sum: uint64(outTxSum - (genSum + uint64(txSize)*uint64(feePerByte)))})
+		tx.Outputs = append(tx.Outputs, Output{Value: uint64(outTxValue - (genValue + uint64(txSize)*uint64(feePerByte)))})
 		tx.Outputs[len(tx.Outputs)-1].Address.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey), 20)
 	}
 
@@ -196,24 +194,24 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outSumVals []ui
 	return tx, ""
 }
 
-func GetInputSum(inp []Input) uint64 {
-	var sum uint64 = 0
+func GetInputValue(inp []Input) uint64 {
+	var value uint64 = 0
 	for i := 0; i < len(inp); i++ {
-		sum += account.GetBalHashOutInd(inp[i].TxHash, inp[i].OutInd)
+		value += account.GetBalHashOutInd(inp[i].TxHash, inp[i].OutInd)
 	}
-	return sum
+	return value
 }
 
-func GetOutputSum(out []Output) uint64 {
-	var sum uint64 = 0
+func GetOutputValue(out []Output) uint64 {
+	var value uint64 = 0
 	for i := 0; i < len(out); i++ {
-		sum += out[i].Sum
+		value += out[i].Value
 	}
-	return sum
+	return value
 }
 
 func GetTxFee(tx Transaction) uint64 {
-	return GetInputSum(tx.Inputs) - GetOutputSum(tx.Outputs)
+	return GetInputValue(tx.Inputs) - GetOutputValue(tx.Outputs)
 }
 
 /*
@@ -225,28 +223,28 @@ but received in this function.
 func PrintTransaction(tx Transaction) {
 	fmt.Printf("Version: %d\nLocktime %d\n", tx.Version, tx.Locktime)
 	println("Inputs:")
-	var inpSum uint64
+	var inpValue uint64
 	for i := 0; i < len(tx.Inputs); i++ {
 		curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
-		inpSum += curVal
+		inpValue += curVal
 		fmt.Printf("%d. HashAddress: %s (Bal: %d)\nOut index: %d\nScriptSig: %s\n", i, tx.Inputs[i].TxHash.ToHexString(), curVal,
 			tx.Inputs[i].OutInd, tx.Inputs[i].ScriptSig.ToHexString())
 	}
 	println("\nOutputs:")
-	var outSum uint64
+	var outValue uint64
 	for i := 0; i < len(tx.Outputs); i++ {
-		outSum += tx.Outputs[i].Sum
-		fmt.Printf("%d. HashAddress: %s. Sum: %d\n", i, tx.Outputs[i].Address.ToHexString(), tx.Outputs[i].Sum)
+		outValue += tx.Outputs[i].Value
+		fmt.Printf("%d. HashAddress: %s. Value: %d\n", i, tx.Outputs[i].Address.ToHexString(), tx.Outputs[i].Value)
 	}
 	print("(Fee: ")
-	println(inpSum-outSum, ")")
+	println(inpValue-outValue, ")")
 }
 
 // Verifies transaction
 func VerifyTransaction(tx Transaction) bool {
 	if tx.Version == 0 {
-		var inpSum uint64
-		var outSum uint64
+		var inpValue uint64
+		var outValue uint64
 		hashMesOfTx := hashing.SHA1(GetCatTxFields(tx))
 
 		// Checking signatures and unique inputs
@@ -262,15 +260,15 @@ func VerifyTransaction(tx Transaction) bool {
 			}
 
 			curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
-			inpSum += curVal
+			inpValue += curVal
 		}
 
 		for i := 0; i < len(tx.Outputs); i++ {
-			outSum += tx.Outputs[i].Sum
+			outValue += tx.Outputs[i].Value
 		}
 
 		// Checking presence of coins to be spent
-		if inpSum < outSum {
+		if inpValue < outValue {
 			return false
 		}
 	}
