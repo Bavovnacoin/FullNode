@@ -7,7 +7,7 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/transaction"
-	"bavovnacoin/utxo"
+	"bavovnacoin/txo"
 	"bufio"
 	"fmt"
 	"log"
@@ -221,7 +221,7 @@ func accAddressesPrinter() {
 }
 
 func utxoPrinter() {
-	utxo.PrintCoinDatabase()
+	txo.PrintCoinDatabase()
 }
 
 func makeTransaction() {

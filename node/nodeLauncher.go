@@ -6,12 +6,12 @@ import (
 	"bavovnacoin/dbController"
 	"bavovnacoin/node_controller"
 	"bavovnacoin/node_controller/command_executor"
-	"bavovnacoin/utxo"
+	"bavovnacoin/txo"
 )
 
 func process() {
 	blockchain.RestoreMempool()
-	utxo.RestoreCoinDatabase()
+	txo.RestoreCoinDatabase()
 	InitAccountsData()
 	blockchain.InitBlockchain()
 

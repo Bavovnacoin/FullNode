@@ -6,7 +6,7 @@ import (
 	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
-	"bavovnacoin/utxo"
+	"bavovnacoin/txo"
 	"fmt"
 )
 
@@ -86,12 +86,12 @@ that is higher or equal to the required sum (minus sum that we have already foun
 If a right neighbor is less than needed sum, we keep iterating, because there is a chance
 of finding better variant.
 */
-func GetTransInputs(value uint64, accUtxo []utxo.TXO) ([]UtxoForInput, []utxo.TXO, uint64) {
+func GetTransInputs(value uint64, accUtxo []txo.TXO) ([]UtxoForInput, []txo.TXO, uint64) {
 	if accUtxo == nil {
 		accUtxo = account.GetAccUtxo()
 	}
 
-	accUtxo = append(accUtxo, utxo.TXO{}) // Stub value for searching
+	accUtxo = append(accUtxo, txo.TXO{}) // Stub value for searching
 	var utxoInput []UtxoForInput
 	tempValue := uint64(0)
 
@@ -250,12 +250,14 @@ func VerifyTransaction(tx Transaction) bool {
 		// Checking signatures and unique inputs
 		for i := 0; i < len(tx.Inputs); i++ {
 			if len(tx.Inputs[i].ScriptSig.ToHexString()) < 66 {
+				println("1")
 				return false
 			}
 
 			pubKey := tx.Inputs[i].ScriptSig.GetPubKey().ToHexString()
 			sign := tx.Inputs[i].ScriptSig.GetSignature().ToHexString()
 			if !ecdsa.Verify(pubKey, sign, hashMesOfTx) {
+				println("2")
 				return false
 			}
 
@@ -269,6 +271,8 @@ func VerifyTransaction(tx Transaction) bool {
 
 		// Checking presence of coins to be spent
 		if inpValue < outValue {
+			println(inpValue, outValue)
+			println("3")
 			return false
 		}
 	}

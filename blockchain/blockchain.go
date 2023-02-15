@@ -4,7 +4,7 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
-	"bavovnacoin/utxo"
+	"bavovnacoin/txo"
 	"bytes"
 	"encoding/gob"
 	"fmt"
@@ -57,14 +57,14 @@ func AddBlockToBlockchain(block Block) bool {
 			txInpList := block.Transactions[i].Inputs
 
 			for j := 0; j < len(txInpList); j++ {
-				utxo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
+				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
 			}
 
 			txOutList := block.Transactions[i].Outputs
 			for j := 0; j < len(txOutList); j++ {
 				var txByteArr byteArr.ByteArr
 				txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
-				utxo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
+				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
 			}
 		}
 

@@ -1,7 +1,7 @@
 package main
 
-import "bavovnacoin/node"
+import "bavovnacoin/testing/singleFunctionTesting"
 
 func main() {
-	node.Launch()
+	singleFunctionTesting.TransactionsVerefication()
 }

@@ -5,7 +5,7 @@ import (
 	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
-	"bavovnacoin/utxo"
+	"bavovnacoin/txo"
 	"fmt"
 	"sort"
 )
@@ -50,14 +50,14 @@ func AddKeyPairToAccount(password string) string {
 	return ""
 }
 
-func GetAccUtxo() []utxo.TXO {
-	var accUtxo []utxo.TXO
+func GetAccUtxo() []txo.TXO {
+	var accUtxo []txo.TXO
 	for i := 0; i < len(CurrAccount.KeyPairList); i++ {
-		for j := 0; j < len(utxo.CoinDatabase); j++ {
+		for j := 0; j < len(txo.CoinDatabase); j++ {
 			var currAccAddr byteArr.ByteArr
 			currAccAddr.SetFromHexString(hashing.SHA1(CurrAccount.KeyPairList[i].PublKey), 20)
-			if utxo.CoinDatabase[j].OutAddress.IsEqual(currAccAddr) {
-				accUtxo = append(accUtxo, utxo.CoinDatabase[j])
+			if txo.CoinDatabase[j].OutAddress.IsEqual(currAccAddr) {
+				accUtxo = append(accUtxo, txo.CoinDatabase[j])
 			}
 		}
 	}
@@ -68,9 +68,9 @@ func GetAccUtxo() []utxo.TXO {
 }
 
 func GetBalHashOutInd(txHash byteArr.ByteArr, outInd int) uint64 {
-	for j := 0; j < len(utxo.CoinDatabase); j++ {
-		if txHash.IsEqual(utxo.CoinDatabase[j].OutTxHash) && utxo.CoinDatabase[j].TxOutInd == uint64(outInd) {
-			return utxo.CoinDatabase[j].Value
+	for j := 0; j < len(txo.CoinDatabase); j++ {
+		if txHash.IsEqual(txo.CoinDatabase[j].OutTxHash) && txo.CoinDatabase[j].TxOutInd == uint64(outInd) {
+			return txo.CoinDatabase[j].Value
 		}
 	}
 	return 0
@@ -78,9 +78,9 @@ func GetBalHashOutInd(txHash byteArr.ByteArr, outInd int) uint64 {
 
 func GetBalByAddress(address byteArr.ByteArr) uint64 {
 	var Value uint64
-	for i := 0; i < len(utxo.CoinDatabase); i++ {
-		if address.IsEqual(utxo.CoinDatabase[i].OutAddress) {
-			Value += utxo.CoinDatabase[i].Value
+	for i := 0; i < len(txo.CoinDatabase); i++ {
+		if address.IsEqual(txo.CoinDatabase[i].OutAddress) {
+			Value += txo.CoinDatabase[i].Value
 		}
 	}
 	return Value

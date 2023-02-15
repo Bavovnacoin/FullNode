@@ -1,4 +1,4 @@
-package utxo
+package txo
 
 import (
 	"bavovnacoin/byteArr"
