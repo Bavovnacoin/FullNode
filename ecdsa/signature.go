@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Sign(hashMes string, privKey string) string {
+func Sign(hashMes string, privKey string) string { // invalid pr key starts with 0 - an empty byte!b
 	bigHash, isHashValid := hexToBig(hashMes)
 	prKNum, isKeyValid := hexToBig(privKey)
 

@@ -216,7 +216,9 @@ func hexToString(block [][]byte) string {
 	res := ""
 	for y := 0; y < len(block); y++ {
 		for x := 0; x < len(block); x++ {
-			res += string(block[x][y])
+			if block[x][y] != 0 {
+				res += string(block[x][y])
+			}
 		}
 	}
 	return res

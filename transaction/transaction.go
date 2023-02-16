@@ -53,8 +53,10 @@ func genTxScriptSignatures(keyPair []ecdsa.KeyPair, passKey string, tx Transacti
 	message := hashing.SHA1(GetCatTxFields(tx))
 	// Signing message
 	for i := 0; i < len(keyPair); i++ {
-		//tx.Inputs[i].ScriptSig = keyPair[i].PublKey + ecdsa.Sign(message, cryption.AES_decrypt(keyPair[i].PrivKey, passKey))
-		tx.Inputs[i].ScriptSig.SetFromHexString(keyPair[i].PublKey+ecdsa.Sign(message, cryption.AES_decrypt(keyPair[i].PrivKey, passKey)), 111)
+		prk := cryption.AES_decrypt(keyPair[i].PrivKey, passKey)
+		sign := ecdsa.Sign(message, prk)
+
+		tx.Inputs[i].ScriptSig.SetFromHexString(keyPair[i].PublKey+sign, 111)
 	}
 
 	return tx
@@ -64,15 +66,14 @@ func ComputeTxSize(tx Transaction) int {
 	size := 0
 	size += 8 // 4 bytes for Version, 4 for locktime
 	for i := 0; i < len(tx.Inputs); i++ {
-		size += 111 //len(tx.Inputs[i].ScriptSig)
-		size += 4   // Input out index size
+		size += 111
+		size += 4 // Input out index size
 		size += 20
-		//size += len(tx.Inputs[i].ScriptSig)
 	}
 
 	for i := 0; i < len(tx.Outputs); i++ {
-		size += 8  // Output value
-		size += 20 //len(tx.Outputs[i].Address)
+		size += 8 // Output value
+		size += 20
 	}
 	return size
 }
@@ -189,7 +190,6 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outVals []uint6
 		tx.Outputs = append(tx.Outputs, Output{Value: uint64(outTxValue - (genValue + uint64(txSize)*uint64(feePerByte)))})
 		tx.Outputs[len(tx.Outputs)-1].Address.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey), 20)
 	}
-
 	tx = genTxScriptSignatures(kpForSign, passKey, tx)
 	return tx, ""
 }
@@ -250,14 +250,13 @@ func VerifyTransaction(tx Transaction) bool {
 		// Checking signatures and unique inputs
 		for i := 0; i < len(tx.Inputs); i++ {
 			if len(tx.Inputs[i].ScriptSig.ToHexString()) < 66 {
-				println("1")
 				return false
 			}
 
 			pubKey := tx.Inputs[i].ScriptSig.GetPubKey().ToHexString()
 			sign := tx.Inputs[i].ScriptSig.GetSignature().ToHexString()
+
 			if !ecdsa.Verify(pubKey, sign, hashMesOfTx) {
-				println("2")
 				return false
 			}
 
@@ -272,7 +271,6 @@ func VerifyTransaction(tx Transaction) bool {
 		// Checking presence of coins to be spent
 		if inpValue < outValue {
 			println(inpValue, outValue)
-			println("3")
 			return false
 		}
 	}

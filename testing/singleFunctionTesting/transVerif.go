@@ -15,8 +15,8 @@ import (
 	"time"
 )
 
-var txAmmount int = 10         // Total ammount of txs
-var incorrectTxAmmount int = 3 // Total ammount of incorrect txs
+var txAmmount int = 20          // Total ammount of txs
+var incorrectTxAmmount int = 10 // Total ammount of incorrect txs
 
 var testTransactions []transaction.Transaction
 var txIncorrMessage []string
@@ -38,7 +38,7 @@ func genTestUtxo() {
 		var outTxHash byteArr.ByteArr
 		outTxHash.SetFromHexString(hashing.SHA1(fmt.Sprint(i)+fmt.Sprint(time.Now().Unix())), 20)
 
-		newTxo := txo.TXO{OutTxHash: outTxHash, Value: (rand.Uint64()%700000 + 300000), OutAddress: outAddr}
+		newTxo := txo.TXO{OutTxHash: outTxHash, Value: (random.Uint64()%700000 + 300000), OutAddress: outAddr}
 		txo.CoinDatabase = append(txo.CoinDatabase, newTxo)
 	}
 }
@@ -48,7 +48,7 @@ func makeTxIncorrect(tx transaction.Transaction, incTxCounter int) (transaction.
 		var incTxHash byteArr.ByteArr
 		inpId := 0
 		if len(tx.Inputs) != 0 {
-			inpId = rand.Intn(len(tx.Inputs))
+			inpId = random.Intn(len(tx.Inputs))
 		}
 		tx.Inputs[inpId].TxHash = incTxHash
 
@@ -58,8 +58,8 @@ func makeTxIncorrect(tx transaction.Transaction, incTxCounter int) (transaction.
 		fakeSigAccId := 0
 		inpId := 0
 		if len(tx.Inputs) != 0 {
-			inpId = rand.Intn(len(tx.Inputs))
-			fakeSigAccId = rand.Intn(len(tx.Inputs))
+			inpId = random.Intn(len(tx.Inputs))
+			fakeSigAccId = random.Intn(len(tx.Inputs))
 		}
 
 		fakeSigPrivKey := cryption.AES_decrypt(account.Wallet[fakeSigAccId].KeyPairList[0].PrivKey, fmt.Sprint(fakeSigAccId))
@@ -71,7 +71,7 @@ func makeTxIncorrect(tx transaction.Transaction, incTxCounter int) (transaction.
 	} else { // Wrong tx output value
 		outId := 0
 		if len(tx.Inputs) != 0 {
-			outId = rand.Intn(len(tx.Outputs))
+			outId = random.Intn(len(tx.Outputs))
 		}
 
 		tx.Outputs[outId].Value = ^uint64(0)
@@ -79,33 +79,46 @@ func makeTxIncorrect(tx transaction.Transaction, incTxCounter int) (transaction.
 	}
 }
 
+func genValidTx(currAccId int) transaction.Transaction {
+	account.CurrAccount = account.Wallet[currAccId]
+	account.GetBalance()
+	var outAddr byteArr.ByteArr
+	outAddr.SetFromHexString(hashing.SHA1(account.Wallet[currAccId].KeyPairList[0].PublKey), 20)
+
+	var outAddrTx []byteArr.ByteArr
+	outAddrTx = append(outAddrTx, outAddr)
+
+	var outValTx []uint64
+	outValTx = append(outValTx, uint64(txo.CoinDatabase[currAccId].Value/((random.Uint64()%10)+3)))
+
+	newTx, _ := transaction.CreateTransaction(fmt.Sprint(currAccId), outAddrTx, outValTx, random.Intn(10), uint(random.Intn(10)))
+	return newTx
+}
+
 func genRandTxs() {
-	var endStep int = txAmmount / incorrectTxAmmount
-	var incTxInd int = rand.Intn(endStep)
+	var step int = int(txAmmount / incorrectTxAmmount)
+	var incTxInd int = -1
 	var incTxCounter int
 
+	if incorrectTxAmmount != 0 {
+		stStep := step * incTxCounter
+		incTxInd = random.Intn(step) + stStep
+
+		incTxCounter++
+	}
+
 	for i := 0; i < txAmmount; i++ {
-		account.CurrAccount = account.Wallet[i]
-		account.GetBalance()
-		var outAddr byteArr.ByteArr
-		outAddr.SetFromHexString(hashing.SHA1(account.Wallet[i].KeyPairList[0].PublKey), 20)
+		newTx := genValidTx(i)
 
-		var outAddrTx []byteArr.ByteArr
-		outAddrTx = append(outAddrTx, outAddr)
+		if i == incTxInd && incTxCounter <= incorrectTxAmmount {
+			stStep := step * incTxCounter
+			if incorrectTxAmmount-1 == incTxCounter {
+				step = txAmmount - stStep
+			}
+			incTxInd = random.Intn(step) + stStep
 
-		var outValTx []uint64
-		outValTx = append(outValTx, uint64(txo.CoinDatabase[i].Value/((rand.Uint64()%10)+3)))
-
-		newTx, _ := transaction.CreateTransaction(fmt.Sprint(i), outAddrTx, outValTx, rand.Intn(10), uint(rand.Intn(10)))
-
-		if i == incTxInd {
-			endStep := i + int(txAmmount/incorrectTxAmmount)
-			r := rand.Intn(endStep)
-			incTxInd = r + i + 1
-			println(r)
 			var message string
 			newTx, message = makeTxIncorrect(newTx, incTxCounter)
-
 			txIncorrMessage = append(txIncorrMessage, message)
 			incTxCounter++
 		} else {
@@ -147,7 +160,12 @@ func printResults() {
 			verifMes+strings.Repeat(" ", 20-len(verifMes)), isMatchedMes)
 	}
 
-	log.Printf("Test result: %d\\%d\n", txAmmount-resultNotMatchedCounter, txAmmount)
+	result := "Passed"
+	if txAmmount-resultNotMatchedCounter != txAmmount {
+		result = "Not passed"
+	}
+
+	log.Printf("Test result: %d\\%d. %s\n", txAmmount-resultNotMatchedCounter, txAmmount, result)
 }
 
 /*
@@ -168,6 +186,7 @@ func TransactionsVerefication() {
 	log.Printf("Generated %d test accounts\n", len(account.Wallet))
 	genTestUtxo()
 	log.Printf("Generated %d test utxo\n", len(txo.CoinDatabase))
+	log.Printf("Generating %d txs (%d are incorrect)", txAmmount, incorrectTxAmmount)
 	genRandTxs()
 	printResults()
 }
