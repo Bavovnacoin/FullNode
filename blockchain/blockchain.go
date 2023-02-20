@@ -49,27 +49,29 @@ func BlockToString(block Block) string {
 	return str
 }
 
-func AddBlockToBlockchain(block Block) bool {
-	isBlockValid := ValidateBlock(block, int(BcLength))
+func AddBlockToBlockchain(block Block, checkBits bool) bool {
+	isBlockValid := ValidateBlock(block, int(BcLength), checkBits)
 
 	if isBlockValid {
 		for i := 0; i < len(block.Transactions); i++ {
 			txInpList := block.Transactions[i].Inputs
 
 			for j := 0; j < len(txInpList); j++ {
-				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
+				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd), checkBits)
 			}
 
 			txOutList := block.Transactions[i].Outputs
 			for j := 0; j < len(txOutList); j++ {
 				var txByteArr byteArr.ByteArr
 				txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
-				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
+				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)), checkBits)
 			}
 		}
 
 		LastBlock = block
-		WriteBlock(BcLength, block)
+		if checkBits {
+			WriteBlock(BcLength, block)
+		}
 	}
 	IsMempAdded = false
 	return isBlockValid
@@ -121,7 +123,7 @@ func GenMerkleRoot(transactions []transaction.Transaction) string {
 	return currLayer[0]
 }
 
-func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
+func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	var newBlock Block
 
 	if BcLength > 0 {
@@ -147,33 +149,55 @@ func CreateBlock(rewardAdr byteArr.ByteArr, miningFlag int) Block {
 
 	newBlock.TransactionCount = uint(len(newBlock.Transactions))
 	newBlock.MerkleRoot = GenMerkleRoot(newBlock.Transactions)
-	log.Println("New block transaction count: " + fmt.Sprint(newBlock.TransactionCount))
+	if allowPrint {
+		log.Println("New block transaction count: " + fmt.Sprint(newBlock.TransactionCount))
+	}
 
 	newBlock.Blocksize = uint(len(BlockToString(newBlock)))
-	if miningFlag != -1 {
-		newBlock.Bits = GetCurrBitsValue()
-		log.Println("Current bits value is " + fmt.Sprintf("%x", newBlock.Bits))
-		target := fmt.Sprintf("%x", BitsToTarget(newBlock.Bits))
-		log.Println("Current target value is " + strings.Repeat("0", 40-len(target)) + target)
-	}
-	BlockForMining = newBlock
-	if miningFlag == 0 {
-		newBlock.Nonce = MineThreads(newBlock, 1)
-	} else if miningFlag == 1 {
-		newBlock.Nonce = MineThreads(newBlock, uint64(runtime.NumCPU()))
-	}
+	// if miningFlag != -1 && allowChangeBits {
+	// 	newBlock.Bits = GetCurrBitsValue()
+
+	// 	if allowPrint {
+	// 		target := fmt.Sprintf("%x", BitsToTarget(newBlock.Bits))
+	// 		log.Println("Current bits value is " + fmt.Sprintf("%x", newBlock.Bits))
+	// 		log.Println("Current target value is " + strings.Repeat("0", 40-len(target)) + target)
+	// 	}
+	// }
 	return newBlock
 }
 
-func ValidateBlock(block Block, height int) bool {
+func GetBits(allowPrint bool) uint64 {
+	bits := GetCurrBitsValue()
+
+	if allowPrint {
+		target := fmt.Sprintf("%x", BitsToTarget(bits))
+		log.Println("Current bits value is " + fmt.Sprintf("%x", bits))
+		log.Println("Current target value is " + strings.Repeat("0", 40-len(target)) + target)
+	}
+	return bits
+}
+
+func MineBlock(block Block, miningFlag int, allowPrint bool) Block {
+	BlockForMining = block
+	if miningFlag == 0 {
+		block.Nonce = MineThreads(block, 1, allowPrint)
+	} else if miningFlag == 1 {
+		block.Nonce = MineThreads(block, uint64(runtime.NumCPU()), allowPrint)
+	}
+	return block
+}
+
+func ValidateBlock(block Block, height int, checkBits bool) bool {
 	var lastBlockHash string
 	var prevBlock Block
-	if height == int(BcLength) {
+
+	if uint64(height) == BcLength {
 		prevBlock = LastBlock
 	} else {
 		var isBlockFound bool
 		prevBlock, isBlockFound = GetBlock(uint64(height))
 		if !isBlockFound {
+			println("Block not found")
 			return false
 		}
 	}
@@ -186,9 +210,11 @@ func ValidateBlock(block Block, height int) bool {
 	merkleRoot := GenMerkleRoot(block.Transactions)
 
 	// Check bits value
-	bits := GetCurrBitsValue()
-	if bits != block.Bits {
-		return false
+	if checkBits {
+		bits := GetCurrBitsValue()
+		if bits != block.Bits {
+			return false
+		}
 	}
 
 	// Check nonce
@@ -237,10 +263,12 @@ func FormGenesisBlock() {
 
 	var rewardAdr byteArr.ByteArr
 	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050", 20)
-	genesisBlock := CreateBlock(rewardAdr, 1)
+	genesisBlock := CreateBlock(rewardAdr, true)
+	genesisBlock.Bits = GetBits(true)
+	genesisBlock = MineBlock(genesisBlock, 1, true)
 	genesisBlock.Bits = STARTBITS
 
-	if AddBlockToBlockchain(genesisBlock) {
+	if AddBlockToBlockchain(genesisBlock, true) {
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
 		log.Println("Block is not added\n")

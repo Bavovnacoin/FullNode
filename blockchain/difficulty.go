@@ -66,7 +66,7 @@ func TargetToBits(target *big.Int) uint64 {
 	targetStr := fmt.Sprintf("%x", target)
 	var targetShift string
 	var valStr string
-	if len(targetShift)%2 != 0 {
+	if len(targetStr)%2 != 0 {
 		targetShift = targetStr[5:]
 		valStr = targetStr[3:5] + "0" + targetStr[:3]
 	} else {

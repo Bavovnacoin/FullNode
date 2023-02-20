@@ -22,6 +22,7 @@ type ParMineData struct {
 
 func mineParTask(data ParMineData, ch chan ParMineData) {
 	target := BitsToTarget(data.bits)
+
 	var step uint64 = 1
 	var start uint64 = (uint64(data.thrId) + data.thrCount*(step-1)) * data.iterPerStep
 	var end uint64 = (uint64(data.thrId+1) + data.thrCount*(step-1)) * data.iterPerStep
@@ -37,6 +38,8 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 
 			data.block.Nonce = nonce
 			hashNounce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(data.block)+fmt.Sprintf("%d", nonce)), 16)
+			// println(fmt.Sprintf("%x", target))
+			// println(fmt.Sprintf("%x", hashNounce))
 			if target.Cmp(hashNounce) == 1 {
 				data.isFound = true
 				data.nonce = nonce
@@ -54,16 +57,23 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 	}
 }
 
-func MineThreads(block Block, threadsCount uint64) uint64 {
-	log.Println("Mining started")
+func MineThreads(block Block, threadsCount uint64, allowPrint bool) uint64 {
+	if allowPrint {
+		log.Println("Mining started")
+	}
+
 	allowParallelMining = true
 	var thrcount uint64
 	if threadsCount+4 > uint64(runtime.NumCPU()) && uint64(runtime.NumCPU())-4 >= 1 {
 		thrcount = uint64(runtime.NumCPU()) - 4
-		log.Println("Threads for mining are limited to " + fmt.Sprint(thrcount))
+		if allowPrint {
+			log.Println("Threads for mining are limited to " + fmt.Sprint(thrcount))
+		}
 	} else if uint64(runtime.NumCPU())-4 < 1 {
 		thrcount = 1
-		log.Println("Threads for mining are limited to 1")
+		if allowPrint {
+			log.Println("Threads for mining are limited to 1")
+		}
 	} else {
 		thrcount = threadsCount
 	}
@@ -90,6 +100,8 @@ func MineThreads(block Block, threadsCount uint64) uint64 {
 			foundNounce = data.nonce
 		}
 	}
-	log.Println("Mining done")
+	if allowPrint {
+		log.Println("Mining done")
+	}
 	return foundNounce
 }

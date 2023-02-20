@@ -191,12 +191,14 @@ func addBlock() {
 func createBlockLog() {
 	var rewardAdr byteArr.ByteArr
 	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050", 20)
-	createdBlock = blockchain.CreateBlock(rewardAdr, 1)
+	createdBlock = blockchain.CreateBlock(rewardAdr, true)
+	createdBlock.Bits = blockchain.GetBits(true)
+	createdBlock = blockchain.MineBlock(createdBlock, 1, true)
 	command_executor.PauseCommand()
 }
 
 func addBlockLog() {
-	if blockchain.AddBlockToBlockchain(createdBlock) {
+	if blockchain.AddBlockToBlockchain(createdBlock, true) {
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")
 	} else {
 		log.Println("Block is not added\n")
