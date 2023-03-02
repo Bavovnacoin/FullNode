@@ -182,8 +182,10 @@ func addBlock() {
 		go createBlockLog()
 		allowCreateBlock = false
 	}
-	if createdBlock.MerkleRoot != "" {
+
+	if createdBlock.MerkleRoot != "" { // Is block mined check
 		addBlockLog()
+		createdBlock.MerkleRoot = ""
 	}
 	command_executor.PauseCommand()
 }
@@ -191,9 +193,11 @@ func addBlock() {
 func createBlockLog() {
 	var rewardAdr byteArr.ByteArr
 	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050", 20)
-	createdBlock = blockchain.CreateBlock(rewardAdr, true)
-	createdBlock.Bits = blockchain.GetBits(true)
-	createdBlock = blockchain.MineBlock(createdBlock, 1, true)
+	newBlock := blockchain.CreateBlock(rewardAdr, true)
+	newBlock.Bits = blockchain.GetBits(true)
+	println(newBlock.Bits)
+	newBlock = blockchain.MineBlock(createdBlock, 1, true)
+	createdBlock = newBlock
 	command_executor.PauseCommand()
 }
 

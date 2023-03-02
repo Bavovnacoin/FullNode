@@ -172,7 +172,6 @@ func GetBits(allowPrint bool) uint64 {
 	if allowPrint {
 		target := fmt.Sprintf("%x", BitsToTarget(bits))
 		log.Println("Current bits value is " + fmt.Sprintf("%x", bits))
-		println(target, len(target))
 		log.Println("Current target value is " + strings.Repeat("0", 40-len(target)) + target)
 	}
 	return bits

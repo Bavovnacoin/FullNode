@@ -11,6 +11,16 @@ import (
 	"fmt"
 )
 
+func StartRPC() {
+	isRpcStarted, err := networking.StartRPCListener()
+	if !isRpcStarted {
+		fmt.Println("Can't start RPC listener")
+		fmt.Println(err)
+	} else {
+		fmt.Println("RPC listener started")
+	}
+}
+
 func process() {
 	blockchain.RestoreMempool()
 	txo.RestoreCoinDatabase()
@@ -26,14 +36,7 @@ func process() {
 
 func Launch() {
 	dbController.DB.OpenDb()
-	isRpcStarted, err := networking.StartRPCListener()
-	if !isRpcStarted {
-		fmt.Println("Can't start RPC listener")
-		fmt.Println(err)
-	} else {
-		fmt.Println("RPC listener started")
-	}
-
+	//StartRPC()
 	go process()
 	node_controller.CommandHandler()
 	blockchain.BackTransactionsToMempool()
