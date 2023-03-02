@@ -1,9 +1,7 @@
 package main
 
-import "bavovnacoin/testing/singleFunctionTesting"
+import "bavovnacoin/node"
 
 func main() {
-	var test1 singleFunctionTesting.BlockchainVerifTest
-	test1.SetTestValues(1, 1, 3)
-	test1.BlockchainVerefication()
+	node.Launch()
 }

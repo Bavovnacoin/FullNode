@@ -4,9 +4,11 @@ import (
 	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/dbController"
+	"bavovnacoin/networking"
 	"bavovnacoin/node_controller"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/txo"
+	"fmt"
 )
 
 func process() {
@@ -24,6 +26,12 @@ func process() {
 
 func Launch() {
 	dbController.DB.OpenDb()
+	isRpcStarted, err := networking.StartRPCListener()
+	if !isRpcStarted {
+		println("Can't start RPC Listener")
+		fmt.Println(err)
+	}
+
 	go process()
 	node_controller.CommandHandler()
 	blockchain.BackTransactionsToMempool()
