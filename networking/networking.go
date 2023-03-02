@@ -7,21 +7,22 @@ import (
 	"net/rpc"
 )
 
+var myAddress string = "0.0.0.0:12345"
+
 type Listener int
 
 type Reply struct {
 	Data []byte
 }
 
-func (l *Listener) PingPong(line []byte, reply *Reply) error {
+func (l *Listener) PingPong(line []byte, reply *Reply) {
 	rv := string(line)
 	fmt.Printf("Receive: %v\n", rv)
 	*reply = Reply{[]byte("pong")}
-	return nil
 }
 
 func StartRPCListener() (bool, error) {
-	addy, err := net.ResolveTCPAddr("tcp", "0.0.0.0:12345")
+	addy, err := net.ResolveTCPAddr("tcp", myAddress)
 	if err != nil {
 		log.Println(err)
 		return false, err

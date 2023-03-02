@@ -1,12 +1,13 @@
 package blockchain
 
 import (
+	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"fmt"
 )
 
 func SetBcHeight(hgt uint64) bool {
-	byteVal, isConv := dbController.ToByteArr(hgt)
+	byteVal, isConv := byteArr.ToByteArr(hgt)
 	if !isConv {
 		return false
 	}
@@ -25,7 +26,7 @@ func GetBcHeight() (uint64, bool) {
 	}
 
 	var len uint64
-	isConv := dbController.FromByteArr(value, &len)
+	isConv := byteArr.FromByteArr(value, &len)
 	if !isConv {
 		return 0, false
 	}
@@ -33,7 +34,7 @@ func GetBcHeight() (uint64, bool) {
 }
 
 func WriteBlock(height uint64, block Block) bool {
-	byteVal, isConv := dbController.ToByteArr(block)
+	byteVal, isConv := byteArr.ToByteArr(block)
 	if !isConv {
 		return false
 	}
@@ -47,7 +48,7 @@ func GetBlock(height uint64) (Block, bool) {
 		return block, false
 	}
 
-	isConv := dbController.FromByteArr(value, &block)
+	isConv := byteArr.FromByteArr(value, &block)
 	if !isConv {
 		return block, false
 	}

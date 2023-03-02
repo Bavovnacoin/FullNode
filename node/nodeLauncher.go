@@ -17,7 +17,7 @@ func process() {
 	InitAccountsData()
 	blockchain.InitBlockchain()
 
-	go createTxRandom()
+	//go createTxRandom()
 	for command_executor.Node_working {
 		createAccoundRandom()
 		addBlock()
@@ -28,8 +28,10 @@ func Launch() {
 	dbController.DB.OpenDb()
 	isRpcStarted, err := networking.StartRPCListener()
 	if !isRpcStarted {
-		println("Can't start RPC Listener")
+		fmt.Println("Can't start RPC listener")
 		fmt.Println(err)
+	} else {
+		fmt.Println("RPC listener started")
 	}
 
 	go process()

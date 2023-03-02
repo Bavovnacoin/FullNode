@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"bavovnacoin/transaction"
 	"fmt"
@@ -8,7 +9,7 @@ import (
 )
 
 func SetMempLen(len uint64) bool {
-	byteVal, isConv := dbController.ToByteArr(len)
+	byteVal, isConv := byteArr.ToByteArr(len)
 	if !isConv {
 		return false
 	}
@@ -22,7 +23,7 @@ func GetMempLen() (uint64, bool) {
 	}
 
 	var len uint64
-	isConv := dbController.FromByteArr(value, &len)
+	isConv := byteArr.FromByteArr(value, &len)
 	if !isConv {
 		return 0, false
 	}
@@ -30,7 +31,7 @@ func GetMempLen() (uint64, bool) {
 }
 
 func WriteTxToMempool(id uint64, tx transaction.Transaction) bool {
-	byteVal, isConv := dbController.ToByteArr(tx)
+	byteVal, isConv := byteArr.ToByteArr(tx)
 	if !isConv {
 		return false
 	}
@@ -45,7 +46,7 @@ func GetTxFromMempool(id uint64) (transaction.Transaction, bool) {
 		return tx, false
 	}
 
-	isConv := dbController.FromByteArr(value, &tx)
+	isConv := byteArr.FromByteArr(value, &tx)
 	if !isConv {
 		return tx, false
 	}

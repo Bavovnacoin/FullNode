@@ -172,6 +172,7 @@ func GetBits(allowPrint bool) uint64 {
 	if allowPrint {
 		target := fmt.Sprintf("%x", BitsToTarget(bits))
 		log.Println("Current bits value is " + fmt.Sprintf("%x", bits))
+		println(target, len(target))
 		log.Println("Current target value is " + strings.Repeat("0", 40-len(target)) + target)
 	}
 	return bits
@@ -262,7 +263,7 @@ func FormGenesisBlock() {
 	log.Println("Creating initial block")
 
 	var rewardAdr byteArr.ByteArr
-	rewardAdr.SetFromHexString("e930fca003a4a70222d916a74cc851c3b3a9b050", 20)
+	rewardAdr.SetFromHexString("f161d1e1b6200a9ac5e4769710203231b422711a", 20)
 	genesisBlock := CreateBlock(rewardAdr, true)
 	genesisBlock.Bits = GetBits(true)
 	genesisBlock = MineBlock(genesisBlock, 1, true)

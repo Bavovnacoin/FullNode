@@ -11,7 +11,7 @@ import (
 )
 
 func SetUtxo(utxo TXO) bool {
-	byteVal, isConv := dbController.ToByteArr(utxo)
+	byteVal, isConv := byteArr.ToByteArr(utxo)
 	if !isConv {
 		return false
 	}
@@ -23,7 +23,7 @@ func RestoreCoinDatabase() bool {
 	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("utxo")), nil)
 	for iter.Next() {
 		var utxo TXO
-		isConv := dbController.FromByteArr(iter.Value(), &utxo)
+		isConv := byteArr.FromByteArr(iter.Value(), &utxo)
 		if !isConv {
 			log.Println("Problem when restoring coin database")
 			return false
@@ -48,7 +48,7 @@ func RemUtxo(OutTxHash byteArr.ByteArr, OutTxInd, blockHeight uint64) bool {
 }
 
 func SetTxo(txo TXO) bool {
-	byteVal, isConv := dbController.ToByteArr(txo)
+	byteVal, isConv := byteArr.ToByteArr(txo)
 	if !isConv {
 		println("Problem when conversion txo")
 		return false
@@ -62,7 +62,7 @@ func PrintSpentTxOuts() bool {
 	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("txo")), nil)
 	for iter.Next() {
 		var txo TXO
-		isConv := dbController.FromByteArr(iter.Value(), &txo)
+		isConv := byteArr.FromByteArr(iter.Value(), &txo)
 		if !isConv {
 			println("problem here")
 			return false
