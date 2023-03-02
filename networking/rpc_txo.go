@@ -5,12 +5,12 @@ import (
 	"bavovnacoin/txo"
 )
 
-func (l *Listener) GetUtxoByAddr(addressesByte []byte, reply *Reply) {
+func (l *Listener) GetUtxoByAddr(addressesByte []byte, reply *Reply) error {
 	var addresses []byteArr.ByteArr
-	println(byteArr.FromByteArr(addressesByte, &addresses))
+	byteArr.FromByteArr(addressesByte, &addresses)
 
 	var addrUtxo []txo.TXO
-	for i := len(txo.CoinDatabase); i > 0; i-- {
+	for i := len(txo.CoinDatabase) - 1; i > 0; i-- {
 		for j := len(addresses); j > 0; j-- {
 			if txo.CoinDatabase[i].OutAddress.IsEqual(addresses[j]) {
 				addrUtxo = append(addrUtxo, txo.CoinDatabase[i])
@@ -23,4 +23,5 @@ func (l *Listener) GetUtxoByAddr(addressesByte []byte, reply *Reply) {
 		byteAddrUtxo = []byte("false")
 	}
 	*reply = Reply{byteAddrUtxo}
+	return nil
 }

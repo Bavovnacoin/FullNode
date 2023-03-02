@@ -36,7 +36,7 @@ func process() {
 
 func Launch() {
 	dbController.DB.OpenDb()
-	//StartRPC()
+	StartRPC()
 	go process()
 	node_controller.CommandHandler()
 	blockchain.BackTransactionsToMempool()
