@@ -10,8 +10,8 @@ func (l *Listener) GetUtxoByAddr(addressesByte []byte, reply *Reply) error {
 	byteArr.FromByteArr(addressesByte, &addresses)
 
 	var addrUtxo []txo.TXO
-	for i := len(txo.CoinDatabase) - 1; i > 0; i-- {
-		for j := len(addresses); j > 0; j-- {
+	for i := len(txo.CoinDatabase) - 1; i >= 0; i-- {
+		for j := len(addresses) - 1; j >= 0; j-- {
 			if txo.CoinDatabase[i].OutAddress.IsEqual(addresses[j]) {
 				addrUtxo = append(addrUtxo, txo.CoinDatabase[i])
 			}
@@ -19,6 +19,7 @@ func (l *Listener) GetUtxoByAddr(addressesByte []byte, reply *Reply) error {
 	}
 
 	byteAddrUtxo, res := byteArr.ToByteArr(addrUtxo)
+
 	if !res {
 		byteAddrUtxo = []byte("false")
 	}
