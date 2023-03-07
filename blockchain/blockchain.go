@@ -262,7 +262,7 @@ func FormGenesisBlock() {
 	log.Println("Creating initial block")
 
 	var rewardAdr byteArr.ByteArr
-	rewardAdr.SetFromHexString("f161d1e1b6200a9ac5e4769710203231b422711a", 20)
+	rewardAdr.SetFromHexString("92a405420017dda1ca887c3080f0b437048241bb", 20)
 	genesisBlock := CreateBlock(rewardAdr, true)
 	genesisBlock.Bits = GetBits(true)
 	genesisBlock = MineBlock(genesisBlock, 1, true)

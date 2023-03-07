@@ -50,11 +50,46 @@ func RemUtxo(OutTxHash byteArr.ByteArr, OutTxInd, blockHeight uint64) bool {
 func SetTxo(txo TXO) bool {
 	byteVal, isConv := byteArr.ToByteArr(txo)
 	if !isConv {
-		println("Problem when conversion txo")
+		println("Problem with conversion txo")
 		return false
 	}
 	key := "txo" + hashing.SHA1(txo.OutTxHash.ToHexString()+fmt.Sprint(txo.TxOutInd)+fmt.Sprint(txo.BlockHeight))
 	return dbController.DB.SetValue(key, byteVal)
+}
+
+func IsOutAddrExist(addr byteArr.ByteArr) bool {
+	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("txo")), nil)
+	for i := 0; iter.Next(); i++ {
+		var txo TXO
+		isConv := byteArr.FromByteArr(iter.Value(), &txo)
+		if !isConv {
+			return false
+		}
+
+		if txo.OutAddress.IsEqual(addr) {
+			return true
+		}
+	}
+
+	iter.Release()
+	iter.Error()
+
+	iter = dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("utxo")), nil)
+	for i := 0; iter.Next(); i++ {
+		var txo TXO
+		isConv := byteArr.FromByteArr(iter.Value(), &txo)
+		if !isConv {
+			return false
+		}
+
+		if txo.OutAddress.IsEqual(addr) {
+			return true
+		}
+	}
+
+	iter.Release()
+	iter.Error()
+	return false
 }
 
 func PrintSpentTxOuts() bool {
@@ -64,7 +99,6 @@ func PrintSpentTxOuts() bool {
 		var txo TXO
 		isConv := byteArr.FromByteArr(iter.Value(), &txo)
 		if !isConv {
-			println("problem here")
 			return false
 		}
 		txo.PrintTxo(i)
