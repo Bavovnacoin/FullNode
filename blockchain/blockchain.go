@@ -21,6 +21,8 @@ var LastBlock Block
 var IsMempAdded bool
 var BlockForMining Block
 
+var RewardAddress string = "dfab60a904302239a34c2795e536a8944c0f90c8"
+
 type Block struct {
 	Blocksize        uint
 	Version          uint
@@ -262,7 +264,7 @@ func FormGenesisBlock() {
 	log.Println("Creating initial block")
 
 	var rewardAdr byteArr.ByteArr
-	rewardAdr.SetFromHexString("92a405420017dda1ca887c3080f0b437048241bb", 20)
+	rewardAdr.SetFromHexString(RewardAddress, 20)
 	genesisBlock := CreateBlock(rewardAdr, true)
 	genesisBlock.Bits = GetBits(true)
 	genesisBlock = MineBlock(genesisBlock, 1, true)
