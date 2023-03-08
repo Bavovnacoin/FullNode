@@ -170,7 +170,7 @@ func blockTxPrinter() {
 				block, _ := blockchain.GetBlock(uint64(commandValues[0]))
 				if commandValues[0] < 0 || commandValues[1] < 0 ||
 					commandValues[0] > int64(blockchain.BcLength) ||
-					commandValues[1] >= int64(block.TransactionCount) {
+					commandValues[1] >= int64(len(block.Transactions)) {
 					log.Println("Error. You typped in wrong index.")
 					return
 				}

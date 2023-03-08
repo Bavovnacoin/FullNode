@@ -116,7 +116,7 @@ func (bvt *BlockchainVerifTest) makeBlockIncorrect(block blockchain.Block, incBl
 			block.Transactions[0].Outputs[0].Value *= 2
 			return block, "Wrong coinbase value"
 		}
-		block.Transactions[block.TransactionCount-1].Outputs[0].Value *= 100000000
+		block.Transactions[len(block.Transactions)-1].Outputs[0].Value *= 100000000
 		return block, "Wrong transaction"
 	}
 	return block, ""

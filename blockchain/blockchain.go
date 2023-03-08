@@ -24,15 +24,14 @@ var BlockForMining Block
 var RewardAddress string = "dfab60a904302239a34c2795e536a8944c0f90c8"
 
 type Block struct {
-	Blocksize        uint
-	Version          uint
-	HashPrevBlock    string
-	Time             time.Time
-	TransactionCount uint
-	MerkleRoot       string
-	Bits             uint64
-	Nonce            uint64
-	Transactions     []transaction.Transaction
+	Blocksize     uint
+	Version       uint
+	HashPrevBlock string
+	Time          time.Time
+	MerkleRoot    string
+	Bits          uint64
+	Nonce         uint64
+	Transactions  []transaction.Transaction
 }
 
 func BlockToString(block Block) string {
@@ -41,7 +40,6 @@ func BlockToString(block Block) string {
 	str += fmt.Sprint(block.Version)
 	str += block.HashPrevBlock
 	str += block.Time.String()
-	str += fmt.Sprint(block.TransactionCount)
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
 	str += fmt.Sprint(block.Nonce)
@@ -149,10 +147,9 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	newBlock.Transactions = make([]transaction.Transaction, len(txArr))
 	copy(newBlock.Transactions, txArr)
 
-	newBlock.TransactionCount = uint(len(newBlock.Transactions))
 	newBlock.MerkleRoot = GenMerkleRoot(newBlock.Transactions)
 	if allowPrint {
-		log.Println("New block transaction count: " + fmt.Sprint(newBlock.TransactionCount))
+		log.Println("New block transaction count: " + fmt.Sprint(len(newBlock.Transactions)))
 	}
 
 	newBlock.Blocksize = uint(len(BlockToString(newBlock)))
@@ -241,7 +238,7 @@ func ValidateBlock(block Block, height int, checkBits bool) bool {
 	}
 
 	// Check transactions
-	for i := 1; i < int(block.TransactionCount); i++ {
+	for i := 1; i < int(len(block.Transactions)); i++ {
 		if !transaction.VerifyTransaction(block.Transactions[i]) {
 			return false
 		}
@@ -286,7 +283,6 @@ func PrintBlockTitle(block Block, height int) {
 	println("Merkle root:", block.MerkleRoot)
 	println("Bits:", block.Bits)
 	println("Nonce:", block.Nonce)
-	println("Transaction count:", block.TransactionCount)
 }
 
 func (block *Block) ToByteArr() ([]byte, bool) {
