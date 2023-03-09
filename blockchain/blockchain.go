@@ -21,7 +21,7 @@ var LastBlock Block
 var IsMempAdded bool
 var BlockForMining Block
 
-var RewardAddress string = "dfab60a904302239a34c2795e536a8944c0f90c8"
+var RewardAddress string = "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
 
 type Block struct {
 	Blocksize     uint

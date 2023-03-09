@@ -33,6 +33,14 @@ type UtxoForInput struct {
 	OutInd int
 }
 
+func (inp *Input) GetHash() string {
+	serField := ""
+	serField += inp.TxHash.ToHexString()
+	serField += inp.ScriptSig.ToHexString()
+	serField += fmt.Sprint(inp.OutInd)
+	return hashing.SHA1(serField)
+}
+
 // Generating message for signing (SCRIPTHASH_ALL)
 func GetCatTxFields(tx Transaction) string {
 	message := ""
@@ -270,7 +278,6 @@ func VerifyTransaction(tx Transaction) bool {
 
 		// Checking presence of coins to be spent
 		if inpValue < outValue {
-			println(inpValue, outValue)
 			return false
 		}
 	}

@@ -47,8 +47,9 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 			command_executor.PauseCommand()
 		}
 
-		start = (uint64(data.thrId) + data.thrCount*(step-1)) * data.iterPerStep
-		end = (uint64(data.thrId+1) + data.thrCount*(step-1)) * data.iterPerStep
+		start = (uint64(data.thrId) + data.thrCount*(step)) * data.iterPerStep
+		end = (uint64(data.thrId+1) + data.thrCount*(step)) * data.iterPerStep
+
 		if command_executor.ShowMiningStats {
 			fmt.Printf("Mining stats. Thread [%d] is done. Now mining in range [%d - %d]\n", data.thrId, start, end)
 		}

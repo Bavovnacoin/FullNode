@@ -7,28 +7,31 @@ import (
 )
 
 var Mempool []transaction.Transaction
+var MempInputHashes = make(map[string]bool)
 
-func ValidateTransaction(tx transaction.Transaction) bool {
-	if !transaction.VerifyTransaction(tx) {
-		return false
-	}
-
-	// TODO: Remove!
-	for j := 0; j < len(tx.Inputs); j++ {
-		for i := 0; i < len(Mempool); i++ { // Check same input in mempool (TODO: find more effective way)
-			for k := 0; k < len(Mempool[i].Inputs); k++ {
-				if Mempool[i].Inputs[k].TxHash.IsEqual(tx.Inputs[j].TxHash) &&
-					Mempool[i].Inputs[k].OutInd == tx.Inputs[j].OutInd {
-					return false
-				}
-			}
+func AreInputsInMempool(inputs []transaction.Input) bool {
+	for _, inp := range inputs {
+		if MempInputHashes[inp.GetHash()] {
+			return false
 		}
 	}
 	return true
 }
 
-func AddTxToMempool(tx transaction.Transaction, allowValidate bool) bool {
-	if allowValidate && !ValidateTransaction(tx) {
+func AddInputsToMempInpHashes(inputs []transaction.Input) {
+	for _, inp := range inputs {
+		MempInputHashes[inp.GetHash()] = true
+	}
+}
+
+func RemInputsFromMempInpHashes(inputs []transaction.Input) {
+	for _, inp := range inputs {
+		delete(MempInputHashes, inp.GetHash())
+	}
+}
+
+func AddTxToMempool(tx transaction.Transaction, allowVerify bool) bool {
+	if allowVerify && !(transaction.VerifyTransaction(tx) || AreInputsInMempool(tx.Inputs)) {
 		return false
 	} else {
 		fee := transaction.GetTxFee(tx)
@@ -38,13 +41,16 @@ func AddTxToMempool(tx transaction.Transaction, allowValidate bool) bool {
 			if insInd < len(Mempool) {
 				Mempool = append(Mempool[:insInd+1], Mempool[insInd:]...)
 				Mempool[insInd] = tx
+				AddInputsToMempInpHashes(tx.Inputs)
 				return true
 			} else {
 				Mempool = append(Mempool, tx)
+				AddInputsToMempInpHashes(tx.Inputs)
 				return true
 			}
 		} else {
 			Mempool = append(Mempool, tx)
+			AddInputsToMempInpHashes(tx.Inputs)
 			return true
 		}
 	}
@@ -74,11 +80,13 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 	for allSize < 1000000-coinbaseTxSize && MempoolInd < len(Mempool) {
 		allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
 
-		if !transaction.VerifyTransaction(Mempool[MempoolInd]) {
+		if !transaction.VerifyTransaction(Mempool[MempoolInd]) { // Removing an incorrect tx
+			RemInputsFromMempInpHashes(Mempool[MempoolInd].Inputs)
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
-			log.Println("Deleted wrong transaction from mempool.")
+			log.Println("Deleted incorrect transaction from mempool.")
 		} else if Mempool[MempoolInd].Locktime < uint(BcLength) {
 			txForBlock = append(txForBlock, Mempool[MempoolInd])
+			RemInputsFromMempInpHashes(Mempool[MempoolInd].Inputs)
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
 		} else {
 			MempoolInd++
@@ -114,6 +122,7 @@ func BackTransactionsToMempool() {
 	if IsMempAdded {
 		for i := 1; i < len(BlockForMining.Transactions); i++ {
 			AddTxToMempool(BlockForMining.Transactions[i], false)
+			AddInputsToMempInpHashes(BlockForMining.Transactions[i].Inputs)
 		}
 		if len(BlockForMining.Transactions) > 1 {
 			log.Printf("%d transactions are returned back to mempool\n", len(BlockForMining.Transactions)-1)
