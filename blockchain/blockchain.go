@@ -49,7 +49,7 @@ func BlockToString(block Block) string {
 	return str
 }
 
-func AddBlockToBlockchain(block Block, checkBits bool) bool {
+func AddBlockToBlockchain(block Block, checkBits, allowWrite bool) bool {
 	isBlockValid := ValidateBlock(block, int(BcLength), checkBits)
 
 	if isBlockValid {
@@ -57,19 +57,19 @@ func AddBlockToBlockchain(block Block, checkBits bool) bool {
 			txInpList := block.Transactions[i].Inputs
 
 			for j := 0; j < len(txInpList); j++ {
-				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd), checkBits)
+				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd), allowWrite)
 			}
 
 			txOutList := block.Transactions[i].Outputs
 			for j := 0; j < len(txOutList); j++ {
 				var txByteArr byteArr.ByteArr
 				txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
-				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)), checkBits)
+				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)), allowWrite)
 			}
 		}
 
 		LastBlock = block
-		if checkBits {
+		if allowWrite {
 			WriteBlock(BcLength, block)
 		}
 	}
@@ -153,15 +153,6 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	}
 
 	newBlock.Blocksize = uint(len(BlockToString(newBlock)))
-	// if miningFlag != -1 && allowChangeBits {
-	// 	newBlock.Bits = GetCurrBitsValue()
-
-	// 	if allowPrint {
-	// 		target := fmt.Sprintf("%x", BitsToTarget(newBlock.Bits))
-	// 		log.Println("Current bits value is " + fmt.Sprintf("%x", newBlock.Bits))
-	// 		log.Println("Current target value is " + strings.Repeat("0", 40-len(target)) + target)
-	// 	}
-	// }
 	return newBlock
 }
 
@@ -267,12 +258,12 @@ func FormGenesisBlock() {
 	genesisBlock = MineBlock(genesisBlock, 1, true)
 	genesisBlock.Bits = STARTBITS
 
-	if AddBlockToBlockchain(genesisBlock, true) {
+	if AddBlockToBlockchain(genesisBlock, true, true) {
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
 		log.Println("Block is not added\n")
 	}
-	IncrBcHeight()
+	IncrBcHeight(true)
 }
 
 func PrintBlockTitle(block Block, height int) {

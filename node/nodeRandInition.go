@@ -173,42 +173,46 @@ func createTxRandom() {
 	}
 }
 
-var allowCreateBlock bool = true
-var createdBlock blockchain.Block
+var AllowCreateBlock bool = true
+var CreatedBlock blockchain.Block
 
-func addBlock() {
-	if allowCreateBlock {
+func AddBlock(allowWrite bool) {
+	if AllowCreateBlock {
 		log.Println("Creating a new block")
-		go createBlockLog()
-		allowCreateBlock = false
+		go CreateBlockLog(blockchain.GetBits(true))
+		AllowCreateBlock = false
 	}
 
-	if createdBlock.MerkleRoot != "" { // Is block mined check
-		addBlockLog()
-		createdBlock.MerkleRoot = ""
+	if CreatedBlock.MerkleRoot != "" { // Is block mined check
+		AddBlockLog(allowWrite)
+		CreatedBlock.MerkleRoot = ""
 	}
 	command_executor.PauseCommand()
 }
 
-func createBlockLog() {
+func CreateBlockLog(bits uint64) {
 	var rewardAdr byteArr.ByteArr
 	rewardAdr.SetFromHexString(blockchain.RewardAddress, 20)
 	newBlock := blockchain.CreateBlock(rewardAdr, true)
-	newBlock.Bits = blockchain.GetBits(true)
+	newBlock.Bits = bits
 	newBlock = blockchain.MineBlock(newBlock, 1, true)
-	createdBlock = newBlock
+	CreatedBlock = newBlock
 	command_executor.PauseCommand()
 }
 
-func addBlockLog() {
-	if blockchain.AddBlockToBlockchain(createdBlock, true) {
+func AddBlockLog(allowWrite bool) bool {
+	isBlockAdded := false
+	if blockchain.AddBlockToBlockchain(CreatedBlock, true, allowWrite) {
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")
+		blockchain.IncrBcHeight(allowWrite)
+		isBlockAdded = true
 	} else {
 		log.Println("Block is not added\n")
+		isBlockAdded = false
 	}
-	blockchain.IncrBcHeight()
 
-	allowCreateBlock = true
-	createdBlock.MerkleRoot = ""
+	AllowCreateBlock = true
+	CreatedBlock.MerkleRoot = ""
 	command_executor.PauseCommand()
+	return isBlockAdded
 }

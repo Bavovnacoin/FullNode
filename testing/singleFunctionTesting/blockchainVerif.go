@@ -43,7 +43,6 @@ func (bvt *BlockchainVerifTest) createValidTx() transaction.Transaction {
 
 	for txCreationTryCounter < bvt.txPerBlockAmmount {
 		accInd := bvt.currAccWalletInd
-		//netwAccAddrInd := bvt.random.Intn(len(account.Wallet[accInd].KeyPairList))
 		bvt.currAccWalletInd = (bvt.currAccWalletInd + 1) % bvt.txPerBlockAmmount
 
 		var accAddr byteArr.ByteArr
@@ -158,7 +157,7 @@ func (bvt *BlockchainVerifTest) genBlocks() {
 			bvt.blockIncorrMessage = append(bvt.blockIncorrMessage, "")
 		}
 
-		if blockchain.AddBlockToBlockchain(block, false) {
+		if blockchain.AddBlockToBlockchain(block, false, false) {
 			bvt.factBlockCorrectness = append(bvt.factBlockCorrectness, true)
 			blockchain.BcLength++
 		} else {

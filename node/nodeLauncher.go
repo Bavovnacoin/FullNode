@@ -21,7 +21,7 @@ func StartRPC() {
 	}
 }
 
-func process() {
+func NodeProcess() {
 	blockchain.RestoreMempool()
 	txo.RestoreCoinDatabase()
 	InitAccountsData()
@@ -29,15 +29,14 @@ func process() {
 
 	//go createTxRandom()
 	for command_executor.Node_working {
-		createAccoundRandom()
-		addBlock()
+		AddBlock(true)
 	}
 }
 
 func Launch() {
 	dbController.DB.OpenDb()
 	StartRPC()
-	go process()
+	go NodeProcess()
 	node_controller.CommandHandler()
 	blockchain.BackTransactionsToMempool()
 	blockchain.WriteMempoolData()
