@@ -16,7 +16,7 @@ type TXO struct {
 
 var CoinDatabase []TXO
 
-func Spend(outTxHash byteArr.ByteArr, outind uint64, allowUseDb bool) {
+func Spend(outTxHash byteArr.ByteArr, outind uint64) {
 	var txoToSpend TXO
 
 	for i := 0; i < len(CoinDatabase); i++ {
@@ -24,20 +24,12 @@ func Spend(outTxHash byteArr.ByteArr, outind uint64, allowUseDb bool) {
 			CoinDatabase[i].TxOutInd == outind {
 			txoToSpend = CoinDatabase[i]
 			CoinDatabase = append(CoinDatabase[:i], CoinDatabase[i+1:]...)
-			if allowUseDb {
-				RemUtxo(outTxHash, outind, txoToSpend.TxOutInd)
-			}
+			RemUtxo(outTxHash, outind, txoToSpend.TxOutInd)
+
 			break
 		}
 	}
-	var setRes bool
-	if allowUseDb {
-		setRes = SetTxo(txoToSpend)
-	}
-
-	if setRes && allowUseDb {
-		log.Println("Utxo has been added to db")
-	}
+	SetTxo(txoToSpend)
 }
 
 func IsUtxoExists(txHash byteArr.ByteArr, outInd uint64) bool {
@@ -50,18 +42,11 @@ func IsUtxoExists(txHash byteArr.ByteArr, outInd uint64) bool {
 }
 
 func AddUtxo(outTxHash byteArr.ByteArr, txOutInd uint64, Value uint64,
-	outAddress byteArr.ByteArr, blockHeight uint64, allowUseDb bool) {
+	outAddress byteArr.ByteArr, blockHeight uint64) {
 	utxo := TXO{OutTxHash: outTxHash, TxOutInd: txOutInd, Value: Value, OutAddress: outAddress,
 		BlockHeight: blockHeight}
 
-	var res bool
-	if allowUseDb {
-		res = SetUtxo(utxo)
-	}
-
-	if !res && allowUseDb {
-		log.Println("Problem when adding utxo to database")
-	}
+	SetUtxo(utxo)
 	CoinDatabase = append(CoinDatabase, utxo)
 }
 

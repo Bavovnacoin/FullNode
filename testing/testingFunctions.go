@@ -68,7 +68,7 @@ func MakeTxIncorrect(tx transaction.Transaction, incTxCounter int, random *rand.
 	}
 }
 
-func GenValidTx(currAccId int, random *rand.Rand) transaction.Transaction {
+func GenValidTx(currAccId int, randLocktime int, random *rand.Rand) transaction.Transaction {
 	account.CurrAccount = account.Wallet[currAccId]
 	account.GetBalance()
 	var outAddr byteArr.ByteArr
@@ -80,7 +80,7 @@ func GenValidTx(currAccId int, random *rand.Rand) transaction.Transaction {
 	var outValTx []uint64
 	outValTx = append(outValTx, uint64(txo.CoinDatabase[currAccId].Value/((random.Uint64()%10)+3)))
 
-	newTx, _ := transaction.CreateTransaction(fmt.Sprint(currAccId), outAddrTx, outValTx, random.Intn(10), uint(random.Intn(10)))
+	newTx, _ := transaction.CreateTransaction(fmt.Sprint(currAccId), outAddrTx, outValTx, random.Intn(10), uint(random.Intn(randLocktime)))
 	return newTx
 }
 
@@ -100,7 +100,7 @@ func GenRandTxs(txAmmount, incorrectTxAmmount int, random *rand.Rand) ([]transac
 	}
 
 	for i := 0; i < txAmmount; i++ {
-		newTx := GenValidTx(i, random)
+		newTx := GenValidTx(i, 3, random)
 
 		if i == incTxInd && incTxCounter <= incorrectTxAmmount {
 			stStep := step * incTxCounter

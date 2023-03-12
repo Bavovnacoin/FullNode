@@ -14,11 +14,9 @@ func SetBcHeight(hgt uint64) bool {
 	return dbController.DB.SetValue("bcLength", byteVal)
 }
 
-func IncrBcHeight(allowWrite bool) {
+func IncrBcHeight() {
 	BcLength++
-	if allowWrite {
-		SetBcHeight(BcLength)
-	}
+	SetBcHeight(BcLength)
 }
 
 func GetBcHeight() (uint64, bool) {

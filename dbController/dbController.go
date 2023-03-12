@@ -1,6 +1,8 @@
 package dbController
 
-import "github.com/syndtr/goleveldb/leveldb"
+import (
+	"github.com/syndtr/goleveldb/leveldb"
+)
 
 var DB Database
 

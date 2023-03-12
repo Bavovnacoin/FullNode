@@ -176,38 +176,46 @@ func createTxRandom() {
 var AllowCreateBlock bool = true
 var CreatedBlock blockchain.Block
 
-func AddBlock(allowWrite bool) {
+func AddBlock(allowLogPrint bool) bool {
 	if AllowCreateBlock {
-		log.Println("Creating a new block")
-		go CreateBlockLog(blockchain.GetBits(true))
+		if allowLogPrint {
+			log.Println("Creating a new block")
+		}
+		go CreateBlockLog(blockchain.GetBits(allowLogPrint), allowLogPrint)
 		AllowCreateBlock = false
 	}
 
 	if CreatedBlock.MerkleRoot != "" { // Is block mined check
-		AddBlockLog(allowWrite)
+		AddBlockLog(false)
 		CreatedBlock.MerkleRoot = ""
+		return true
 	}
 	command_executor.PauseCommand()
+	return false
 }
 
-func CreateBlockLog(bits uint64) {
+func CreateBlockLog(bits uint64, allowPrint bool) {
 	var rewardAdr byteArr.ByteArr
 	rewardAdr.SetFromHexString(blockchain.RewardAddress, 20)
-	newBlock := blockchain.CreateBlock(rewardAdr, true)
+	newBlock := blockchain.CreateBlock(rewardAdr, allowPrint)
 	newBlock.Bits = bits
-	newBlock = blockchain.MineBlock(newBlock, 1, true)
+	newBlock = blockchain.MineBlock(newBlock, 1, allowPrint)
 	CreatedBlock = newBlock
 	command_executor.PauseCommand()
 }
 
-func AddBlockLog(allowWrite bool) bool {
+func AddBlockLog(allowPrint bool) bool {
 	isBlockAdded := false
-	if blockchain.AddBlockToBlockchain(CreatedBlock, true, allowWrite) {
-		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")
-		blockchain.IncrBcHeight(allowWrite)
+	if blockchain.AddBlockToBlockchain(CreatedBlock, true) {
+		if allowPrint {
+			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")
+		}
+		blockchain.IncrBcHeight()
 		isBlockAdded = true
 	} else {
-		log.Println("Block is not added\n")
+		if allowPrint {
+			log.Println("Block is not added\n")
+		}
 		isBlockAdded = false
 	}
 

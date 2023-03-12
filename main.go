@@ -5,5 +5,5 @@ import loadtesting "bavovnacoin/testing/loadTesting"
 func main() {
 	//node.Launch()
 	var lt loadtesting.LoadTest
-	lt.StartLoadTest(10, 2, 5)
+	lt.StartLoadTest(70, 1, 5)
 }

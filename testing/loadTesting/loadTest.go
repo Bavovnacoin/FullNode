@@ -2,12 +2,13 @@ package loadtesting
 
 import (
 	"bavovnacoin/blockchain"
+	"bavovnacoin/dbController"
 	"bavovnacoin/node"
-	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/testing"
 	"bavovnacoin/transaction"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -22,14 +23,13 @@ type LoadTest struct {
 	incTxCounter int
 	currAccInd   int // TODO: change to currAccInd
 
-	nodeWorking bool
-	source      rand.Source
-	random      *rand.Rand
-	blockchain  []blockchain.Block
+	testNodeWorking bool
+	source          rand.Source
+	random          *rand.Rand
 }
 
 func (lt *LoadTest) GenRandTx() transaction.Transaction {
-	newTx := testing.GenValidTx(lt.currAccInd, lt.random)
+	newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
 
 	if lt.currAccInd == lt.incTxInd && lt.incTxCounter <= lt.incTxAmmount {
 		stStep := lt.step * lt.incTxCounter
@@ -64,23 +64,10 @@ func (lt *LoadTest) StartTestTxSending() {
 	defer conn.Close()
 
 	var isAccepted bool
-	for i := 0; i < lt.txAmmount; i++ {
+	for ; lt.txAmmount > 0; lt.txAmmount-- {
 		newTx := lt.GenRandTx()
 		conn.SendTransaction(newTx, &isAccepted)
 	}
-}
-
-func (lt *LoadTest) GetCurrBitsValue() uint64 {
-	var bits uint64
-	if int(blockchain.BcLength)%blockchain.BLOCK_DIFF_CHECK == 0 && blockchain.BcLength != 0 {
-		blockDiff := lt.blockchain[uint64(int(blockchain.BcLength)-blockchain.BLOCK_DIFF_CHECK)]
-		bits = blockchain.GenBits(blockDiff.Time, blockchain.LastBlock.Time, blockchain.LastBlock.Bits)
-	} else if blockchain.BcLength != 0 {
-		bits = blockchain.LastBlock.Bits
-	} else {
-		bits = blockchain.STARTBITS
-	}
-	return bits
 }
 
 func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount int) {
@@ -89,38 +76,32 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount in
 	lt.rpcAmmount = rpcAmmount
 	lt.source = rand.NewSource(time.Now().Unix())
 	lt.random = rand.New(lt.source)
-	lt.nodeWorking = true
+	lt.testNodeWorking = true
 
 	lt.initRandTxValues()
 
 	testing.GenTestAccounts(txAmmount)
-	testing.GenTestUtxo(10, lt.random)
+	testing.GenTestUtxo(txAmmount, lt.random)
 
+	dbController.DbPath = "testing/loadTesting/testData"
+
+	println(dbController.DB.OpenDb())
 	node.StartRPC()
 
 	go lt.StartTestTxSending()
 	println("Initializing transactions. Please, wait...")
 	time.Sleep(1 * time.Second)
 
-	for lt.nodeWorking {
-		if node.AllowCreateBlock {
-			log.Println("Creating a new block")
-			go node.CreateBlockLog(lt.GetCurrBitsValue())
+	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 { //lt.testNodeWorking &&
+		isAdded := node.AddBlock(false)
+		if isAdded {
 			println(len(blockchain.Mempool))
-			node.AllowCreateBlock = false
+			log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n", blockchain.BcLength, len(blockchain.LastBlock.Transactions)-1)
 		}
-
-		if node.CreatedBlock.MerkleRoot != "" { // Is block mined check
-			node.CreatedBlock.Bits = lt.GetCurrBitsValue()
-			isCreated := node.AddBlockLog(false)
-			if isCreated {
-				lt.blockchain = append(lt.blockchain, node.CreatedBlock)
-			}
-			node.CreatedBlock.MerkleRoot = ""
-		}
-		command_executor.PauseCommand()
 	}
 
+	dbController.DB.CloseDb()
+	os.RemoveAll(dbController.DbPath)
 	// go lt.TestNodeProcess()
 	// node_controller.CommandHandler()
 }

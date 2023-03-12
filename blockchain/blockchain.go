@@ -49,7 +49,7 @@ func BlockToString(block Block) string {
 	return str
 }
 
-func AddBlockToBlockchain(block Block, checkBits, allowWrite bool) bool {
+func AddBlockToBlockchain(block Block, checkBits bool) bool {
 	isBlockValid := ValidateBlock(block, int(BcLength), checkBits)
 
 	if isBlockValid {
@@ -57,21 +57,20 @@ func AddBlockToBlockchain(block Block, checkBits, allowWrite bool) bool {
 			txInpList := block.Transactions[i].Inputs
 
 			for j := 0; j < len(txInpList); j++ {
-				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd), allowWrite)
+				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
 			}
 
 			txOutList := block.Transactions[i].Outputs
 			for j := 0; j < len(txOutList); j++ {
 				var txByteArr byteArr.ByteArr
 				txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
-				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)), allowWrite)
+				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
 			}
 		}
 
 		LastBlock = block
-		if allowWrite {
-			WriteBlock(BcLength, block)
-		}
+		WriteBlock(BcLength, block)
+
 	}
 	IsMempAdded = false
 	return isBlockValid
@@ -258,12 +257,12 @@ func FormGenesisBlock() {
 	genesisBlock = MineBlock(genesisBlock, 1, true)
 	genesisBlock.Bits = STARTBITS
 
-	if AddBlockToBlockchain(genesisBlock, true, true) {
+	if AddBlockToBlockchain(genesisBlock, true) {
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
 		log.Println("Block is not added\n")
 	}
-	IncrBcHeight(true)
+	IncrBcHeight()
 }
 
 func PrintBlockTitle(block Block, height int) {
