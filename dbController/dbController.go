@@ -8,8 +8,10 @@ type Database struct {
 	Db *leveldb.DB
 }
 
+var DbPath string = "data"
+
 func (database *Database) OpenDb() bool {
-	db, err := leveldb.OpenFile("data", nil)
+	db, err := leveldb.OpenFile(DbPath, nil)
 	if err != nil {
 		return false
 	}
