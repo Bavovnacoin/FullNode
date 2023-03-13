@@ -83,7 +83,6 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 		if !transaction.VerifyTransaction(Mempool[MempoolInd]) { // Removing an incorrect tx
 			RemInputsFromMempInpHashes(Mempool[MempoolInd].Inputs)
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
-			println("Removed an incorrect tx")
 		} else if Mempool[MempoolInd].Locktime < uint(BcLength) {
 			txForBlock = append(txForBlock, Mempool[MempoolInd])
 			RemInputsFromMempInpHashes(Mempool[MempoolInd].Inputs)

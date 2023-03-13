@@ -1,6 +1,7 @@
 package loadtesting
 
 import (
+	"bavovnacoin/byteArr"
 	"bavovnacoin/transaction"
 	"bytes"
 	"encoding/gob"
@@ -71,4 +72,37 @@ func (c *Connection) SendTransaction(tx transaction.Transaction, isAccepted *boo
 		*isAccepted = false
 	}
 	return true
+}
+
+func (c *Connection) IsAddrExist(addr byteArr.ByteArr) bool {
+	var repl Reply
+	err := c.client.Call("Listener.IsAddrExist", addr.ByteArr, &repl)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	if repl.Data[0] == 0 {
+		return false
+	}
+
+	return true
+}
+
+// GetMyUtxo - in wallet
+func (c *Connection) GetUtxoByAddress(addresses []byteArr.ByteArr) bool {
+	byteArr, isConv := c.ToByteArr(addresses)
+	if !isConv {
+		return false
+	}
+
+	var repl Reply
+	err := c.client.Call("Listener.GetUtxoByAddr", byteArr, &repl)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	return true
+
 }

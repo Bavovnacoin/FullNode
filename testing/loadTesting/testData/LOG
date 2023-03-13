@@ -1,6 +1,0 @@
-=============== Mar 12, 2023 (EET) ===============
-19:24:00.366361 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-19:24:00.468078 db@open opening
-19:24:00.469478 version@stat F·[] S·0B[] Sc·[]
-19:24:00.517108 db@janitor F·2 G·0
-19:24:00.517108 db@open done T·49.0301ms

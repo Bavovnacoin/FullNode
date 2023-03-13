@@ -2,7 +2,9 @@ package loadtesting
 
 import (
 	"bavovnacoin/blockchain"
+	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
+	"bavovnacoin/hashing"
 	"bavovnacoin/node"
 	"bavovnacoin/testing"
 	"bavovnacoin/transaction"
@@ -21,11 +23,26 @@ type LoadTest struct {
 	step         int
 	incTxInd     int
 	incTxCounter int
-	currAccInd   int // TODO: change to currAccInd
+	currAccInd   int
+	txHandled    int
 
-	testNodeWorking bool
-	source          rand.Source
-	random          *rand.Rand
+	// Rand rpc generation
+	rpcStep                 int
+	rpcLastTxHandledAmmount int
+	rpcHandledAmmount       int
+
+	source rand.Source
+	random *rand.Rand
+}
+
+func (lt *LoadTest) initTestData(txAmmount, incTxAmmount, rpcAmmount int) {
+	lt.txAmmount = txAmmount
+	lt.incTxAmmount = incTxAmmount
+	lt.rpcAmmount = rpcAmmount
+	lt.source = rand.NewSource(time.Now().Unix())
+	lt.random = rand.New(lt.source)
+	lt.rpcStep = (lt.txAmmount - lt.incTxAmmount) / lt.rpcAmmount
+	lt.initRandTxValues()
 }
 
 func (lt *LoadTest) GenRandTx() transaction.Transaction {
@@ -70,38 +87,63 @@ func (lt *LoadTest) StartTestTxSending() {
 	}
 }
 
-func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount int) {
-	lt.txAmmount = txAmmount
-	lt.incTxAmmount = incTxAmmount
-	lt.rpcAmmount = rpcAmmount
-	lt.source = rand.NewSource(time.Now().Unix())
-	lt.random = rand.New(lt.source)
-	lt.testNodeWorking = true
+func (lt *LoadTest) callRandRpc(rpcInd int) {
+	var addr byteArr.ByteArr
+	addr.SetFromHexString(hashing.SHA1("Glory to Ukraine"), 20)
 
-	lt.initRandTxValues()
+	var conn Connection
+	conn.Establish()
+	defer conn.Close()
+	if rpcInd%2 == 0 {
+		conn.GetUtxoByAddress([]byteArr.ByteArr{addr})
+	} else if rpcInd%2 == 1 {
+		conn.IsAddrExist(addr)
+	}
+}
+
+func (lt *LoadTest) tryCallRandRpc() {
+	currCallsAmmount := (lt.txHandled - lt.rpcStep*lt.rpcHandledAmmount) / lt.rpcStep
+
+	if lt.rpcHandledAmmount < lt.rpcAmmount && currCallsAmmount != 0 {
+		for i := 0; i < currCallsAmmount; i++ {
+			lt.callRandRpc(lt.rpcHandledAmmount)
+			lt.rpcHandledAmmount++
+		}
+	}
+
+}
+
+func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount int) {
+	lt.initTestData(txAmmount, incTxAmmount, rpcAmmount)
+
+	dbController.DbPath = "testing/loadTesting/testData"
+	if _, err := os.Stat(dbController.DbPath); err == nil {
+		os.RemoveAll(dbController.DbPath)
+		println("Removed test db from a previous test.")
+	}
+	dbController.DB.OpenDb()
 
 	testing.GenTestAccounts(txAmmount)
 	testing.GenTestUtxo(txAmmount, lt.random)
 
-	dbController.DbPath = "testing/loadTesting/testData"
-
-	println(dbController.DB.OpenDb())
 	node.StartRPC()
 
 	go lt.StartTestTxSending()
 	println("Initializing transactions. Please, wait...")
 	time.Sleep(1 * time.Second)
 
-	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 { //lt.testNodeWorking &&
+	// Add rpc check (is it executing -> store ammount of executed time as an array and compare to ammount of need rpc?)
+	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 || lt.rpcHandledAmmount < lt.rpcAmmount {
 		isAdded := node.AddBlock(false)
 		if isAdded {
-			println(len(blockchain.Mempool))
+			lt.txHandled += len(blockchain.LastBlock.Transactions) - 1
 			log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n", blockchain.BcLength, len(blockchain.LastBlock.Transactions)-1)
 		}
+
+		lt.tryCallRandRpc()
 	}
 
 	dbController.DB.CloseDb()
 	os.RemoveAll(dbController.DbPath)
-	// go lt.TestNodeProcess()
 	// node_controller.CommandHandler()
 }
