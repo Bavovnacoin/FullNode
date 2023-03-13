@@ -1,7 +1,6 @@
 package node
 
 import (
-	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/dbController"
 	"bavovnacoin/networking"
@@ -24,7 +23,7 @@ func StartRPC() {
 func NodeProcess() {
 	blockchain.RestoreMempool()
 	txo.RestoreCoinDatabase()
-	InitAccountsData()
+	//InitAccountsData()
 	blockchain.InitBlockchain()
 
 	//go createTxRandom()
@@ -41,5 +40,4 @@ func Launch() {
 	blockchain.BackTransactionsToMempool()
 	blockchain.WriteMempoolData()
 	dbController.DB.CloseDb()
-	account.WriteAccounts()
 }

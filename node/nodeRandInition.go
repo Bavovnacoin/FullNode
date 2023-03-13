@@ -4,44 +4,17 @@ import (
 	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
-	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/transaction"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
-	"os"
-	"strconv"
 	"time"
 )
 
 var newAccountNotFact int = 0
 var newAccountNotCome int = 0
-
-func InitAccountsData() {
-	var emptyDat []byte
-	err := account.IsWalletExists(account.WalletName)
-	if !err {
-		os.WriteFile(account.WalletName, emptyDat, 0777)
-		var genesisAccKeyPair []ecdsa.KeyPair
-		genesisAccKeyPair = append(genesisAccKeyPair, ecdsa.KeyPair{PrivKey: "d966fded26f23d50bb1223cdc6efe4cfebc9f2d6967cb570122c040baf5d42091953a2ba6466963351a4c6bc616e1858de87de02724cc89d9306a62b6d29fab6",
-			PublKey: "033361587c679cf9476949cb7cdd15c07d6f2f9674886333f667bfedb87635a4b4"})
-		account.Wallet = append(account.Wallet, account.Account{Id: "0",
-			HashPass: "b6589fc6ab0dc82cf12099d1c2d40ab994e8410c", KeyPairList: genesisAccKeyPair})
-
-		account.WriteAccounts()
-
-		log.Println("Created new wallet")
-	} else {
-		dataByte, _ := os.ReadFile(account.WalletName)
-		json.Unmarshal([]byte(dataByte), &account.Wallet)
-		account.RightBoundAccNum, _ = strconv.Atoi(account.Wallet[len(account.Wallet)-1].Id)
-
-		log.Println("Restored wallet")
-	}
-}
 
 func createAccoundRandom() {
 	source := rand.NewSource(time.Now().Unix())
@@ -187,7 +160,7 @@ func AddBlock(allowLogPrint bool) bool {
 
 	if CreatedBlock.MerkleRoot != "" { // Is block mined check
 		isBlockValid := blockchain.ValidateBlock(CreatedBlock, int(blockchain.BcLength), true, false)
-		AddBlockLog(false, isBlockValid)
+		AddBlockLog(allowLogPrint, isBlockValid)
 		CreatedBlock.MerkleRoot = ""
 		return true
 	}
