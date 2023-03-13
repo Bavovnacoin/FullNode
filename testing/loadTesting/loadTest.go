@@ -6,6 +6,7 @@ import (
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node"
+	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/testing"
 	"bavovnacoin/transaction"
 	"log"
@@ -32,8 +33,9 @@ type LoadTest struct {
 	rpcHandledAmmount       int
 
 	// Test results
-	rpcExecTime []time.Duration
-	txVerifTime []time.Duration // Determines how much time a user needs to wait to add tx to a mempool
+	rpcExecTime    []time.Duration // Determines how much time a user needs to wait to call an rpc
+	txVerifTime    []time.Duration // Determines how much time a user needs to wait to add tx to a mempool
+	blockValidTime []time.Duration // Determines how much a node need to validate a block
 
 	source rand.Source
 	random *rand.Rand
@@ -125,8 +127,32 @@ func (lt *LoadTest) tryCallRandRpc() {
 
 }
 
-func (lt *LoadTest) printResults() {
+func (lt *LoadTest) testAddBlock() bool {
+	if node.AllowCreateBlock {
+		go node.CreateBlockLog(blockchain.GetBits(false), false)
+		node.AllowCreateBlock = false
+	}
 
+	var start time.Time
+	if node.CreatedBlock.MerkleRoot != "" { // Is block mined check
+		start = time.Now()
+		isBlockValid := blockchain.ValidateBlock(node.CreatedBlock, int(blockchain.BcLength), true, false)
+		if isBlockValid {
+			lt.blockValidTime = append(lt.blockValidTime, time.Since(start))
+		}
+
+		node.AddBlockLog(false, isBlockValid)
+		node.CreatedBlock.MerkleRoot = ""
+		return true
+	}
+	command_executor.PauseCommand()
+	return false
+}
+
+func (lt *LoadTest) printResults() {
+	for i := 0; i < len(lt.blockValidTime); i++ {
+		println()
+	}
 }
 
 func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount int) {
@@ -151,7 +177,8 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount in
 	// Add rpc check (is it executing -> store ammount of executed time as an array and compare to ammount of need rpc?)
 	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 ||
 		len(lt.rpcExecTime) < lt.rpcAmmount {
-		isAdded := node.AddBlock(false)
+		var isAdded bool = lt.testAddBlock()
+
 		if isAdded {
 			lt.txHandled += len(blockchain.LastBlock.Transactions) - 1
 			log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n",

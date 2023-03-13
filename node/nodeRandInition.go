@@ -186,7 +186,8 @@ func AddBlock(allowLogPrint bool) bool {
 	}
 
 	if CreatedBlock.MerkleRoot != "" { // Is block mined check
-		AddBlockLog(false)
+		isBlockValid := blockchain.ValidateBlock(CreatedBlock, int(blockchain.BcLength), true, false)
+		AddBlockLog(false, isBlockValid)
 		CreatedBlock.MerkleRoot = ""
 		return true
 	}
@@ -204,10 +205,10 @@ func CreateBlockLog(bits uint64, allowPrint bool) {
 	command_executor.PauseCommand()
 }
 
-func AddBlockLog(allowPrint bool) bool {
+func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 	isBlockAdded := false
 
-	if blockchain.ValidateBlock(CreatedBlock, int(blockchain.BcLength), true) {
+	if isBlockValid {
 		blockchain.AddBlockToBlockchain(CreatedBlock, true)
 		if allowPrint {
 			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")

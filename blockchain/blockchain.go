@@ -172,7 +172,7 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) Block {
 	return block
 }
 
-func ValidateBlock(block Block, height int, checkBits bool) bool {
+func ValidateBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
 	var lastBlockHash string
 	var prevBlock Block
 
@@ -224,9 +224,11 @@ func ValidateBlock(block Block, height int, checkBits bool) bool {
 	}
 
 	// Check transactions
-	for i := 1; i < int(len(block.Transactions)); i++ {
-		if !transaction.VerifyTransaction(block.Transactions[i]) {
-			return false
+	if allowCheckTxs {
+		for i := 1; i < int(len(block.Transactions)); i++ {
+			if !transaction.VerifyTransaction(block.Transactions[i]) {
+				return false
+			}
 		}
 	}
 	return true
@@ -253,7 +255,7 @@ func FormGenesisBlock() {
 	genesisBlock = MineBlock(genesisBlock, 1, true)
 	genesisBlock.Bits = STARTBITS
 
-	if ValidateBlock(genesisBlock, int(BcLength), true) {
+	if ValidateBlock(genesisBlock, int(BcLength), true, false) {
 		AddBlockToBlockchain(genesisBlock, true)
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
