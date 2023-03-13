@@ -49,31 +49,27 @@ func BlockToString(block Block) string {
 	return str
 }
 
-func AddBlockToBlockchain(block Block, checkBits bool) bool {
-	isBlockValid := ValidateBlock(block, int(BcLength), checkBits)
+// Warning: it is considered that the block is valid
+func AddBlockToBlockchain(block Block, checkBits bool) {
+	for i := 0; i < len(block.Transactions); i++ {
+		txInpList := block.Transactions[i].Inputs
 
-	if isBlockValid {
-		for i := 0; i < len(block.Transactions); i++ {
-			txInpList := block.Transactions[i].Inputs
-
-			for j := 0; j < len(txInpList); j++ {
-				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
-			}
-
-			txOutList := block.Transactions[i].Outputs
-			for j := 0; j < len(txOutList); j++ {
-				var txByteArr byteArr.ByteArr
-				txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
-				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
-			}
+		for j := 0; j < len(txInpList); j++ {
+			txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
 		}
 
-		LastBlock = block
-		WriteBlock(BcLength, block)
-
+		txOutList := block.Transactions[i].Outputs
+		for j := 0; j < len(txOutList); j++ {
+			var txByteArr byteArr.ByteArr
+			txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
+			txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
+		}
 	}
+
+	LastBlock = block
+	WriteBlock(BcLength, block)
+
 	IsMempAdded = false
-	return isBlockValid
 }
 
 func GenMerkleRoot(transactions []transaction.Transaction) string {
@@ -257,7 +253,8 @@ func FormGenesisBlock() {
 	genesisBlock = MineBlock(genesisBlock, 1, true)
 	genesisBlock.Bits = STARTBITS
 
-	if AddBlockToBlockchain(genesisBlock, true) {
+	if ValidateBlock(genesisBlock, int(BcLength), true) {
+		AddBlockToBlockchain(genesisBlock, true)
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
 		log.Println("Block is not added\n")
