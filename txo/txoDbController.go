@@ -119,3 +119,21 @@ func PrintSpentTxOuts() bool {
 	iter.Error()
 	return true
 }
+
+func PrintUtxo() bool {
+	i := 0
+	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("utxo")), nil)
+	for iter.Next() {
+		var txo TXO
+		isConv := byteArr.FromByteArr(iter.Value(), &txo)
+		if !isConv {
+			return false
+		}
+		txo.PrintTxo(i)
+		i++
+	}
+
+	iter.Release()
+	iter.Error()
+	return true
+}
