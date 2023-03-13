@@ -2,12 +2,14 @@ package singleFunctionTesting
 
 import (
 	"bavovnacoin/account"
+	"bavovnacoin/dbController"
 	"bavovnacoin/testing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 )
@@ -72,6 +74,13 @@ func (tvt *TransVerifTest) TransactionsVerefication(txAmmount int, incorrectTxAm
 	tvt.txAmmount = txAmmount
 	tvt.incorrectTxAmmount = incorrectTxAmmount
 
+	dbController.DbPath = "testing/testData"
+	if _, err := os.Stat(dbController.DbPath); err == nil {
+		os.RemoveAll(dbController.DbPath)
+		println("Removed test db from a previous test.")
+	}
+	dbController.DB.OpenDb()
+
 	tvt.source = rand.NewSource(time.Now().Unix())
 	tvt.random = rand.New(tvt.source)
 
@@ -83,7 +92,9 @@ func (tvt *TransVerifTest) TransactionsVerefication(txAmmount int, incorrectTxAm
 	log.Printf("Generated %d test accounts\n", len(account.Wallet))
 	testing.GenTestUtxo(tvt.txAmmount, tvt.random)
 	log.Printf("Generated %d test utxo\n", len(txo.CoinDatabase))
-	log.Printf("Generating %d txs (%d are incorrect)", tvt.txAmmount, tvt.incorrectTxAmmount)
 	tvt.testTransactions, tvt.txIncorrMessage = testing.GenRandTxs(tvt.txAmmount, tvt.incorrectTxAmmount, tvt.random)
+	log.Printf("Generated %d txs (%d are incorrect)", tvt.txAmmount, tvt.incorrectTxAmmount)
 	tvt.printResults()
+	dbController.DB.CloseDb()
+	os.RemoveAll(dbController.DbPath)
 }

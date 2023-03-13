@@ -19,16 +19,20 @@ func GenTestAccounts(ammount int) {
 	}
 }
 
+func GenUtxo(i int, random *rand.Rand) {
+	var outAddr byteArr.ByteArr
+	outAddr.SetFromHexString(hashing.SHA1(account.Wallet[i].KeyPairList[0].PublKey), 20)
+
+	var outTxHash byteArr.ByteArr
+	outTxHash.SetFromHexString(hashing.SHA1(fmt.Sprint(i)+fmt.Sprint(time.Now().Unix())), 20)
+
+	newTxo := txo.TXO{OutTxHash: outTxHash, Value: (random.Uint64()%700000 + 300000), OutAddress: outAddr}
+	txo.AddUtxo(newTxo.OutTxHash, newTxo.TxOutInd, newTxo.Value, newTxo.OutAddress, newTxo.BlockHeight)
+}
+
 func GenTestUtxo(ammount int, random *rand.Rand) {
 	for i := 0; i < ammount; i++ {
-		var outAddr byteArr.ByteArr
-		outAddr.SetFromHexString(hashing.SHA1(account.Wallet[i].KeyPairList[0].PublKey), 20)
-
-		var outTxHash byteArr.ByteArr
-		outTxHash.SetFromHexString(hashing.SHA1(fmt.Sprint(i)+fmt.Sprint(time.Now().Unix())), 20)
-
-		newTxo := txo.TXO{OutTxHash: outTxHash, Value: (random.Uint64()%700000 + 300000), OutAddress: outAddr}
-		txo.CoinDatabase = append(txo.CoinDatabase, newTxo)
+		GenUtxo(i, random)
 	}
 }
 

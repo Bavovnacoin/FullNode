@@ -23,10 +23,8 @@ func StartRPC() {
 func NodeProcess() {
 	blockchain.RestoreMempool()
 	txo.RestoreCoinDatabase()
-	//InitAccountsData()
 	blockchain.InitBlockchain()
 
-	//go createTxRandom()
 	for command_executor.Node_working {
 		AddBlock(true)
 	}

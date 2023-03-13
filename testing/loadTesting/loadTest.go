@@ -1,6 +1,7 @@
 package loadtesting
 
 import (
+	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
@@ -9,6 +10,7 @@ import (
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/testing"
 	"bavovnacoin/transaction"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -51,7 +53,15 @@ func (lt *LoadTest) initTestData(txAmmount, incTxAmmount, rpcAmmount int) {
 	lt.initRandTxValues()
 }
 
+func (lt *LoadTest) GenRandValues() {
+	go testing.GenTestAccounts(lt.txAmmount)
+	time.Sleep(5 * time.Second)
+	go testing.GenTestUtxo(lt.txAmmount, lt.random)
+}
+
 func (lt *LoadTest) genRandTx() transaction.Transaction {
+	account.Wallet = append(account.Wallet, account.GenAccount(fmt.Sprint(lt.currAccInd)))
+	testing.GenUtxo(lt.currAccInd, lt.random)
 	newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
 
 	if lt.currAccInd == lt.incTxInd && lt.incTxCounter <= lt.incTxAmmount {
@@ -147,23 +157,19 @@ func (lt *LoadTest) testAddBlock() bool {
 func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount int) {
 	lt.initTestData(txAmmount, incTxAmmount, rpcAmmount)
 
-	dbController.DbPath = "testing/loadTesting/testData"
+	dbController.DbPath = "testing/testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {
 		os.RemoveAll(dbController.DbPath)
 		println("Removed test db from a previous test.")
 	}
 	dbController.DB.OpenDb()
 
-	testing.GenTestAccounts(txAmmount)
-	testing.GenTestUtxo(txAmmount, lt.random)
-
 	node.StartRPC()
 
 	go lt.startTestTxSending()
-	println("Initializing transactions. Please, wait...")
+	println("Initializing transactions")
 	time.Sleep(1 * time.Second)
 
-	// Add rpc check (is it executing -> store ammount of executed time as an array and compare to ammount of need rpc?)
 	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 ||
 		len(lt.rpcExecTimeUtxoByAddr)+len(lt.rpcExecTimeisAddrExist) < lt.rpcAmmount {
 		var isAdded bool = lt.testAddBlock()
@@ -181,5 +187,4 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount in
 	os.RemoveAll(dbController.DbPath)
 
 	lt.printResults()
-	// node_controller.CommandHandler()
 }

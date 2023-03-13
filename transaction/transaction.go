@@ -268,7 +268,12 @@ func VerifyTransaction(tx Transaction) bool {
 				return false
 			}
 
-			curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
+			utxo, res := txo.GetUtxo(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
+			if !res {
+				return false
+			}
+			curVal := utxo.Value
+			//curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 			inpValue += curVal
 		}
 

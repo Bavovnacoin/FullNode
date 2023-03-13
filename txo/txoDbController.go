@@ -15,8 +15,18 @@ func SetUtxo(utxo TXO) bool {
 	if !isConv {
 		return false
 	}
-	key := "utxo" + hashing.SHA1(utxo.OutTxHash.ToHexString()+fmt.Sprint(utxo.TxOutInd)+fmt.Sprint(utxo.BlockHeight))
+	key := "utxo" + hashing.SHA1(utxo.OutTxHash.ToHexString()+fmt.Sprint(utxo.TxOutInd))
 	return dbController.DB.SetValue(key, byteVal)
+}
+
+func GetUtxo(outTxHash byteArr.ByteArr, outInd int) (TXO, bool) {
+	utxoByteArr, isValid := dbController.DB.GetValue("utxo" + hashing.SHA1(outTxHash.ToHexString()+fmt.Sprint(outInd)))
+	var utxo TXO
+	if isValid {
+		byteArr.FromByteArr(utxoByteArr, &utxo)
+		return utxo, true
+	}
+	return utxo, false
 }
 
 func RestoreCoinDatabase() bool {
