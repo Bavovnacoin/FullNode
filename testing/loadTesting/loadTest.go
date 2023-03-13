@@ -31,6 +31,10 @@ type LoadTest struct {
 	rpcLastTxHandledAmmount int
 	rpcHandledAmmount       int
 
+	// Test results
+	rpcExecTime []time.Duration
+	txVerifTime []time.Duration // Determines how much time a user needs to wait to add tx to a mempool
+
 	source rand.Source
 	random *rand.Rand
 }
@@ -45,7 +49,7 @@ func (lt *LoadTest) initTestData(txAmmount, incTxAmmount, rpcAmmount int) {
 	lt.initRandTxValues()
 }
 
-func (lt *LoadTest) GenRandTx() transaction.Transaction {
+func (lt *LoadTest) genRandTx() transaction.Transaction {
 	newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
 
 	if lt.currAccInd == lt.incTxInd && lt.incTxCounter <= lt.incTxAmmount {
@@ -75,15 +79,20 @@ func (lt *LoadTest) initRandTxValues() {
 	}
 }
 
-func (lt *LoadTest) StartTestTxSending() {
+func (lt *LoadTest) startTestTxSending() {
 	var conn Connection
 	conn.Establish()
 	defer conn.Close()
 
 	var isAccepted bool
+	var start time.Time
 	for ; lt.txAmmount > 0; lt.txAmmount-- {
-		newTx := lt.GenRandTx()
+		newTx := lt.genRandTx()
+
+		start = time.Now()
 		conn.SendTransaction(newTx, &isAccepted)
+		lt.txVerifTime = append(lt.txVerifTime, time.Since(start))
+
 	}
 }
 
@@ -94,11 +103,14 @@ func (lt *LoadTest) callRandRpc(rpcInd int) {
 	var conn Connection
 	conn.Establish()
 	defer conn.Close()
+
+	start := time.Now()
 	if rpcInd%2 == 0 {
 		conn.GetUtxoByAddress([]byteArr.ByteArr{addr})
 	} else if rpcInd%2 == 1 {
 		conn.IsAddrExist(addr)
 	}
+	lt.rpcExecTime = append(lt.rpcExecTime, time.Since(start))
 }
 
 func (lt *LoadTest) tryCallRandRpc() {
@@ -110,6 +122,10 @@ func (lt *LoadTest) tryCallRandRpc() {
 			lt.rpcHandledAmmount++
 		}
 	}
+
+}
+
+func (lt *LoadTest) printResults() {
 
 }
 
@@ -128,16 +144,18 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount in
 
 	node.StartRPC()
 
-	go lt.StartTestTxSending()
+	go lt.startTestTxSending()
 	println("Initializing transactions. Please, wait...")
 	time.Sleep(1 * time.Second)
 
 	// Add rpc check (is it executing -> store ammount of executed time as an array and compare to ammount of need rpc?)
-	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 || lt.rpcHandledAmmount < lt.rpcAmmount {
+	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 ||
+		len(lt.rpcExecTime) < lt.rpcAmmount {
 		isAdded := node.AddBlock(false)
 		if isAdded {
 			lt.txHandled += len(blockchain.LastBlock.Transactions) - 1
-			log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n", blockchain.BcLength, len(blockchain.LastBlock.Transactions)-1)
+			log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n",
+				blockchain.BcLength, len(blockchain.LastBlock.Transactions)-1)
 		}
 
 		lt.tryCallRandRpc()
@@ -145,5 +163,7 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount in
 
 	dbController.DB.CloseDb()
 	os.RemoveAll(dbController.DbPath)
+
+	lt.printResults()
 	// node_controller.CommandHandler()
 }
