@@ -33,9 +33,9 @@ type LoadTest struct {
 	rpcHandledAmmount       int
 
 	// Test results
-	rpcExecTime    []time.Duration // Determines how much time a user needs to wait to call an rpc
-	txVerifTime    []time.Duration // Determines how much time a user needs to wait to add tx to a mempool
-	blockValidTime []time.Duration // Determines how much a node need to validate a block
+	rpcExecTimeUtxoByAddr  []time.Duration // Determines how much time a user needs to wait to call an rpc
+	rpcExecTimeisAddrExist []time.Duration // Determines how much time a user needs to wait to call an rpc
+	txVerifTime            []time.Duration // Determines how much time a user needs to wait to add tx to a mempool
 
 	source rand.Source
 	random *rand.Rand
@@ -109,10 +109,11 @@ func (lt *LoadTest) callRandRpc(rpcInd int) {
 	start := time.Now()
 	if rpcInd%2 == 0 {
 		conn.GetUtxoByAddress([]byteArr.ByteArr{addr})
+		lt.rpcExecTimeUtxoByAddr = append(lt.rpcExecTimeUtxoByAddr, time.Since(start))
 	} else if rpcInd%2 == 1 {
 		conn.IsAddrExist(addr)
+		lt.rpcExecTimeisAddrExist = append(lt.rpcExecTimeisAddrExist, time.Since(start))
 	}
-	lt.rpcExecTime = append(lt.rpcExecTime, time.Since(start))
 }
 
 func (lt *LoadTest) tryCallRandRpc() {
@@ -133,26 +134,14 @@ func (lt *LoadTest) testAddBlock() bool {
 		node.AllowCreateBlock = false
 	}
 
-	var start time.Time
 	if node.CreatedBlock.MerkleRoot != "" { // Is block mined check
-		start = time.Now()
 		isBlockValid := blockchain.ValidateBlock(node.CreatedBlock, int(blockchain.BcLength), true, false)
-		if isBlockValid {
-			lt.blockValidTime = append(lt.blockValidTime, time.Since(start))
-		}
-
 		node.AddBlockLog(false, isBlockValid)
 		node.CreatedBlock.MerkleRoot = ""
 		return true
 	}
 	command_executor.PauseCommand()
 	return false
-}
-
-func (lt *LoadTest) printResults() {
-	for i := 0; i < len(lt.blockValidTime); i++ {
-		println()
-	}
 }
 
 func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount int) {
@@ -176,7 +165,7 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount in
 
 	// Add rpc check (is it executing -> store ammount of executed time as an array and compare to ammount of need rpc?)
 	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 ||
-		len(lt.rpcExecTime) < lt.rpcAmmount {
+		len(lt.rpcExecTimeUtxoByAddr)+len(lt.rpcExecTimeisAddrExist) < lt.rpcAmmount {
 		var isAdded bool = lt.testAddBlock()
 
 		if isAdded {
