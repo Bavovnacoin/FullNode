@@ -173,7 +173,9 @@ func decompressPubKey(s string) Point {
 	pref := s[:2]
 	x, _ := big.NewInt(0).SetString(s[2:], 16)
 	// y**2 = x**3 + b, a == 0
-	ysquared := big.NewInt(0).Mod(big.NewInt(0).Add(big.NewInt(0).Exp(x, big.NewInt(3), nil), b), p)
+	bb := big.NewInt(0).Exp(x, big.NewInt(3), nil)
+	aa := big.NewInt(0).Add(bb, b)
+	ysquared := big.NewInt(0).Mod(aa, p)
 	// y = (y**2)**((p+1)/4)
 	y := big.NewInt(0).Exp(ysquared, big.NewInt(0).Div(big.NewInt(0).Add(p, big.NewInt(1)), big.NewInt(4)), p)
 	if (pref == "02" && big.NewInt(0).Mod(y, big.NewInt(2)).Cmp(big.NewInt(0)) != 0) ||

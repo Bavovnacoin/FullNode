@@ -251,6 +251,7 @@ func PrintTransaction(tx Transaction) {
 // Verifies transaction
 func VerifyTransaction(tx Transaction) bool {
 	if tx.Version == 0 {
+		ecdsa.InitValues()
 		var inpValue uint64
 		var outValue uint64
 		hashMesOfTx := hashing.SHA1(GetCatTxFields(tx))
