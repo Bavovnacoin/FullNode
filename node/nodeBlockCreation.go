@@ -36,6 +36,7 @@ func CreateBlockLog(bits uint64, allowPrint bool) {
 	newBlock := blockchain.CreateBlock(rewardAdr, allowPrint)
 	newBlock.Bits = bits
 	newBlock = blockchain.MineBlock(newBlock, 1, allowPrint)
+	blockchain.RemoveTxsFromMempool(newBlock.Transactions[1:]) //TODO: check all MineBlock functions, back txs to the memp?
 	CreatedBlock = newBlock
 	command_executor.PauseCommand()
 }

@@ -130,7 +130,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	var coinbaseTx transaction.Transaction
 	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{Address: rewardAdr, Value: GetCoinsForEmition()})
 
-	var txArr []transaction.Transaction = GetTransactionsFromMempool(transaction.ComputeTxSize(coinbaseTx))
+	txArr := GetTransactionsFromMempool(transaction.ComputeTxSize(coinbaseTx))
 
 	var feeSum uint64 = 0
 	for i := 0; i < len(txArr); i++ {

@@ -138,6 +138,7 @@ func (bvt *BlockchainVerifTest) genBlocks() {
 		block := blockchain.CreateBlock(rewAddress, false)
 		block.Bits = 0xf00fff14
 		block = blockchain.MineBlock(block, 1, false)
+		blockchain.RemoveTxsFromMempool(block.Transactions[1:])
 
 		if i == incBlockInd && incBlockCounter <= bvt.incorrectblockAmmount {
 			stStep := step * incBlockCounter

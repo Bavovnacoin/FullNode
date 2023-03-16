@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"bavovnacoin/byteArr"
+	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"log"
 )
@@ -80,18 +81,31 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 	for allSize < 1000000-coinbaseTxSize && MempoolInd < len(Mempool) {
 		allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
 
-		if !transaction.VerifyTransaction(Mempool[MempoolInd]) { // Removing an incorrect tx
-			RemInputsFromMempInpHashes(Mempool[MempoolInd].Inputs)
-			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
-		} else if Mempool[MempoolInd].Locktime < uint(BcLength) {
-			txForBlock = append(txForBlock, Mempool[MempoolInd])
-			RemInputsFromMempInpHashes(Mempool[MempoolInd].Inputs)
+		if Mempool[MempoolInd].Locktime < uint(BcLength) {
 			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
 		} else {
 			MempoolInd++
 		}
 	}
 	return txForBlock
+}
+
+func RemoveTxsFromMempool(txs []transaction.Transaction) {
+	remCount := 0
+	for mempInd, mempVal := range Mempool {
+		mempTxHash := hashing.SHA1(transaction.GetCatTxFields(mempVal))
+		for _, txVal := range txs {
+			currTxHash := hashing.SHA1(transaction.GetCatTxFields(txVal))
+			if mempTxHash == currTxHash {
+				Mempool = append(Mempool[:mempInd], Mempool[mempInd+1:]...)
+				remCount++
+				break
+			}
+		}
+		if remCount == len(txs) {
+			break
+		}
+	}
 }
 
 func IsAddressInMempool(address byteArr.ByteArr) bool {
@@ -124,7 +138,7 @@ func BackTransactionsToMempool() {
 			AddInputsToMempInpHashes(BlockForMining.Transactions[i].Inputs)
 		}
 		if len(BlockForMining.Transactions) > 1 {
-			log.Printf("%d transactions are returned back to mempool\n", len(BlockForMining.Transactions)-1)
+			log.Printf("%d transactions are returned back to the mempool\n", len(BlockForMining.Transactions)-1)
 		}
 	}
 }
