@@ -1,7 +1,9 @@
 package main
 
+import "bavovnacoin/node"
+
 func main() {
-	//node.Launch()
+	node.Launch()
 
 	// var tvt singleFunctionTesting.TransVerifTest
 	// tvt.TransactionsVerefication(10, 4)

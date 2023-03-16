@@ -57,7 +57,6 @@ func AddTxToMempool(tx transaction.Transaction, allowVerify bool) bool {
 	}
 }
 
-// Make binary search???
 func findIndexSorted(fee uint64, locktime uint) int {
 	for i := 0; i < len(Mempool); i++ {
 		txFee := transaction.GetTxFee(Mempool[i])
@@ -76,20 +75,17 @@ func findIndexSorted(fee uint64, locktime uint) int {
 func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 	var txForBlock []transaction.Transaction
 	allSize := 0
-	MempoolInd := 0
 
-	for allSize < 1000000-coinbaseTxSize && MempoolInd < len(Mempool) {
-		allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
-
+	for MempoolInd := 0; allSize < 1000000-coinbaseTxSize && MempoolInd < len(Mempool); MempoolInd++ {
 		if Mempool[MempoolInd].Locktime < uint(BcLength) {
-			Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
-		} else {
-			MempoolInd++
+			allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
+			txForBlock = append(txForBlock, Mempool[MempoolInd])
 		}
 	}
 	return txForBlock
 }
 
+// TODO: store pointer to that element, access it and delete?
 func RemoveTxsFromMempool(txs []transaction.Transaction) {
 	remCount := 0
 	for mempInd, mempVal := range Mempool {
@@ -97,6 +93,7 @@ func RemoveTxsFromMempool(txs []transaction.Transaction) {
 		for _, txVal := range txs {
 			currTxHash := hashing.SHA1(transaction.GetCatTxFields(txVal))
 			if mempTxHash == currTxHash {
+				RemInputsFromMempInpHashes(Mempool[mempInd].Inputs)
 				Mempool = append(Mempool[:mempInd], Mempool[mempInd+1:]...)
 				remCount++
 				break
