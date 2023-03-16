@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var BLOCK_DIFF_CHECK int = 3
+var BLOCK_DIFF_CHECK int = 10
 var BLOCK_CREATION_SEC int = 60
 var STARTBITS uint64 = 0x6c140113
 

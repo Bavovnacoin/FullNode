@@ -4,12 +4,14 @@ import (
 	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
+	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"fmt"
 	"log"
 	"math/big"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 )
@@ -24,12 +26,6 @@ type BlockchainVerifTest struct {
 
 	source rand.Source
 	random *rand.Rand
-}
-
-func (bvt *BlockchainVerifTest) SetTestValues(blockAmmount int, incorrectblockAmmount int, txPerBlockAmmount int) {
-	bvt.blockAmmount = blockAmmount
-	bvt.incorrectblockAmmount = incorrectblockAmmount
-	bvt.txPerBlockAmmount = txPerBlockAmmount
 }
 
 func (bvt *BlockchainVerifTest) genBlockTestAccounts(ammount int) {
@@ -200,7 +196,18 @@ func (bvt *BlockchainVerifTest) printResults() {
 	log.Printf("Test result: %d\\%d. %s\n", bvt.blockAmmount-resultNotMatchedCounter, bvt.blockAmmount, result)
 }
 
-func (bvt *BlockchainVerifTest) BlockchainVerefication() {
+func (bvt *BlockchainVerifTest) BlockchainVerefication(blockAmmount int, incorrectblockAmmount int, txPerBlockAmmount int) {
+	bvt.blockAmmount = blockAmmount
+	bvt.incorrectblockAmmount = incorrectblockAmmount
+	bvt.txPerBlockAmmount = txPerBlockAmmount
+
+	dbController.DbPath = "testing/testData"
+	if _, err := os.Stat(dbController.DbPath); err == nil {
+		os.RemoveAll(dbController.DbPath)
+		println("Removed test db from a previous test.")
+	}
+	dbController.DB.OpenDb()
+
 	bvt.source = rand.NewSource(time.Now().Unix())
 	bvt.random = rand.New(bvt.source)
 	blockchain.STARTBITS = 0xffff14
@@ -212,4 +219,6 @@ func (bvt *BlockchainVerifTest) BlockchainVerefication() {
 	}
 	bvt.genBlocks()
 	bvt.printResults()
+	dbController.DB.CloseDb()
+	os.RemoveAll(dbController.DbPath)
 }

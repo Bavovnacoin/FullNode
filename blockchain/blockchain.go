@@ -21,7 +21,7 @@ var LastBlock Block
 var IsMempAdded bool
 var BlockForMining Block
 
-var RewardAddress string = "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
+var RewardAddress string = "8f7de2da2ba0967eac572437f15ede0766746432"
 
 type Block struct {
 	Blocksize     uint
@@ -182,7 +182,6 @@ func ValidateBlock(block Block, height int, checkBits bool, allowCheckTxs bool) 
 		var isBlockFound bool
 		prevBlock, isBlockFound = GetBlock(uint64(height))
 		if !isBlockFound {
-			println("Block not found")
 			return false
 		}
 	}

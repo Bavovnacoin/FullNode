@@ -68,12 +68,14 @@ func GetAccUtxo() []txo.TXO {
 }
 
 func GetBalHashOutInd(txHash byteArr.ByteArr, outInd int) uint64 {
-	for j := 0; j < len(txo.CoinDatabase); j++ {
-		if txHash.IsEqual(txo.CoinDatabase[j].OutTxHash) && txo.CoinDatabase[j].TxOutInd == uint64(outInd) {
-			return txo.CoinDatabase[j].Value
-		}
-	}
-	return 0
+	utxo, _ := txo.GetUtxo(txHash, outInd)
+	return utxo.Value
+	// for j := 0; j < len(txo.CoinDatabase); j++ {
+	// 	if txHash.IsEqual(txo.CoinDatabase[j].OutTxHash) && txo.CoinDatabase[j].TxOutInd == uint64(outInd) {
+	// 		return txo.CoinDatabase[j].Value
+	// 	}
+	// }
+	// return 0
 }
 
 func GetBalByAddress(address byteArr.ByteArr) uint64 {

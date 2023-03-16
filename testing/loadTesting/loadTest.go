@@ -9,7 +9,7 @@ import (
 	"bavovnacoin/node"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/testing"
-	"bavovnacoin/transaction"
+	"bavovnacoin/txo"
 	"fmt"
 	"log"
 	"math/rand"
@@ -18,9 +18,8 @@ import (
 )
 
 type LoadTest struct {
-	txAmmount    int
-	incTxAmmount int
-	rpcAmmount   int
+	txAmmount  int
+	rpcAmmount int
 
 	// Rand tx generation
 	step         int
@@ -43,14 +42,13 @@ type LoadTest struct {
 	random *rand.Rand
 }
 
-func (lt *LoadTest) initTestData(txAmmount, incTxAmmount, rpcAmmount int) {
+func (lt *LoadTest) initTestData(txAmmount, rpcAmmount int) {
 	lt.txAmmount = txAmmount
-	lt.incTxAmmount = incTxAmmount
 	lt.rpcAmmount = rpcAmmount
 	lt.source = rand.NewSource(time.Now().Unix())
 	lt.random = rand.New(lt.source)
-	lt.rpcStep = (lt.txAmmount - lt.incTxAmmount) / lt.rpcAmmount
-	lt.initRandTxValues()
+	lt.rpcStep = (lt.txAmmount) / lt.rpcAmmount
+	//lt.initRandTxValues()
 }
 
 func (lt *LoadTest) GenRandValues() {
@@ -59,37 +57,36 @@ func (lt *LoadTest) GenRandValues() {
 	go testing.GenTestUtxo(lt.txAmmount, lt.random)
 }
 
-func (lt *LoadTest) genRandTx() transaction.Transaction {
-	account.Wallet = append(account.Wallet, account.GenAccount(fmt.Sprint(lt.currAccInd)))
-	testing.GenUtxo(lt.currAccInd, lt.random)
-	newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
+// func (lt *LoadTest) genRandTx() transaction.Transaction {
+// 	newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
 
-	if lt.currAccInd == lt.incTxInd && lt.incTxCounter <= lt.incTxAmmount {
-		stStep := lt.step * lt.incTxCounter
-		if lt.incTxAmmount-1 == lt.incTxCounter {
-			lt.step = lt.txAmmount - stStep
-		}
-		lt.incTxInd = lt.random.Intn(lt.step) + stStep
+// 	if lt.currAccInd == lt.incTxInd && lt.incTxCounter <= lt.incTxAmmount {
+// 		stStep := lt.step * lt.incTxCounter
+// 		if lt.incTxAmmount-1 == lt.incTxCounter {
+// 			lt.step = lt.txAmmount - stStep
+// 		}
+// 		println(lt.step)
+// 		lt.incTxInd = lt.random.Intn(lt.step) + stStep
 
-		newTx, _ = testing.MakeTxIncorrect(newTx, lt.incTxCounter, lt.random)
-		lt.incTxCounter++
-	}
+// 		newTx, _ = testing.MakeTxIncorrect(newTx, lt.incTxCounter, lt.random)
+// 		lt.incTxCounter++
+// 	}
 
-	lt.currAccInd++
+// 	lt.currAccInd++
 
-	return newTx
-}
+// 	return newTx
+// }
 
-func (lt *LoadTest) initRandTxValues() {
-	lt.step = int(lt.txAmmount / lt.incTxAmmount)
-	lt.incTxInd = -1
-	if lt.incTxAmmount != 0 {
-		stStep := lt.step * lt.incTxCounter
-		lt.incTxInd = lt.random.Intn(lt.step) + stStep
+// func (lt *LoadTest) initRandTxValues() {
+// 	lt.step = int(lt.txAmmount / lt.incTxAmmount)
+// 	lt.incTxInd = -1
+// 	if lt.incTxAmmount != 0 {
+// 		stStep := lt.step * lt.incTxCounter
+// 		lt.incTxInd = lt.random.Intn(lt.step) + stStep
 
-		lt.incTxCounter++
-	}
-}
+// 		lt.incTxCounter++
+// 	}
+// }
 
 func (lt *LoadTest) startTestTxSending() {
 	var conn Connection
@@ -99,7 +96,7 @@ func (lt *LoadTest) startTestTxSending() {
 	var isAccepted bool
 	var start time.Time
 	for ; lt.txAmmount > 0; lt.txAmmount-- {
-		newTx := lt.genRandTx()
+		newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
 
 		start = time.Now()
 		conn.SendTransaction(newTx, &isAccepted)
@@ -154,8 +151,8 @@ func (lt *LoadTest) testAddBlock() bool {
 	return false
 }
 
-func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount int) {
-	lt.initTestData(txAmmount, incTxAmmount, rpcAmmount)
+func (lt *LoadTest) StartLoadTest(txAmmount int, rpcAmmount int) {
+	lt.initTestData(txAmmount, rpcAmmount)
 
 	dbController.DbPath = "testing/testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {
@@ -163,8 +160,12 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, incTxAmmount int, rpcAmmount in
 		println("Removed test db from a previous test.")
 	}
 	dbController.DB.OpenDb()
-
 	node.StartRPC()
+
+	testing.GenTestAccounts(lt.txAmmount)
+	fmt.Printf("Generated %d test accounts\n", len(account.Wallet))
+	testing.GenTestUtxo(lt.txAmmount, lt.random)
+	fmt.Printf("Generated %d test utxo\n", len(txo.CoinDatabase))
 
 	go lt.startTestTxSending()
 	println("Initializing transactions")
