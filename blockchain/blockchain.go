@@ -258,7 +258,8 @@ func FormGenesisBlock() {
 		AddBlockToBlockchain(genesisBlock, true)
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
-		log.Println("Block is not added\n")
+		log.Println("Block is not added")
+		println()
 	}
 	IncrBcHeight()
 }
