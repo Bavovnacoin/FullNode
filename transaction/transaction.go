@@ -286,6 +286,7 @@ func VerifyTransaction(tx Transaction) bool {
 		if inpValue < outValue {
 			return false
 		}
+		return true
 	}
-	return true
+	return false
 }
