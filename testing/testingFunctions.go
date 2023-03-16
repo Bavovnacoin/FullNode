@@ -92,11 +92,12 @@ func GenRandTxs(txAmmount, incorrectTxAmmount int, random *rand.Rand) ([]transac
 	var randTxs []transaction.Transaction
 	var txIncorrMessages []string
 
-	var step int = int(txAmmount / incorrectTxAmmount)
+	var step int
 	var incTxInd int = -1
 	var incTxCounter int
 
 	if incorrectTxAmmount != 0 {
+		step = int(txAmmount / incorrectTxAmmount)
 		stStep := step * incTxCounter
 		incTxInd = random.Intn(step) + stStep
 

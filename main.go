@@ -1,6 +1,8 @@
 package main
 
-import loadtesting "bavovnacoin/testing/loadTesting"
+import (
+	"bavovnacoin/testing/singleFunctionTesting"
+)
 
 func main() {
 	//node.Launch()
@@ -11,6 +13,6 @@ func main() {
 	// var bvt singleFunctionTesting.BlockchainVerifTest
 	// bvt.BlockchainVerefication(10, 3, 10)
 
-	var lt loadtesting.LoadTest
-	lt.StartLoadTest(20, 5)
+	var tvt singleFunctionTesting.TransVerifTime
+	tvt.TransVerifTime()
 }
