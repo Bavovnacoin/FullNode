@@ -1,12 +1,12 @@
 package main
 
-import "bavovnacoin/node"
+import "bavovnacoin/testing/singleFunctionTesting"
 
 func main() {
-	node.Launch()
+	//node.Launch()
 
-	// var tvt singleFunctionTesting.TransVerifTest
-	// tvt.TransactionsVerefication(10, 4)
+	var tvt singleFunctionTesting.TransVerifTest
+	tvt.TransactionsVerefication(10, 4)
 
 	// var bvt singleFunctionTesting.BlockchainVerifTest
 	// bvt.BlockchainVerefication(10, 3, 10)

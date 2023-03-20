@@ -61,7 +61,7 @@ func inverse(a, m *big.Int) *big.Int {
 	y := big.NewInt(1)
 
 	if a.Cmp(big.NewInt(0)) == -1 {
-		a = big.NewInt(0).Mod(a, m)
+		a = a.Mod(a, m)
 	}
 
 	bigOne := big.NewInt(1)
@@ -70,11 +70,11 @@ func inverse(a, m *big.Int) *big.Int {
 
 		qmuly := big.NewInt(0).Mul(q, y)
 		tempY := y
-		y = big.NewInt(0).Sub(prevY, qmuly)
+		y = qmuly.Sub(prevY, qmuly)
 		prevY = tempY
 
 		tempa := a
-		a = big.NewInt(0).Rem(m, a)
+		a = m.Rem(m, a)
 		m = tempa
 	}
 
@@ -84,12 +84,15 @@ func inverse(a, m *big.Int) *big.Int {
 func double(point Point) Point {
 	// slope
 	x2 := big.NewInt(0).Mul(point.x, point.x)
-	x2m3 := big.NewInt(1).Mul(x2, big.NewInt(3))
-	up := big.NewInt(0).Add(x2m3, a)
-	ym2 := big.NewInt(0).Mul(point.y, big.NewInt(2))
-	down := inverse(ym2, p)
-	umd := big.NewInt(0).Mul(up, down)
+	x2.Mul(x2, big.NewInt(3))
+	x2.Add(x2, a)
+
+	bigTwo := big.NewInt(2)
+	bigTwo.Mul(point.y, bigTwo)
+	inverse(bigTwo, p)
+	umd := big.NewInt(0).Mul(x2, bigTwo)
 	s := big.NewInt(0).Mod(umd, p)
+
 	// x
 	s2 := big.NewInt(0).Mul(s, s)
 	xm2 := big.NewInt(0).Mul(point.x, big.NewInt(2))
@@ -162,7 +165,7 @@ func fillZero(str string, needLen int) string {
 
 func compressPubKey(p Point) string {
 	xStrHex := fillZero(bigToHex(p.x), 64)
-	if big.NewInt(0).Mod(p.y, big.NewInt(2)).Cmp(big.NewInt(0)) == 0 {
+	if p.y.Mod(p.y, big.NewInt(2)).Cmp(big.NewInt(0)) == 0 {
 		return "02" + xStrHex
 	} else {
 		return "03" + xStrHex
@@ -173,9 +176,7 @@ func decompressPubKey(s string) Point {
 	pref := s[:2]
 	x, _ := big.NewInt(0).SetString(s[2:], 16)
 	// y**2 = x**3 + b, a == 0
-	bb := big.NewInt(0).Exp(x, big.NewInt(3), nil)
-	aa := big.NewInt(0).Add(bb, b)
-	ysquared := big.NewInt(0).Mod(aa, p)
+	ysquared := big.NewInt(0).Mod(big.NewInt(0).Add(big.NewInt(0).Exp(x, big.NewInt(3), nil), b), p)
 	// y = (y**2)**((p+1)/4)
 	y := big.NewInt(0).Exp(ysquared, big.NewInt(0).Div(big.NewInt(0).Add(p, big.NewInt(1)), big.NewInt(4)), p)
 	if (pref == "02" && big.NewInt(0).Mod(y, big.NewInt(2)).Cmp(big.NewInt(0)) != 0) ||
