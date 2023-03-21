@@ -1,10 +1,7 @@
 package node_controller
 
 import (
-	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
-	"bavovnacoin/byteArr"
-	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
@@ -15,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var text string
@@ -33,12 +31,13 @@ func getLineSeparator() string {
 
 func CommandHandler() {
 	reader = bufio.NewReader(os.Stdin)
-	for command_executor.Node_working {
+	for command_executor.ComContr.FullNodeWorking {
 		text, _ = reader.ReadString('\n')
 		text = strings.Trim(text, getLineSeparator())
 		if text == "stop" {
-			command_executor.Node_working = false
-			log.Println("Node has been stopped.")
+			command_executor.ComContr.FullNodeWorking = false
+			log.Println("Stopping the node...")
+			time.Sleep(time.Second)
 		} else if text == "pause" {
 			command_executor.Pause = !command_executor.Pause
 			if command_executor.Pause {
@@ -56,12 +55,8 @@ func CommandHandler() {
 			ifPauseFunction(bcPrinter, "getbc")
 		} else if len(text) >= 10 && text[:10] == "getblocktx" {
 			ifPauseFunction(blockTxPrinter, "getblocktx")
-		} else if len(text) >= 10 && text[:10] == "getaccaddr" {
-			ifPauseFunction(accAddressesPrinter, "getaccaddr")
 		} else if text == "gettxo" {
 			ifPauseFunction(utxoPrinter, "gettxo")
-		} else if text == "maketx" {
-			ifPauseFunction(makeTransaction, "maketx")
 		} else if text == "showminingstats" {
 			miningStatsPrinter()
 		} else if text != "" {
@@ -79,9 +74,7 @@ func helpPrinter() {
 	println("getmemptx [id] - show specific mempool transaction")
 	println("getbc [start_height] [end_height] - show titles of blockchain blocks from a defined range")
 	println("getblocktx [block_height] [block_tx_id] - show specific transaction from a defined block")
-	println("getaccaddr [acc_id] - show addresses and balances of a specific account")
 	println("gettxo - show all outputs")
-	println("maketx - create new transaction and send to mempool")
 	println("showminingstats - show statistics of current mining process")
 }
 
@@ -186,137 +179,8 @@ func blockTxPrinter() {
 	}
 }
 
-func accAddressesPrinter() {
-	command := strings.Split(text, " ")
-	if len(command) == 1 {
-		log.Println("Error. You typed in command without parameters")
-		return
-	}
-
-	for i := 1; i < len(command); i++ {
-		ind, err := strconv.ParseInt(command[i], 10, 64)
-		if err == nil {
-			if ind >= int64(len(account.Wallet)) || ind < 0 {
-				log.Println("Error. You typed wrong tx index. Must be between 0 and", len(account.Wallet)-1)
-				break
-			}
-
-			log.Println("Address of account index", ind)
-			acc := account.Wallet[ind]
-			var value uint64
-			for i := 0; i < len(acc.KeyPairList); i++ {
-				var accAddress byteArr.ByteArr
-				accAddrStr := hashing.SHA1(acc.KeyPairList[i].PublKey)
-				accAddress.SetFromHexString(accAddrStr, 20)
-				bal := account.GetBalByAddress(accAddress)
-				value += bal
-				fmt.Printf("[%d]. %s, balance: %d\n", i, accAddrStr, bal)
-			}
-			fmt.Printf("Total value: %d\n", value)
-			break
-		} else {
-			log.Println("Error. Expected numerical type as a parameter")
-		}
-	}
-}
-
 func utxoPrinter() {
 	txo.PrintCoinDatabase()
-}
-
-func makeTransaction() {
-	log.Println("Transaction creation. To stop type stopcreation")
-
-	var accId uint64
-	println("Type in account id")
-	for true {
-		text, _ = reader.ReadString('\n')
-		text = strings.Trim(text, getLineSeparator())
-		if text == "stopcreation" {
-			return
-		}
-
-		accIdInp, err := strconv.ParseUint(text, 10, 64)
-		if err == nil {
-			accId = accIdInp
-			account.CurrAccount = account.Wallet[accId]
-			break
-		} else {
-			println("Error. Expected numerical value.")
-		}
-	}
-
-	var outAddr []byteArr.ByteArr
-	var outValue []uint64
-	println("Type in address and value to be sent separated by a space. Or continue by typing next.")
-
-	for true {
-		text, _ = reader.ReadString('\n')
-		text = strings.Trim(text, getLineSeparator())
-		inputArr := strings.Split(text, " ")
-		if text == "next" {
-			break
-		}
-		if text == "stopcreation" {
-			return
-		}
-		var inpAddr byteArr.ByteArr
-		inpAddr.SetFromHexString(inputArr[0], 20)
-		for i := 1; i < len(inputArr); i++ {
-			value, err := strconv.ParseUint(inputArr[i], 10, 64)
-			if err == nil {
-				outValue = append(outValue, value)
-			}
-		}
-	}
-
-	println("Type in tx fee per byte.")
-	var fee int
-	for true {
-		text, _ = reader.ReadString('\n')
-		text = strings.Trim(text, getLineSeparator())
-		if text == "stopcreation" {
-			return
-		}
-
-		feeInp, err := strconv.ParseInt(text, 10, 64)
-		if err == nil {
-			fee = int(feeInp)
-			break
-		} else {
-			println("Error. Expected numerical value.")
-		}
-	}
-
-	println("Type in locktime.")
-	var locktime uint64
-	for true {
-		text, _ = reader.ReadString('\n')
-		text = strings.Trim(text, getLineSeparator())
-		if text == "stopcreation" {
-			return
-		}
-
-		locktimeInp, err := strconv.ParseUint(text, 10, 64)
-		if err == nil {
-			locktime = locktimeInp
-			break
-		} else {
-			println("Error. Expected numerical value.")
-		}
-	}
-
-	tx, mes := transaction.CreateTransaction(fmt.Sprint(accId), outAddr, outValue, fee, uint(locktime))
-	if mes == "" {
-		transaction.PrintTransaction(tx)
-		if blockchain.AddTxToMempool(tx, true) {
-			log.Println("Created transaction is sent to the mempool")
-		} else {
-			log.Println("Transaction was not added to mempool")
-		}
-	} else {
-		println(mes)
-	}
 }
 
 func miningStatsPrinter() {

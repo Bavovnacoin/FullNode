@@ -1,0 +1,8 @@
+{
+    "TxMinFee": 4,
+    "MiningThreads": 0,
+    "NodeType": 0,
+    "OtherNodesAddresses": [
+        "188.163.8.146:25565"
+    ]
+}
