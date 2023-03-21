@@ -10,6 +10,8 @@ import (
 	"fmt"
 )
 
+var NodeSettings node_controller.NodeSettings
+
 func StartRPC() {
 	isRpcStarted, err := networking.StartRPCListener()
 	if !isRpcStarted {

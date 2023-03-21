@@ -124,18 +124,3 @@ func InitAccount(accountId string) bool {
 	}
 	return false
 }
-
-func SignData(hashMes string, kpInd int, pass string) (string, bool) {
-	if CurrAccount.HashPass != hashing.SHA1(pass) {
-		return "", true
-	}
-	kp := CurrAccount.KeyPairList[kpInd]
-	kp.PrivKey = cryption.AES_decrypt(kp.PrivKey, pass)
-
-	return ecdsa.Sign(hashMes, kp.PrivKey), false
-}
-
-func VerifData(hashMes string, kpInd int, signature string) bool {
-	kp := CurrAccount.KeyPairList[kpInd]
-	return ecdsa.Verify(kp.PublKey, signature, hashMes)
-}

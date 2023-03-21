@@ -53,7 +53,8 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 		isBlockAdded = true
 	} else {
 		if allowPrint {
-			log.Println("Block is not added\n")
+			log.Println("Block is not added")
+			println()
 		}
 		isBlockAdded = false
 	}
