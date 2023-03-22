@@ -13,7 +13,6 @@ import (
 )
 
 var NodeLaunched bool
-var NodeSettings node_settings.NodeSettings
 
 func StartRPC() {
 	isRpcStarted, err := networking.StartRPCListener()
@@ -51,7 +50,7 @@ func funcChoser(variant string) {
 		command_executor.ComContr.ClearConsole()
 		LaunchFullNode()
 	} else if variant == "2" {
-		node_settings.LaunchMenu(&NodeSettings)
+		node_settings.LaunchMenu(&node_settings.Settings)
 	} else if variant == "3" {
 		NodeLaunched = false
 	}
@@ -60,8 +59,8 @@ func funcChoser(variant string) {
 func Launch() {
 	NodeLaunched = true
 	command_executor.ComContr.OpSys = runtime.GOOS
-	NodeSettings.GetSettings()
-	NodeSettings.InitSettingsValues()
+	node_settings.Settings.GetSettings()
+	node_settings.Settings.InitSettingsValues()
 
 	var variant string
 	for NodeLaunched {

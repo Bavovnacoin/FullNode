@@ -290,3 +290,11 @@ func VerifyTransaction(tx Transaction) bool {
 	}
 	return false
 }
+
+func CheckTxMinFee(tx Transaction, minFee uint64) bool {
+	txFeePerByte := GetTxFee(tx) / uint64(ComputeTxSize(tx))
+	if txFeePerByte >= minFee {
+		return true
+	}
+	return false
+}

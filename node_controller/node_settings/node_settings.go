@@ -9,6 +9,7 @@ import (
 	"runtime"
 )
 
+var Settings NodeSettings
 var settingsFileName string = "node_settings.json"
 
 type NodeSettings struct {

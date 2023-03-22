@@ -1,7 +1,6 @@
 package networking
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"net/rpc"
@@ -13,13 +12,6 @@ type Listener int
 
 type Reply struct {
 	Data []byte
-}
-
-func (l *Listener) PingPong(line []byte, reply *Reply) error {
-	rv := string(line)
-	fmt.Printf("Receive: %v\n", rv)
-	*reply = Reply{[]byte("pong")}
-	return nil
 }
 
 func StartRPCListener() (bool, error) {
