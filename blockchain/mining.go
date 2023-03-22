@@ -3,10 +3,10 @@ package blockchain
 import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/command_executor"
+	"bavovnacoin/node_controller/node_settings"
 	"fmt"
 	"log"
 	"math/big"
-	"runtime"
 )
 
 var allowParallelMining bool
@@ -63,19 +63,7 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) uint64 {
 
 	allowParallelMining = true
 	var thrcount uint64
-	if threadsCount+4 > uint64(runtime.NumCPU()) && uint64(runtime.NumCPU())-4 >= 1 {
-		thrcount = uint64(runtime.NumCPU()) - 4
-		if allowPrint {
-			log.Println("Threads for mining are limited to " + fmt.Sprint(thrcount))
-		}
-	} else if uint64(runtime.NumCPU())-4 < 1 {
-		thrcount = 1
-		if allowPrint {
-			log.Println("Threads for mining are limited to 1")
-		}
-	} else {
-		thrcount = threadsCount
-	}
+	thrcount = uint64(node_settings.Settings.GetThreadsAmmount())
 
 	resChan := make(chan ParMineData, thrcount)
 	var foundNounce uint64
