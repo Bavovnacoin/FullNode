@@ -27,14 +27,17 @@ func InitCheckpoints() {
 }
 
 func checkForCheckpCorrespondence(height uint64, block blockchain.Block) bool {
-	if height == Checkpoints[checkpInd].height {
+	if checkpInd < uint64(len(Checkpoints)) && height == Checkpoints[checkpInd].height {
 		var blockHash byteArr.ByteArr
 		blockHash.SetFromHexString(hashing.SHA1(blockchain.BlockToString(block)), 20)
 
 		if blockHash.IsEqual(Checkpoints[checkpInd].blockHash) {
 			checkpInd++
 			return true
+		} else {
+			return false
 		}
 	}
-	return false
+
+	return true
 }
