@@ -124,8 +124,8 @@ func ChooseMenuVariant(variant string, settings *NodeSettings) {
 		fieldEnterForm(fmt.Sprintf("Current fee is %d. Type another fee or \"back\" to back to the settings menu.\n",
 			settings.TxMinFee), settings, feePerByteValid)
 	} else if variant == "2" {
-		fieldEnterForm(fmt.Sprintf("Current threads ammount is %s. Type another ammount (0 - for maximum) or \"back\" to back to the settings menu.\n",
-			settings.ThreadsForMiningToString()), settings, threadsSetValid)
+		fieldEnterForm(fmt.Sprintf("Current threads ammount is %s. Type another ammount up to %d (0 - for maximum) or \"back\" to back to the settings menu.\n",
+			settings.ThreadsForMiningToString(), settings.GetMaxThreadsAmmount()), settings, threadsSetValid)
 	} else if variant == "3" {
 		fieldEnterForm(fmt.Sprintf("Current node type is %s. Type number for node type or \"back\" to back to the settings menu:\n%s\n",
 			settings.NodeTypesNames[settings.NodeType], nodeNamesVariants(settings.NodeTypesNames, settings.NodeType)), settings, nodeTypeSetValid)

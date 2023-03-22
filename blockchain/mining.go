@@ -63,7 +63,7 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) uint64 {
 
 	allowParallelMining = true
 	var thrcount uint64
-	thrcount = uint64(node_settings.Settings.GetThreadsAmmount())
+	thrcount = uint64(node_settings.Settings.GetThreadsAmmountForMining())
 
 	resChan := make(chan ParMineData, thrcount)
 	var foundNounce uint64

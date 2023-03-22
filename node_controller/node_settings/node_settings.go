@@ -43,7 +43,14 @@ func (ns *NodeSettings) WriteSettings() {
 	os.WriteFile(settingsFileName, byteData, 0777)
 }
 
-func (ns *NodeSettings) GetThreadsAmmount() uint64 {
+func (ns *NodeSettings) GetThreadsAmmountForMining() uint {
+	if ns.MiningThreads == 0 {
+		return uint(runtime.NumCPU() - 4)
+	}
+	return ns.MiningThreads
+}
+
+func (ns *NodeSettings) GetMaxThreadsAmmount() uint64 {
 	thrAmmount := uint64(runtime.NumCPU() - 4)
 	if thrAmmount <= 0 {
 		return 1
@@ -52,7 +59,7 @@ func (ns *NodeSettings) GetThreadsAmmount() uint64 {
 }
 
 func (ns *NodeSettings) SetMiningThreads(threads uint) bool {
-	if threads < 0 || threads > uint(ns.GetThreadsAmmount()) {
+	if threads < 0 || threads > uint(ns.GetMaxThreadsAmmount()) {
 		return false
 	}
 	ns.MiningThreads = threads
@@ -61,7 +68,7 @@ func (ns *NodeSettings) SetMiningThreads(threads uint) bool {
 
 func (ns *NodeSettings) ThreadsForMiningToString() string {
 	if ns.MiningThreads == 0 {
-		return fmt.Sprintf("MAX (%d)", ns.GetThreadsAmmount())
+		return fmt.Sprintf("MAX (%d)", ns.GetThreadsAmmountForMining())
 	}
 	return fmt.Sprintf("%d", ns.MiningThreads)
 }
