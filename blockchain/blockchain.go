@@ -50,7 +50,7 @@ func BlockToString(block Block) string {
 }
 
 // Warning: it is considered that the block is valid
-func AddBlockToBlockchain(block Block, checkBits bool) {
+func AddBlockToBlockchain(block Block) {
 	for i := 0; i < len(block.Transactions); i++ {
 		txInpList := block.Transactions[i].Inputs
 
@@ -255,7 +255,7 @@ func FormGenesisBlock() {
 	genesisBlock.Bits = STARTBITS
 
 	if ValidateBlock(genesisBlock, int(BcLength), true, false) {
-		AddBlockToBlockchain(genesisBlock, true)
+		AddBlockToBlockchain(genesisBlock)
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
 		log.Println("Block is not added")

@@ -19,6 +19,21 @@ func (c *Connection) Establish(address string) bool {
 	return true
 }
 
+func (c *Connection) EstablishAddresses(addresses []string, addrInd int) (bool, int) {
+	for true {
+		res := c.Establish(addresses[addrInd])
+		if res {
+			return true, addrInd
+		} else if addrInd+1 < len(addresses[addrInd]) {
+			addrInd++
+			c.Close()
+		} else {
+			return false, addrInd
+		}
+	}
+	return false, addrInd
+}
+
 func (c *Connection) Close() {
 	c.client.Close()
 }

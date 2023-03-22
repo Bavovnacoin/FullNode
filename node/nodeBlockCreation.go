@@ -45,7 +45,7 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 	isBlockAdded := false
 
 	if isBlockValid {
-		blockchain.AddBlockToBlockchain(CreatedBlock, true)
+		blockchain.AddBlockToBlockchain(CreatedBlock)
 		if allowPrint {
 			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")
 		}
