@@ -37,7 +37,7 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 			}
 
 			data.block.Nonce = nonce
-			hashNounce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(data.block)+fmt.Sprintf("%d", nonce)), 16)
+			hashNounce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(data.block)), 16)
 			if target.Cmp(hashNounce) == 1 {
 				data.isFound = true
 				data.nonce = nonce
@@ -87,6 +87,7 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) uint64 {
 			foundNounce = data.nonce
 		}
 	}
+
 	if allowPrint {
 		log.Println("Mining done")
 	}

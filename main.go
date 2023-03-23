@@ -4,13 +4,9 @@ import "bavovnacoin/node"
 
 func main() {
 	node.Launch()
+	// dbController.DB.OpenDb()
+	// defer dbController.DB.CloseDb()
 
-	// var tvt singleFunctionTesting.TransVerifTest
-	// tvt.TransactionsVerefication(10, 4)
-
-	// var bvt singleFunctionTesting.BlockchainVerifTest
-	// bvt.BlockchainVerefication(10, 3, 10)
-
-	// var lt loadtesting.LoadTest
-	// lt.StartLoadTest(50, 5)
+	// b, _ := blockchain.GetBlock(1)
+	// println(b.Nonce)
 }

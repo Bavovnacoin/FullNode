@@ -7,8 +7,10 @@ import (
 	"bavovnacoin/node_controller"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/node_controller/node_settings"
+	"bavovnacoin/synchronization"
 	"bavovnacoin/txo"
 	"fmt"
+	"log"
 	"runtime"
 )
 
@@ -27,7 +29,6 @@ func StartRPC() {
 func NodeProcess() {
 	blockchain.RestoreMempool()
 	txo.RestoreCoinDatabase()
-	blockchain.InitBlockchain()
 
 	for command_executor.ComContr.FullNodeWorking {
 		AddBlock(true)
@@ -38,6 +39,13 @@ func LaunchFullNode() {
 	command_executor.ComContr.FullNodeWorking = true
 	dbController.DB.OpenDb()
 	StartRPC()
+	blockchain.InitBlockchain()
+
+	log.Println("Db synchronization.")
+	syncRes := synchronization.StartInitSync(true, blockchain.BcLength)
+	if !syncRes { //TODO: continue? or start mining
+		log.Println("An error occured when synchronizing DB")
+	}
 	go NodeProcess()
 	node_controller.CommandHandler()
 	blockchain.BackTransactionsToMempool()

@@ -7,9 +7,9 @@ import (
 	"log"
 )
 
-func StartInitSync(printLog bool) bool {
+func StartInitSync(printLog bool, startBlock uint64) bool {
 	var conn networking.Connection
-	var addrInd int = 0
+	var addrInd int = -1
 
 	var isEstablished bool
 	isEstablished, addrInd = conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, addrInd)
@@ -18,7 +18,7 @@ func StartInitSync(printLog bool) bool {
 	}
 
 	InitCheckpoints()
-	var blockReqInd uint64 = 0
+	var blockReqInd uint64 = startBlock
 	checkpCorresp := false
 	for true {
 		blocks, res := conn.RequestBlocks(blockReqInd)
@@ -31,6 +31,7 @@ func StartInitSync(printLog bool) bool {
 				checkpCorresp = checkForCheckpCorrespondence(blockReqInd, blocks[i])
 				if checkpCorresp {
 					blockchain.AddBlockToBlockchain(blocks[i])
+					blockchain.IncrBcHeight()
 					blockReqInd++
 				} else {
 					if printLog {
@@ -39,6 +40,9 @@ func StartInitSync(printLog bool) bool {
 					}
 					break
 				}
+			}
+			if printLog {
+				log.Printf("Blocks downloaded. Current height is %d\n", blockchain.BcLength)
 			}
 		}
 

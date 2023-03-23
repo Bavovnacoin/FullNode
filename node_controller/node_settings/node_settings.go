@@ -45,6 +45,9 @@ func (ns *NodeSettings) WriteSettings() {
 
 func (ns *NodeSettings) GetThreadsAmmountForMining() uint {
 	if ns.MiningThreads == 0 {
+		if uint(runtime.NumCPU()-4) <= 0 {
+			return 1
+		}
 		return uint(runtime.NumCPU() - 4)
 	}
 	return ns.MiningThreads

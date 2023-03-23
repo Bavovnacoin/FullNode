@@ -42,10 +42,10 @@ func BlockToString(block Block) string {
 	str += block.Time.String()
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
-	str += fmt.Sprint(block.Nonce)
 	for i := 0; i < len(block.Transactions); i++ {
 		str += transaction.GetCatTxFields(block.Transactions[i])
 	}
+	str += fmt.Sprint(block.Nonce)
 	return str
 }
 
@@ -169,6 +169,7 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) Block {
 	} else if miningFlag == 1 {
 		block.Nonce = MineThreads(block, uint64(runtime.NumCPU()), allowPrint)
 	}
+
 	return block
 }
 
@@ -181,6 +182,7 @@ func ValidateBlock(block Block, height int, checkBits bool, allowCheckTxs bool) 
 	} else {
 		var isBlockFound bool
 		prevBlock, isBlockFound = GetBlock(uint64(height))
+
 		if !isBlockFound {
 			return false
 		}
@@ -204,6 +206,7 @@ func ValidateBlock(block Block, height int, checkBits bool, allowCheckTxs bool) 
 	// Check nonce
 	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(block)+fmt.Sprint(block.Nonce)), 16)
 	if BitsToTarget(block.Bits).Cmp(hashNonce) != 1 {
+		println(hashing.SHA1(BlockToString(block) + fmt.Sprint(block.Nonce)))
 		return false
 	}
 
@@ -239,9 +242,10 @@ func InitBlockchain() {
 		LastBlock, _ = GetBlock(BcLength - 1)
 
 		log.Println("Data is restored from db. Blockchain height:", BcLength)
-	} else {
-		FormGenesisBlock()
 	}
+	// else {
+	// 	FormGenesisBlock()
+	// }
 }
 
 func FormGenesisBlock() {

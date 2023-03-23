@@ -13,7 +13,7 @@ func (l *Listener) GetBlocks(startFromBlock []byte, reply *Reply) error {
 	byteArr.FromByteArr(startFromBlock, &startBlockToRetrieve)
 
 	var blocksToSend []blockchain.Block
-	for i := startBlockToRetrieve; i < startBlockToRetrieve+retrStep; i++ {
+	for i := startBlockToRetrieve; i < startBlockToRetrieve+retrStep && i < blockchain.BcLength; i++ {
 		block, res := blockchain.GetBlock(i)
 		if res {
 			blocksToSend = append(blocksToSend, block)
@@ -41,6 +41,6 @@ func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, 
 		return blocks, false
 	}
 
-	byteArr.FromByteArr(repl.Data, blocks)
+	byteArr.FromByteArr(repl.Data, &blocks)
 	return blocks, true
 }
