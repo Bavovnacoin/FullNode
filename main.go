@@ -1,12 +1,23 @@
 package main
 
-import "bavovnacoin/node"
+import (
+	"bavovnacoin/blockchain"
+	"bavovnacoin/dbController"
+	"bavovnacoin/hashing"
+)
+
+func GetBlockHashes(args ...uint64) {
+	dbController.DB.OpenDb()
+	defer dbController.DB.CloseDb()
+
+	for _, ind := range args {
+		b, _ := blockchain.GetBlock(ind)
+		println(hashing.SHA1(blockchain.BlockToString(b)), blockchain.ValidateBlock(b, int(ind), true, true))
+	}
+}
 
 func main() {
-	node.Launch()
-	// dbController.DB.OpenDb()
-	// defer dbController.DB.CloseDb()
+	// node.Launch()
 
-	// b, _ := blockchain.GetBlock(1)
-	// println(b.Nonce)
+	GetBlockHashes(0, 5)
 }

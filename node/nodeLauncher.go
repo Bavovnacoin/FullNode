@@ -27,9 +27,6 @@ func StartRPC() {
 }
 
 func NodeProcess() {
-	blockchain.RestoreMempool()
-	txo.RestoreCoinDatabase()
-
 	for command_executor.ComContr.FullNodeWorking {
 		AddBlock(true)
 	}
@@ -40,12 +37,19 @@ func LaunchFullNode() {
 	dbController.DB.OpenDb()
 	StartRPC()
 	blockchain.InitBlockchain()
+	blockchain.RestoreMempool()
+	txo.RestoreCoinDatabase()
 
 	log.Println("Db synchronization.")
 	syncRes := synchronization.StartInitSync(true, blockchain.BcLength)
 	if !syncRes { //TODO: continue? or start mining
 		log.Println("An error occured when synchronizing DB")
 	}
+
+	if blockchain.BcLength == 0 {
+		blockchain.FormGenesisBlock()
+	}
+
 	go NodeProcess()
 	node_controller.CommandHandler()
 	blockchain.BackTransactionsToMempool()

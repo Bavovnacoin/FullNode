@@ -51,6 +51,7 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 		}
 		blockchain.IncrBcHeight()
 		isBlockAdded = true
+		println()
 	} else {
 		if allowPrint {
 			log.Println("Block is not added")

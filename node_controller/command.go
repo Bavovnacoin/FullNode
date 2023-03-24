@@ -136,7 +136,7 @@ func bcPrinter() {
 				log.Println("Blockchain from", commandValues[0], "to", commandValues[1])
 				for i := commandValues[0]; i < commandValues[1]; i++ {
 					block, _ := blockchain.GetBlock(uint64(i))
-					blockchain.PrintBlockTitle(block, int(i))
+					blockchain.PrintBlockTitle(block, uint64(i))
 					println()
 				}
 			}

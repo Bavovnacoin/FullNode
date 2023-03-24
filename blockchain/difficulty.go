@@ -6,7 +6,6 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var BLOCK_DIFF_CHECK int = 10
@@ -26,8 +25,8 @@ func GetCurrBitsValue() uint64 {
 	return bits
 }
 
-func GenBits(frstBlockTime time.Time, secBlockTime time.Time, bits uint64) uint64 {
-	spentTimeSec := secBlockTime.Unix() - frstBlockTime.Unix()
+func GenBits(frstBlockTime int64, secBlockTime int64, bits uint64) uint64 {
+	spentTimeSec := secBlockTime - frstBlockTime
 	expextTimeSec := BLOCK_DIFF_CHECK * BLOCK_CREATION_SEC
 	if spentTimeSec == 0 {
 		spentTimeSec = 1

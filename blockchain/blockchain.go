@@ -27,7 +27,7 @@ type Block struct {
 	Blocksize     uint
 	Version       uint
 	HashPrevBlock string
-	Time          time.Time
+	Time          int64
 	MerkleRoot    string
 	Bits          uint64
 	Nonce         uint64
@@ -39,7 +39,7 @@ func BlockToString(block Block) string {
 	str += fmt.Sprint(block.Blocksize)
 	str += fmt.Sprint(block.Version)
 	str += block.HashPrevBlock
-	str += block.Time.String()
+	str += fmt.Sprint(block.Time)
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
 	for i := 0; i < len(block.Transactions); i++ {
@@ -126,7 +126,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	} else {
 		newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 	}
-	newBlock.Time = time.Now()
+	newBlock.Time = time.Now().Unix()
 	var coinbaseTx transaction.Transaction
 	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{Address: rewardAdr, Value: GetCoinsForEmition()})
 
@@ -206,7 +206,6 @@ func ValidateBlock(block Block, height int, checkBits bool, allowCheckTxs bool) 
 	// Check nonce
 	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(block)), 16)
 	if BitsToTarget(block.Bits).Cmp(hashNonce) != 1 {
-		println(hashing.SHA1(BlockToString(block)))
 		return false
 	}
 
@@ -243,9 +242,6 @@ func InitBlockchain() {
 
 		log.Println("Data is restored from db. Blockchain height:", BcLength)
 	}
-	// else {
-	// 	FormGenesisBlock()
-	// }
 }
 
 func FormGenesisBlock() {
@@ -268,14 +264,15 @@ func FormGenesisBlock() {
 	IncrBcHeight()
 }
 
-func PrintBlockTitle(block Block, height int) {
+func PrintBlockTitle(block Block, height uint64) {
 	println("Block height:", height)
 	println("Version:", block.Version)
 	println("Hash of prev block:", block.HashPrevBlock)
-	println("Time:", block.Time.String())
+	println("Time:", time.Unix(block.Time, 0).String())
 	println("Merkle root:", block.MerkleRoot)
 	println("Bits:", block.Bits)
 	println("Nonce:", block.Nonce)
+	println("Transactions count:", len(block.Transactions))
 }
 
 func (block *Block) ToByteArr() ([]byte, bool) {
