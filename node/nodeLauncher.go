@@ -35,15 +35,28 @@ func NodeProcess() {
 func LaunchFullNode() {
 	command_executor.ComContr.FullNodeWorking = true
 	dbController.DB.OpenDb()
+	defer dbController.DB.CloseDb()
 	StartRPC()
+	defer networking.StopRPCListener()
 	blockchain.InitBlockchain()
 	blockchain.RestoreMempool()
 	txo.RestoreCoinDatabase()
 
 	log.Println("Db synchronization...")
-	syncRes := synchronization.StartInitSync(true, blockchain.BcLength)
+	syncRes := synchronization.StartSync(true, blockchain.BcLength)
 	if !syncRes {
-		log.Println("An error occured when synchronizing DB")
+		input := ""
+		for true {
+			command_executor.ComContr.ClearConsole()
+			log.Println("An error occured when synchronizing DB")
+			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
+			fmt.Scan(&input)
+			if input == "Yes" {
+				break
+			} else if input == "back" {
+				return
+			}
+		}
 	} else {
 		log.Println("Db synchronization done")
 	}
@@ -51,14 +64,12 @@ func LaunchFullNode() {
 	if blockchain.BcLength == 0 {
 		blockchain.FormGenesisBlock()
 	}
-	panic(fmt.Sprintf("Bc len: %d", blockchain.BcLength))
+	// panic(fmt.Sprintf("Bc len: %d", blockchain.BcLength))
 
-	//TODO: continue? or start mining
 	go NodeProcess()
 	node_controller.CommandHandler()
 	blockchain.BackTransactionsToMempool()
 	blockchain.WriteMempoolData()
-	dbController.DB.CloseDb()
 }
 
 func funcChoser(variant string) {

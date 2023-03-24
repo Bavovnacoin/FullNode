@@ -7,6 +7,7 @@ import (
 )
 
 var myAddress string = "localhost:12345"
+var inbound *net.TCPListener
 
 type Listener int
 
@@ -21,7 +22,7 @@ func StartRPCListener() (bool, error) {
 		return false, err
 	}
 
-	inbound, err := net.ListenTCP("tcp", addy)
+	inbound, err = net.ListenTCP("tcp", addy)
 	if err != nil {
 		log.Println(err)
 		return false, err
@@ -32,4 +33,12 @@ func StartRPCListener() (bool, error) {
 	go rpc.Accept(inbound)
 
 	return true, err
+}
+
+func StopRPCListener() bool {
+	err := inbound.Close()
+	if err == nil {
+		return true
+	}
+	return false
 }

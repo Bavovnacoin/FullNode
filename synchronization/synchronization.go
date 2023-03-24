@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-func StartInitSync(printLog bool, startBlock uint64) bool {
+func StartSync(printLog bool, startBlock uint64) bool {
 	var conn networking.Connection
 	var addrInd int = -1
 
@@ -44,7 +44,7 @@ func StartInitSync(printLog bool, startBlock uint64) bool {
 				}
 			}
 			if blocksDownlSuccess && printLog {
-				log.Printf("Added %d blocks (downloaded %.2f%% of blockchain). Current bc height: %d\n", len(blocks),
+				log.Printf("Added %d blocks (downloaded %.2f%% of the blockchain). Current bc height: %d\n", len(blocks),
 					(float64(blockchain.BcLength)/float64(currBcHeight))*100, blockchain.BcLength)
 			}
 		}
