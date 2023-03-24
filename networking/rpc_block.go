@@ -6,41 +6,48 @@ import (
 	"log"
 )
 
-const retrStep uint64 = 10
+const retrStep uint64 = 4
 
-func (l *Listener) GetBlocks(startFromBlock []byte, reply *Reply) error {
+type BlockRequest struct {
+	BcHeight uint64
+	Blocks   []blockchain.Block
+}
+
+func (l *Listener) SendBlocks(startFromBlock []byte, reply *Reply) error {
 	var startBlockToRetrieve uint64
 	byteArr.FromByteArr(startFromBlock, &startBlockToRetrieve)
+	var request BlockRequest
 
-	var blocksToSend []blockchain.Block
 	for i := startBlockToRetrieve; i < startBlockToRetrieve+retrStep && i < blockchain.BcLength; i++ {
 		block, res := blockchain.GetBlock(i)
 		if res {
-			blocksToSend = append(blocksToSend, block)
+			request.Blocks = append(request.Blocks, block)
 		} else {
 			break
 		}
 	}
+	request.BcHeight = blockchain.BcLength
 
-	blocksToSendByte, _ := byteArr.ToByteArr(blocksToSend)
-	*reply = Reply{blocksToSendByte}
+	requestStructByte, _ := byteArr.ToByteArr(request)
+	*reply = Reply{requestStructByte}
 	return nil
 }
 
-func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, bool) {
-	var blocks []blockchain.Block
+func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, uint64, bool) {
+	var blockReq BlockRequest
 	startByteArr, isConv := c.ToByteArr(startFromHeight)
 	if !isConv {
-		return blocks, false
+		return blockReq.Blocks, blockReq.BcHeight, false
 	}
 
 	var repl Reply
-	err := c.client.Call("Listener.GetBlocks", startByteArr, &repl)
+	err := c.client.Call("Listener.SendBlocks", startByteArr, &repl)
 	if err != nil {
 		log.Println(err)
-		return blocks, false
+		return blockReq.Blocks, blockReq.BcHeight, false
 	}
 
-	byteArr.FromByteArr(repl.Data, &blocks)
-	return blocks, true
+	byteArr.FromByteArr(repl.Data, &blockReq)
+
+	return blockReq.Blocks, blockReq.BcHeight, true
 }

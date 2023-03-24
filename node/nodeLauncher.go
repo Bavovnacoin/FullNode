@@ -40,16 +40,20 @@ func LaunchFullNode() {
 	blockchain.RestoreMempool()
 	txo.RestoreCoinDatabase()
 
-	log.Println("Db synchronization.")
+	log.Println("Db synchronization...")
 	syncRes := synchronization.StartInitSync(true, blockchain.BcLength)
-	if !syncRes { //TODO: continue? or start mining
+	if !syncRes {
 		log.Println("An error occured when synchronizing DB")
+	} else {
+		log.Println("Db synchronization done")
 	}
 
 	if blockchain.BcLength == 0 {
 		blockchain.FormGenesisBlock()
 	}
+	panic(fmt.Sprintf("Bc len: %d", blockchain.BcLength))
 
+	//TODO: continue? or start mining
 	go NodeProcess()
 	node_controller.CommandHandler()
 	blockchain.BackTransactionsToMempool()

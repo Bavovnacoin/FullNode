@@ -178,18 +178,18 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 
 	if int(BcLength) != 0 {
 		var prevBlock Block
-		var isBlockFound bool
+
 		if uint64(height) == BcLength {
 			prevBlock = LastBlock
 		} else {
+			var isBlockFound bool
 			prevBlock, isBlockFound = GetBlock(uint64(height) - 1)
+			if !isBlockFound {
+				return false
+			}
 		}
 
 		lastBlockHash = hashing.SHA1(BlockToString(prevBlock))
-		println(lastBlockHash)
-		if !isBlockFound {
-			return false
-		}
 	} else {
 		lastBlockHash = "0000000000000000000000000000000000000000"
 	}
@@ -232,6 +232,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 			}
 		}
 	}
+
 	return true
 }
 

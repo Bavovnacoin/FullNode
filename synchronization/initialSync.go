@@ -21,12 +21,13 @@ func StartInitSync(printLog bool, startBlock uint64) bool {
 	var blockReqInd uint64 = startBlock
 	checkpCorresp := false
 	for true {
-		blocks, res := conn.RequestBlocks(blockReqInd)
+		blocks, currBcHeight, res := conn.RequestBlocks(blockReqInd)
 		if res {
 			if len(blocks) == 0 {
 				return true
 			}
 
+			var blocksDownlSuccess bool = true
 			for i := 0; i < len(blocks); i++ {
 				checkpCorresp = checkForBlockCorrespondence(blockReqInd, blocks[i])
 				if checkpCorresp {
@@ -38,11 +39,13 @@ func StartInitSync(printLog bool, startBlock uint64) bool {
 						log.Printf("Address %s sent an incorrect block. Selecting next address\n",
 							node_settings.Settings.OtherNodesAddresses[addrInd])
 					}
+					blocksDownlSuccess = false
 					break
 				}
 			}
-			if printLog {
-				log.Printf("Blocks downloaded. Current height is %d\n", blockchain.BcLength)
+			if blocksDownlSuccess && printLog {
+				log.Printf("Added %d blocks (downloaded %.2f%% of blockchain). Current bc height: %d\n", len(blocks),
+					(float64(blockchain.BcLength)/float64(currBcHeight))*100, blockchain.BcLength)
 			}
 		}
 
@@ -55,5 +58,6 @@ func StartInitSync(printLog bool, startBlock uint64) bool {
 			}
 		}
 	}
+
 	return true
 }

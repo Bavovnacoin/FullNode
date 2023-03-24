@@ -3,6 +3,7 @@ package synchronization
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
+	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 )
 
@@ -23,16 +24,14 @@ func setCheckpoint(height uint64, hashValue string) CheckPoint {
 
 func InitCheckpoints() {
 	checkpInd = 0
-	Checkpoints = append(Checkpoints, setCheckpoint(2, "0013ef434f366f596593738a9e50ddd5ea06ca66"))
-	Checkpoints = append(Checkpoints, setCheckpoint(5, "00127ebf6d909a17be9e41422589b06d1f607de9"))
+	Checkpoints = append(Checkpoints, setCheckpoint(2, "00051ebaef762eea0932bb97d61c76061899868d"))
+	Checkpoints = append(Checkpoints, setCheckpoint(5, "000ab237e87118a9c4077ae20854b304d0ca8424"))
 }
 
 func checkForBlockCorrespondence(height uint64, block blockchain.Block) bool {
 	if checkpInd < uint64(len(Checkpoints)) && height == Checkpoints[checkpInd].height {
 		var blockHash byteArr.ByteArr
 		blockHash.SetFromHexString(hashing.SHA1(blockchain.BlockToString(block)), 20)
-
-		println(blockHash.ToHexString(), Checkpoints[checkpInd].blockHash.ToHexString())
 		if blockHash.IsEqual(Checkpoints[checkpInd].blockHash) {
 			checkpInd++
 			return true
@@ -41,9 +40,19 @@ func checkForBlockCorrespondence(height uint64, block blockchain.Block) bool {
 		}
 	} else if checkpInd >= uint64(len(Checkpoints)) {
 		isVal := blockchain.VerifyBlock(block, int(height), true, true)
-		println(isVal, height)
 		return isVal
 	}
 
 	return true
+}
+
+func GetCheckpHashes(args ...uint64) {
+	dbController.DB.OpenDb()
+	defer dbController.DB.CloseDb()
+	blockchain.InitBlockchain()
+
+	for _, ind := range args {
+		b, _ := blockchain.GetBlock(ind)
+		println(hashing.SHA1(blockchain.BlockToString(b)))
+	}
 }
