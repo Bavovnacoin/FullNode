@@ -204,9 +204,9 @@ func ValidateBlock(block Block, height int, checkBits bool, allowCheckTxs bool) 
 	}
 
 	// Check nonce
-	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(block)+fmt.Sprint(block.Nonce)), 16)
+	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(block)), 16)
 	if BitsToTarget(block.Bits).Cmp(hashNonce) != 1 {
-		println(hashing.SHA1(BlockToString(block) + fmt.Sprint(block.Nonce)))
+		println(hashing.SHA1(BlockToString(block)))
 		return false
 	}
 
