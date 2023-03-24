@@ -175,21 +175,21 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) Block {
 
 func ValidateBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
 	var lastBlockHash string
-	var prevBlock Block
 
-	if uint64(height) == BcLength {
-		prevBlock = LastBlock
-	} else {
+	if int(BcLength) != 0 {
+		var prevBlock Block
 		var isBlockFound bool
-		prevBlock, isBlockFound = GetBlock(uint64(height))
+		if uint64(height) == BcLength {
+			prevBlock = LastBlock
+		} else {
+			prevBlock, isBlockFound = GetBlock(uint64(height) - 1)
+		}
 
+		lastBlockHash = hashing.SHA1(BlockToString(prevBlock))
+		println(lastBlockHash)
 		if !isBlockFound {
 			return false
 		}
-	}
-
-	if int(BcLength) != 0 {
-		lastBlockHash = hashing.SHA1(BlockToString(prevBlock))
 	} else {
 		lastBlockHash = "0000000000000000000000000000000000000000"
 	}

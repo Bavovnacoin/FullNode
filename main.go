@@ -9,6 +9,7 @@ import (
 func GetBlockHashes(args ...uint64) {
 	dbController.DB.OpenDb()
 	defer dbController.DB.CloseDb()
+	blockchain.InitBlockchain()
 
 	for _, ind := range args {
 		b, _ := blockchain.GetBlock(ind)
@@ -19,5 +20,5 @@ func GetBlockHashes(args ...uint64) {
 func main() {
 	// node.Launch()
 
-	GetBlockHashes(0, 5)
+	GetBlockHashes(2, 5)
 }
