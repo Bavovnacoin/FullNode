@@ -23,11 +23,11 @@ func setCheckpoint(height uint64, hashValue string) CheckPoint {
 
 func InitCheckpoints() {
 	checkpInd = 0
-	Checkpoints = append(Checkpoints, setCheckpoint(2, "0529fe2df59de3ed8a9b1c3c75746d735a161afc"))
-	Checkpoints = append(Checkpoints, setCheckpoint(5, "6ce9d14e492b66c785c8ac4199aade93e7403049"))
+	Checkpoints = append(Checkpoints, setCheckpoint(2, "0013ef434f366f596593738a9e50ddd5ea06ca66"))
+	Checkpoints = append(Checkpoints, setCheckpoint(5, "00127ebf6d909a17be9e41422589b06d1f607de9"))
 }
 
-func checkForCheckpCorrespondence(height uint64, block blockchain.Block) bool {
+func checkForBlockCorrespondence(height uint64, block blockchain.Block) bool {
 	if checkpInd < uint64(len(Checkpoints)) && height == Checkpoints[checkpInd].height {
 		var blockHash byteArr.ByteArr
 		blockHash.SetFromHexString(hashing.SHA1(blockchain.BlockToString(block)), 20)

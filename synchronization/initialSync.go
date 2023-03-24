@@ -28,7 +28,7 @@ func StartInitSync(printLog bool, startBlock uint64) bool {
 			}
 
 			for i := 0; i < len(blocks); i++ {
-				checkpCorresp = checkForCheckpCorrespondence(blockReqInd, blocks[i])
+				checkpCorresp = checkForBlockCorrespondence(blockReqInd, blocks[i])
 				if checkpCorresp {
 					blockchain.AddBlockToBlockchain(blocks[i])
 					blockchain.IncrBcHeight()
