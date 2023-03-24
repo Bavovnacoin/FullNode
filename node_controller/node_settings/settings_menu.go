@@ -119,6 +119,14 @@ func addressesSetValid(input string, settings *NodeSettings) bool {
 	return false
 }
 
+func myAddrSetValid(address string, settings *NodeSettings) bool {
+	if address != settings.MyAddress && settings.IsAddressValid(address) {
+		settings.MyAddress = address
+		return true
+	}
+	return false
+}
+
 func ChooseMenuVariant(variant string, settings *NodeSettings) {
 	if variant == "1" {
 		fieldEnterForm(fmt.Sprintf("Current fee is %d. Type another fee or \"back\" to back to the settings menu.\n",
@@ -133,6 +141,9 @@ func ChooseMenuVariant(variant string, settings *NodeSettings) {
 		fieldEnterForm("Current addresses are seen below. Choose a variant to delete or type a new address to add a new address. Type \"back\" to back to the settings menu.\n"+
 			addressesVariants(settings.OtherNodesAddresses), settings, addressesSetValid)
 	} else if variant == "5" {
+		fieldEnterForm(fmt.Sprintf("Current address is %s. Enter a new one or type \"back\" to back to the settings menu.\n", settings.MyAddress),
+			settings, myAddrSetValid)
+	} else if variant == "6" {
 		settings_menu = false
 	}
 }
@@ -148,7 +159,8 @@ func LaunchMenu(settings *NodeSettings) {
 		fmt.Printf("2. Threads for mining (%s).\n", settings.ThreadsForMiningToString())
 		fmt.Printf("3. Node type (%s).\n", settings.NodeTypesNames[settings.NodeType])
 		fmt.Printf("4. Other node addresses (Ammount: %d).\n", len(settings.OtherNodesAddresses))
-		fmt.Printf("5. Back\n")
+		fmt.Printf("5. Change my address (Current: %s).\n", settings.MyAddress)
+		fmt.Printf("6. Back\n")
 
 		fmt.Scan(&variant)
 		ChooseMenuVariant(variant, settings)

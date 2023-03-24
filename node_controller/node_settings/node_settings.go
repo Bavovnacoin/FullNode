@@ -17,6 +17,7 @@ type NodeSettings struct {
 	MiningThreads       uint     // Threads for mining count
 	NodeType            uint     // For now there's two types: full node, audithor
 	OtherNodesAddresses []string // Addresses of other nodes to communicate
+	MyAddress           string
 
 	NodeTypesNames []string `json:"-"`
 }
@@ -86,7 +87,7 @@ func (ns *NodeSettings) IsAddressAdded(address string) bool {
 }
 
 func (ns *NodeSettings) IsAddressValid(address string) bool {
-	isAddrMatch, _ := regexp.MatchString("^(?:http(s)?:\\/\\/)?[\\w.-]+(?:\\.[\\w\\.-]+)+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$", address)
+	isAddrMatch, _ := regexp.MatchString("^(?:http(s)?:\\/\\/)?[\\w.-]+(?:(\\.)|(:[0-9]+))+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$", address)
 	return isAddrMatch
 }
 

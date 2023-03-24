@@ -4,5 +4,6 @@
     "NodeType": 0,
     "OtherNodesAddresses": [
         "localhost:12345"
-    ]
+    ],
+    "MyAddress": "localhost:12345"
 }
