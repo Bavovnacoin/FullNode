@@ -13,7 +13,7 @@ func GetBlockHashes(args ...uint64) {
 
 	for _, ind := range args {
 		b, _ := blockchain.GetBlock(ind)
-		println(hashing.SHA1(blockchain.BlockToString(b)), blockchain.ValidateBlock(b, int(ind), true, true))
+		println(hashing.SHA1(blockchain.BlockToString(b)))
 	}
 }
 

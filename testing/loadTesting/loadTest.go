@@ -142,7 +142,7 @@ func (lt *LoadTest) testAddBlock() bool {
 	}
 
 	if node.CreatedBlock.MerkleRoot != "" { // Is block mined check
-		isBlockValid := blockchain.ValidateBlock(node.CreatedBlock, int(blockchain.BcLength), true, false)
+		isBlockValid := blockchain.VerifyBlock(node.CreatedBlock, int(blockchain.BcLength), true, false)
 		node.AddBlockLog(false, isBlockValid)
 		node.CreatedBlock.MerkleRoot = ""
 		return true

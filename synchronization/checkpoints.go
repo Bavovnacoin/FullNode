@@ -40,7 +40,7 @@ func checkForCheckpCorrespondence(height uint64, block blockchain.Block) bool {
 			return false
 		}
 	} else if checkpInd >= uint64(len(Checkpoints)) {
-		isVal := blockchain.ValidateBlock(block, int(height), true, true)
+		isVal := blockchain.VerifyBlock(block, int(height), true, true)
 		println(isVal, height)
 		return isVal
 	}

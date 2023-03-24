@@ -21,7 +21,7 @@ func AddBlock(allowLogPrint bool) bool {
 	}
 
 	if CreatedBlock.MerkleRoot != "" { // Is block mined check
-		isBlockValid := blockchain.ValidateBlock(CreatedBlock, int(blockchain.BcLength), true, false)
+		isBlockValid := blockchain.VerifyBlock(CreatedBlock, int(blockchain.BcLength), true, false)
 		AddBlockLog(allowLogPrint, isBlockValid)
 		CreatedBlock.MerkleRoot = ""
 		return true
