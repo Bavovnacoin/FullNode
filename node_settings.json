@@ -1,9 +1,9 @@
 {
-    "TxMinFee": 4,
+    "TxMinFee": 0,
     "MiningThreads": 0,
     "NodeType": 0,
     "OtherNodesAddresses": [
-        "localhost:12345"
+        "localhost:8080"
     ],
     "MyAddress": "localhost:12345"
 }

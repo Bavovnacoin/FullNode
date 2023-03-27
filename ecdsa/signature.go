@@ -48,9 +48,7 @@ func Verify(pubKey, sign, hashMes string) bool {
 	inv := inverse(signPoint.y, n)
 	u1 := big.NewInt(1).Mod(big.NewInt(1).Mul(bigHash, inv), n)
 	u2 := big.NewInt(1).Mod(big.NewInt(1).Mul(signPoint.x, inv), n)
-	st := time.Now()
 	p3 := add(multiply(u1, g), multiply(u2, pKey))
-	println(time.Since(st))
 
 	if p3.x.String() == signPoint.x.String() {
 		return true

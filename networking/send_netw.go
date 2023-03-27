@@ -1,10 +1,16 @@
 package networking
 
 import (
+	"bavovnacoin/transaction"
 	"bytes"
 	"encoding/gob"
 	"net/rpc"
 )
+
+type TxProposal struct {
+	Tx      transaction.Transaction
+	Address string
+}
 
 type Connection struct {
 	client *rpc.Client
@@ -19,13 +25,16 @@ func (c *Connection) Establish(address string) bool {
 	return true
 }
 
-func (c *Connection) EstablishAddresses(addresses []string, addrInd int) (bool, int) {
+func (c *Connection) EstablishAddresses(addresses []string, addrInd int, avoidAddress string) (bool, int) {
 	var res bool = false
 	for addrInd < len(addresses) {
 		if res {
 			return true, addrInd
 		} else if addrInd+1 < len(addresses) {
 			addrInd++
+			if addresses[addrInd] == avoidAddress {
+				continue
+			}
 			res = c.Establish(addresses[addrInd])
 		} else {
 			return false, addrInd

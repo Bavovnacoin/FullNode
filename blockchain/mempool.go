@@ -8,7 +8,12 @@ import (
 )
 
 var Mempool []transaction.Transaction
+var MempTxHashes = make(map[string]bool)
 var MempInputHashes = make(map[string]bool)
+
+func IsTxInMempool(txHash byteArr.ByteArr) bool {
+	return MempTxHashes[txHash.ToHexString()]
+}
 
 func AreInputsInMempool(inputs []transaction.Input) bool {
 	for _, inp := range inputs {
@@ -35,23 +40,25 @@ func AddTxToMempool(tx transaction.Transaction, allowVerify bool) bool {
 	if allowVerify && !(transaction.VerifyTransaction(tx) || AreInputsInMempool(tx.Inputs)) {
 		return false
 	} else {
-		fee := transaction.GetTxFee(tx)
-		insInd := findIndexSorted(fee, tx.Locktime)
+		insInd := findIndexSorted(transaction.GetTxFee(tx), tx.Locktime)
 
 		if len(Mempool) != 0 {
 			if insInd < len(Mempool) {
 				Mempool = append(Mempool[:insInd+1], Mempool[insInd:]...)
 				Mempool[insInd] = tx
 				AddInputsToMempInpHashes(tx.Inputs)
+				MempTxHashes[hashing.SHA1(transaction.GetCatTxFields(tx))] = true
 				return true
 			} else {
 				Mempool = append(Mempool, tx)
 				AddInputsToMempInpHashes(tx.Inputs)
+				MempTxHashes[hashing.SHA1(transaction.GetCatTxFields(tx))] = true
 				return true
 			}
 		} else {
 			Mempool = append(Mempool, tx)
 			AddInputsToMempInpHashes(tx.Inputs)
+			MempTxHashes[hashing.SHA1(transaction.GetCatTxFields(tx))] = true
 			return true
 		}
 	}
@@ -85,7 +92,6 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 	return txForBlock
 }
 
-// TODO: store pointer to that element, access it and delete?
 func RemoveTxsFromMempool(txs []transaction.Transaction) {
 	remCount := 0
 	for mempInd, mempVal := range Mempool {
@@ -94,6 +100,7 @@ func RemoveTxsFromMempool(txs []transaction.Transaction) {
 			currTxHash := hashing.SHA1(transaction.GetCatTxFields(txVal))
 			if mempTxHash == currTxHash {
 				RemInputsFromMempInpHashes(Mempool[mempInd].Inputs)
+				delete(MempTxHashes, hashing.SHA1(transaction.GetCatTxFields(Mempool[mempInd])))
 				Mempool = append(Mempool[:mempInd], Mempool[mempInd+1:]...)
 				remCount++
 				break
@@ -133,6 +140,7 @@ func BackTransactionsToMempool() {
 		for i := 1; i < len(BlockForMining.Transactions); i++ {
 			AddTxToMempool(BlockForMining.Transactions[i], false)
 			AddInputsToMempInpHashes(BlockForMining.Transactions[i].Inputs)
+			MempTxHashes[hashing.SHA1(transaction.GetCatTxFields(BlockForMining.Transactions[i]))] = true
 		}
 		if len(BlockForMining.Transactions) > 1 {
 			log.Printf("%d transactions are returned back to the mempool\n", len(BlockForMining.Transactions)-1)

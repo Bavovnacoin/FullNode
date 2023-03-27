@@ -1,12 +1,12 @@
 package networking
 
 import (
+	"bavovnacoin/node_controller/node_settings"
 	"log"
 	"net"
 	"net/rpc"
 )
 
-var myAddress string = "localhost:12345"
 var inbound *net.TCPListener
 
 type Listener int
@@ -16,7 +16,7 @@ type Reply struct {
 }
 
 func StartRPCListener() (bool, error) {
-	addy, err := net.ResolveTCPAddr("tcp", myAddress)
+	addy, err := net.ResolveTCPAddr("tcp", node_settings.Settings.MyAddress)
 	if err != nil {
 		log.Println(err)
 		return false, err

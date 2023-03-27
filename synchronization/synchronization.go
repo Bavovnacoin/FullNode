@@ -12,7 +12,7 @@ func StartSync(printLog bool, startBlock uint64) bool {
 	var addrInd int = -1
 
 	var isEstablished bool
-	isEstablished, addrInd = conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, addrInd)
+	isEstablished, addrInd = conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, addrInd, "")
 	if !isEstablished {
 		return false
 	}
@@ -52,7 +52,7 @@ func StartSync(printLog bool, startBlock uint64) bool {
 		// If error
 		if !res || !checkpCorresp {
 			conn.Close()
-			isEstablished, addrInd = conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, addrInd)
+			isEstablished, addrInd = conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, addrInd, "")
 			if !isEstablished {
 				return false
 			}

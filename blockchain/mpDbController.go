@@ -3,9 +3,9 @@ package blockchain
 import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
+	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"fmt"
-	"log"
 )
 
 func SetMempLen(len uint64) bool {
@@ -30,18 +30,19 @@ func GetMempLen() (uint64, bool) {
 	return len, true
 }
 
-func WriteTxToMempool(id uint64, tx transaction.Transaction) bool {
+func WriteTxToMempool(tx transaction.Transaction) bool {
 	byteVal, isConv := byteArr.ToByteArr(tx)
 	if !isConv {
 		return false
 	}
 
-	return dbController.DB.SetValue("mp"+fmt.Sprint(id), byteVal)
+	return dbController.DB.SetValue("mp"+hashing.SHA1(transaction.GetCatTxFields(tx)), byteVal)
 }
 
-func GetTxFromMempool(id uint64) (transaction.Transaction, bool) {
+// TODO: get tx by hash
+func GetTxFromMempool(txHash byteArr.ByteArr) (transaction.Transaction, bool) {
 	var tx transaction.Transaction
-	value, isGotten := dbController.DB.GetValue("mp" + fmt.Sprint(id))
+	value, isGotten := dbController.DB.GetValue("mp" + txHash.ToHexString())
 	if !isGotten {
 		return tx, false
 	}
@@ -54,19 +55,6 @@ func GetTxFromMempool(id uint64) (transaction.Transaction, bool) {
 	return tx, true
 }
 
-func WriteMempoolData() {
-	oldLen, _ := GetMempLen()
-	var i uint64
-	for ; i < uint64(len(Mempool)); i++ {
-		WriteTxToMempool(i, Mempool[i])
-	}
-
-	if oldLen > uint64(len(Mempool)) {
-		RemoveMPRange(i, oldLen)
-	}
-	SetMempLen(uint64(len(Mempool)))
-}
-
 func RemoveMPRange(start, end uint64) {
 	for ; start < end; start++ {
 		res := dbController.DB.RemoveValue("mp" + fmt.Sprint(start))
@@ -76,20 +64,33 @@ func RemoveMPRange(start, end uint64) {
 	}
 }
 
-func RestoreMempool() {
-	mempLen, _ := GetMempLen()
-	var i uint64
-	for ; i < mempLen; i++ {
-		tx, val := GetTxFromMempool(i)
-		if !val {
-			log.Println("Problem when restoring mp")
-			break
-		}
-		Mempool = append(Mempool, tx)
-	}
-	if mempLen != 0 {
-		log.Println("Mempool restored")
-	} else {
-		log.Println("Mempool is empty")
-	}
-}
+// func WriteMempoolData() {
+// 	oldLen, _ := GetMempLen()
+// 	var i uint64
+// 	for ; i < uint64(len(Mempool)); i++ {
+// 		WriteTxToMempool(i, Mempool[i])
+// 	}
+
+// 	if oldLen > uint64(len(Mempool)) {
+// 		RemoveMPRange(i, oldLen)
+// 	}
+// 	SetMempLen(uint64(len(Mempool)))
+// }
+
+// func RestoreMempool() {
+// 	mempLen, _ := GetMempLen()
+// 	var i uint64
+// 	for ; i < mempLen; i++ {
+// 		tx, val := GetTxFromMempool(i)
+// 		if !val {
+// 			log.Println("Problem when restoring mp")
+// 			break
+// 		}
+// 		Mempool = append(Mempool, tx)
+// 	}
+// 	if mempLen != 0 {
+// 		log.Println("Mempool restored")
+// 	} else {
+// 		log.Println("Mempool is empty")
+// 	}
+// }
