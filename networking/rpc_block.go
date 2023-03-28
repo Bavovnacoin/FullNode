@@ -5,6 +5,7 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/node_settings"
+	"bavovnacoin/transaction"
 	"log"
 )
 
@@ -55,10 +56,63 @@ func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, 
 	return blockReq.Blocks, blockReq.BcHeight, true
 }
 
+func (l *Listener) AddProposedBlockToMemp(blockProposalByteArr []byte, reply *Reply) error {
+	var txProp BlockProposal
+	byteArr.FromByteArr(blockProposalByteArr, &txProp)
+
+	if  &&
+		blockchain.AddTxToMempool(txProp.Tx, true) {
+		*reply = Reply{[]byte{1}}
+		ProposeTxToSettingsNodes(txProp.Tx, "")
+	} else {
+		*reply = Reply{[]byte{0}}
+	}
+	return nil
+}
+
+func (l *Listener) GetBlockProposal(blockHashByteArr []byte, reply *Reply) error {
+	var blockHash byteArr.ByteArr
+	blockHash.ByteArr = blockHashByteArr
+	var lastBlockHash byteArr.ByteArr
+	lastBlockHash.SetFromHexString(hashing.SHA1(blockchain.BlockHeaderToString(blockchain.LastBlock)), 20)
+	if !lastBlockHash.IsEqual(blockHash) {
+		*reply = Reply{[]byte{1}}
+	} else {
+		*reply = Reply{[]byte{0}}
+		return nil
+	}
+	return nil
+}
+
+func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.Block) bool {
+	var repl Reply
+	err := c.client.Call("Listener.GetBlockProposal", blockHash, &repl)
+	if err != nil {
+		return false // Problem when accessing an RPC function
+	}
+
+	if repl.Data[0] == 1 {
+		repl.Data = []byte{}
+
+		var blockProp BlockProposal
+		blockProp.Block = block
+		blockProp.Address = node_settings.Settings.MyAddress
+		propBytes, _ := c.ToByteArr(blockProp)
+
+		err := c.client.Call("Listener.AddProposedBlockToMemp", propBytes, &repl) //TODO: AddProposedTxToMemp
+		if err != nil || repl.Data[0] == 0 {
+			return false // The node reverted this tx
+		}
+	} else {
+		return false // The node is already has this tx
+	}
+	return true // No problems
+}
+
 func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bool {
 	var blockHash byteArr.ByteArr
-	txHashString := hashing.SHA1(blockchain.BlockHeaderToString(block))
-	txHash.SetFromHexString(txHashString, 20)
+	blockHashString := hashing.SHA1(blockchain.BlockHeaderToString(block))
+	blockHash.SetFromHexString(blockHashString, 20)
 
 	var connection Connection
 	var isNodesAccessible bool
@@ -70,7 +124,7 @@ func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bo
 			return false
 		}
 
-		connection.ProposeTxToOtherNode(txHash.ByteArr, tx)
+		connection.ProposeBlockToOtherNode(blockHash.ByteArr, block)
 	}
 	return true
 }
