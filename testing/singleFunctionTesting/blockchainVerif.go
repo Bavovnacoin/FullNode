@@ -90,7 +90,7 @@ func (bvt *BlockchainVerifTest) makeBlockIncorrect(block blockchain.Block, incBl
 	if incBlockCounter%5 == 1 { // Wrong nonce
 		block.Nonce = 0
 		for true {
-			blockHash := hashing.SHA1(blockchain.BlockToString(block))
+			blockHash := hashing.SHA1(blockchain.BlockHeaderToString(block))
 			bigBlockHash, _ := new(big.Int).SetString(blockHash, 16)
 			if blockchain.BitsToTarget(block.Bits).Cmp(bigBlockHash) == -1 {
 				return block, "Wrong nonce value"

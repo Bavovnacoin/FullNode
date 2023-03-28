@@ -34,7 +34,7 @@ type Block struct {
 	Transactions  []transaction.Transaction
 }
 
-func BlockToString(block Block) string {
+func BlockHeaderToString(block Block) string {
 	str := ""
 	str += fmt.Sprint(block.Blocksize)
 	str += fmt.Sprint(block.Version)
@@ -42,9 +42,6 @@ func BlockToString(block Block) string {
 	str += fmt.Sprint(block.Time)
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
-	for i := 0; i < len(block.Transactions); i++ {
-		str += transaction.GetCatTxFields(block.Transactions[i])
-	}
 	str += fmt.Sprint(block.Nonce)
 	return str
 }
@@ -122,7 +119,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	var newBlock Block
 
 	if BcLength > 0 {
-		newBlock.HashPrevBlock = hashing.SHA1(BlockToString(LastBlock))
+		newBlock.HashPrevBlock = hashing.SHA1(BlockHeaderToString(LastBlock))
 	} else {
 		newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 	}
@@ -147,7 +144,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 		log.Println("New block transaction count: " + fmt.Sprint(len(newBlock.Transactions)))
 	}
 
-	newBlock.Blocksize = uint(len(BlockToString(newBlock)))
+	newBlock.Blocksize = uint(len(BlockHeaderToString(newBlock)))
 	return newBlock
 }
 
@@ -189,7 +186,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 			}
 		}
 
-		lastBlockHash = hashing.SHA1(BlockToString(prevBlock))
+		lastBlockHash = hashing.SHA1(BlockHeaderToString(prevBlock))
 	} else {
 		lastBlockHash = "0000000000000000000000000000000000000000"
 	}
@@ -204,7 +201,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	}
 
 	// Check nonce
-	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockToString(block)), 16)
+	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockHeaderToString(block)), 16)
 	if BitsToTarget(block.Bits).Cmp(hashNonce) != 1 {
 		return false
 	}

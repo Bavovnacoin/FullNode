@@ -39,7 +39,6 @@ func LaunchFullNode() {
 	StartRPC()
 	defer networking.StopRPCListener()
 	blockchain.InitBlockchain()
-	//blockchain.RestoreMempool()
 	txo.RestoreCoinDatabase()
 
 	log.Println("Db synchronization...")
@@ -68,8 +67,6 @@ func LaunchFullNode() {
 
 	go NodeProcess()
 	node_controller.CommandHandler()
-	//blockchain.BackTransactionsToMempool()
-	//blockchain.WriteMempoolData()
 }
 
 func funcChoser(variant string) {

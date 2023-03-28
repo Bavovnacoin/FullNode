@@ -3,6 +3,8 @@ package networking
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
+	"bavovnacoin/hashing"
+	"bavovnacoin/node_controller/node_settings"
 	"log"
 )
 
@@ -51,4 +53,24 @@ func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, 
 	byteArr.FromByteArr(repl.Data, &blockReq)
 
 	return blockReq.Blocks, blockReq.BcHeight, true
+}
+
+func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bool {
+	var blockHash byteArr.ByteArr
+	txHashString := hashing.SHA1(blockchain.BlockHeaderToString(block))
+	txHash.SetFromHexString(txHashString, 20)
+
+	var connection Connection
+	var isNodesAccessible bool
+
+	for i := 0; i < len(node_settings.Settings.OtherNodesAddresses); i++ {
+		isNodesAccessible, i = connection.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, i-1, avoidAddress)
+
+		if !isNodesAccessible {
+			return false
+		}
+
+		connection.ProposeTxToOtherNode(txHash.ByteArr, tx)
+	}
+	return true
 }
