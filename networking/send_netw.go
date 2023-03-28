@@ -1,6 +1,7 @@
 package networking
 
 import (
+	"bavovnacoin/blockchain"
 	"bavovnacoin/transaction"
 	"bytes"
 	"encoding/gob"
@@ -9,6 +10,11 @@ import (
 
 type TxProposal struct {
 	Tx      transaction.Transaction
+	Address string
+}
+
+type BlockProposal struct {
+	Block   blockchain.Block
 	Address string
 }
 
