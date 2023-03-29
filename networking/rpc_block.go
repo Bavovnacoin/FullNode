@@ -5,7 +5,6 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node_controller/node_settings"
-	"bavovnacoin/transaction"
 	"log"
 )
 
@@ -57,13 +56,13 @@ func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, 
 }
 
 func (l *Listener) AddProposedBlockToMemp(blockProposalByteArr []byte, reply *Reply) error {
-	var txProp BlockProposal
-	byteArr.FromByteArr(blockProposalByteArr, &txProp)
+	var blockProp BlockProposal
+	byteArr.FromByteArr(blockProposalByteArr, &blockProp)
 
-	if  &&
-		blockchain.AddTxToMempool(txProp.Tx, true) {
+	if blockchain.AllowCameBlockToAdd(blockProp.Block, GetSettingsNodesTime()) {
+		//blockchain.AddTxToMempool(txProp.Tx, true) {
 		*reply = Reply{[]byte{1}}
-		ProposeTxToSettingsNodes(txProp.Tx, "")
+		//ProposeTxToSettingsNodes(txProp.Tx, "")
 	} else {
 		*reply = Reply{[]byte{0}}
 	}

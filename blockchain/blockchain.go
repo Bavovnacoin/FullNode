@@ -169,11 +169,3 @@ func (block *Block) ToByteArr() ([]byte, bool) {
 
 	return network.Bytes(), true
 }
-
-func AllowCameBlockToAdd(block Block) bool {
-	// TODO: Check time
-	if !VerifyBlock(block, int(BcLength)+1, true, true) {
-		return false
-	}
-	return true
-}
