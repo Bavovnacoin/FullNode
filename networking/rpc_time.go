@@ -7,7 +7,7 @@ import (
 )
 
 func (l *Listener) SendNodeTime(reply *Reply) error {
-	localTime := time.Now().Unix()
+	localTime := time.Now().UTC().Unix()
 	var locTimeBytes []byte
 	binary.LittleEndian.PutUint64(locTimeBytes, uint64(localTime))
 	*reply = Reply{locTimeBytes}

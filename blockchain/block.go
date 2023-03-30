@@ -43,7 +43,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	} else {
 		newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 	}
-	newBlock.Time = time.Now().Unix()
+	newBlock.Time = time.Now().UTC().Unix()
 	var coinbaseTx transaction.Transaction
 	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{Address: rewardAdr, Value: GetCoinsForEmition()})
 
