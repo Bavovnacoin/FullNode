@@ -28,7 +28,6 @@ func BlockHeaderToString(block Block) string {
 	str += fmt.Sprint(block.Blocksize)
 	str += fmt.Sprint(block.Version)
 	str += block.HashPrevBlock
-	str += fmt.Sprint(block.Time)
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
 	str += fmt.Sprint(block.Nonce)
@@ -43,7 +42,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	} else {
 		newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 	}
-	newBlock.Time = time.Now().UTC().Unix()
+
 	var coinbaseTx transaction.Transaction
 	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{Address: rewardAdr, Value: GetCoinsForEmition()})
 

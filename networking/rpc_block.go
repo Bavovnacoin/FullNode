@@ -59,10 +59,8 @@ func (l *Listener) AddProposedBlockToMemp(blockProposalByteArr []byte, reply *Re
 	var blockProp BlockProposal
 	byteArr.FromByteArr(blockProposalByteArr, &blockProp)
 
-	if blockchain.AllowCameBlockToAdd(blockProp.Block, GetSettingsNodesTime()) {
-		//blockchain.AddTxToMempool(txProp.Tx, true) {
+	if blockchain.TryCameBlockToAdd(blockProp.Block, GetSettingsNodesTime()) {
 		*reply = Reply{[]byte{1}}
-		//ProposeTxToSettingsNodes(txProp.Tx, "")
 	} else {
 		*reply = Reply{[]byte{0}}
 	}
@@ -89,8 +87,9 @@ func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.
 	if err != nil {
 		return false // Problem when accessing an RPC function
 	}
-
+	println("Proposal checked")
 	if repl.Data[0] == 1 {
+		println("Proposal approved")
 		repl.Data = []byte{}
 
 		var blockProp BlockProposal
@@ -98,17 +97,21 @@ func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.
 		blockProp.Address = node_settings.Settings.MyAddress
 		propBytes, _ := c.ToByteArr(blockProp)
 
-		err := c.client.Call("Listener.AddProposedBlockToMemp", propBytes, &repl) //TODO: AddProposedTxToMemp
+		err := c.client.Call("Listener.AddProposedBlockToMemp", propBytes, &repl)
+		println("Block trying to add")
 		if err != nil || repl.Data[0] == 0 {
-			return false // The node reverted this tx
+			return false // The node reverted this block
 		}
 	} else {
-		return false // The node is already has this tx
+		println("Proposal is not approved")
+		return false // The node is already has this block
 	}
+
 	return true // No problems
 }
 
 func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bool {
+	println("Proposition 1")
 	var blockHash byteArr.ByteArr
 	blockHashString := hashing.SHA1(blockchain.BlockHeaderToString(block))
 	blockHash.SetFromHexString(blockHashString, 20)
@@ -123,7 +126,12 @@ func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bo
 			return false
 		}
 
-		connection.ProposeBlockToOtherNode(blockHash.ByteArr, block)
+		println("Proposition 2")
+		if connection.ProposeBlockToOtherNode(blockHash.ByteArr, block) {
+			println("Block proposed")
+		} else {
+			println("Block is not proposed")
+		}
 	}
 	return true
 }

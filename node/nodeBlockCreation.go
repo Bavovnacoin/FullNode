@@ -3,27 +3,31 @@ package node
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
+	"bavovnacoin/networking"
 	"bavovnacoin/node_controller/command_executor"
 	"fmt"
 	"log"
+	"time"
 )
 
-var AllowCreateBlock bool = true
-var CreatedBlock blockchain.Block
-
 func AddBlock(allowLogPrint bool) bool {
-	if AllowCreateBlock {
+	for !blockchain.IsMiningDone { //Waiting for mining to be done
+		time.Sleep(1 * time.Millisecond)
+		blockchain.IsMiningDone = false
+	}
+
+	if blockchain.AllowCreateBlock {
 		if allowLogPrint {
 			log.Println("Creating a new block")
 		}
 		go CreateBlockLog(blockchain.GetBits(allowLogPrint), allowLogPrint)
-		AllowCreateBlock = false
+		blockchain.AllowCreateBlock = false
 	}
 
-	if CreatedBlock.MerkleRoot != "" { // Is block mined check
-		isBlockValid := blockchain.VerifyBlock(CreatedBlock, int(blockchain.BcLength), true, false)
+	if blockchain.CreatedBlock.MerkleRoot != "" { // Is block mined check
+		isBlockValid := blockchain.VerifyBlock(blockchain.CreatedBlock, int(blockchain.BcLength), true, false)
 		AddBlockLog(allowLogPrint, isBlockValid)
-		CreatedBlock.MerkleRoot = ""
+		blockchain.CreatedBlock.MerkleRoot = ""
 		return true
 	}
 	command_executor.PauseCommand()
@@ -36,8 +40,9 @@ func CreateBlockLog(bits uint64, allowPrint bool) {
 	newBlock := blockchain.CreateBlock(rewardAdr, allowPrint)
 	newBlock.Bits = bits
 	newBlock = blockchain.MineBlock(newBlock, 1, allowPrint)
-	blockchain.RemoveTxsFromMempool(newBlock.Transactions[1:]) //TODO: check all MineBlock functions, back txs to the memp?
-	CreatedBlock = newBlock
+	blockchain.RemoveTxsFromMempool(newBlock.Transactions[1:])
+	blockchain.CreatedBlock = newBlock
+	networking.ProposeBlockToSettingsNodes(blockchain.CreatedBlock, "")
 	command_executor.PauseCommand()
 }
 
@@ -45,7 +50,11 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 	isBlockAdded := false
 
 	if isBlockValid {
-		blockchain.AddBlockToBlockchain(CreatedBlock)
+		blockAddRes := blockchain.AddBlockToBlockchain(blockchain.CreatedBlock)
+		if !blockAddRes {
+			return false
+		}
+
 		if allowPrint {
 			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")
 		}
@@ -54,14 +63,14 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 		println()
 	} else {
 		if allowPrint {
-			log.Println("Block is not added")
+			log.Println("Created block is not valid.")
 			println()
 		}
 		isBlockAdded = false
 	}
 
-	AllowCreateBlock = true
-	CreatedBlock.MerkleRoot = ""
+	blockchain.AllowCreateBlock = true
+	blockchain.CreatedBlock.MerkleRoot = ""
 	command_executor.PauseCommand()
 	return isBlockAdded
 }

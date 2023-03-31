@@ -2,6 +2,8 @@ package blockchain
 
 import (
 	"bavovnacoin/util"
+	"fmt"
+	"log"
 )
 
 var pastElevenBlocksSortedTime []int64
@@ -14,12 +16,12 @@ func initPastBlocksTime() {
 			blocksToAddAmmount = 11
 		}
 
-		for i := BcLength - 1; i >= 0 || i >= BcLength-blocksToAddAmmount; i-- {
-			block, _ := GetBlock(i)
+		for i := uint64(0); i < blocksToAddAmmount; i++ {
+			block, _ := GetBlock(BcLength - i - 1)
 			pastElevenBlocksSortedTime = util.InsertSorted(pastElevenBlocksSortedTime, block.Time)
 		}
 
-		pastElevenBlocksSortedTime = pastElevenBlocksSortedTime[:11]
+		pastElevenBlocksSortedTime = pastElevenBlocksSortedTime[:blocksToAddAmmount]
 		timeCheckHeight = BcLength
 	}
 }
@@ -34,9 +36,35 @@ func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 	return true
 }
 
-func AllowCameBlockToAdd(block Block, otherNodesTime []int64) bool {
-	if !checkCameBlockTime(block.Time, otherNodesTime) || !VerifyBlock(block, int(BcLength)+1, true, true) {
+func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
+	println("Trying to add a new block")
+	PauseBlockAddition = true
+	blockVer := !VerifyBlock(block, int(BcLength), true, true)
+	println("Block verefication completed")
+	if blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
+		PauseBlockAddition = false
+		println("Came block is NOOTTT added!")
 		return false
 	}
+	AllowMining = false
+	BreakBlockAddition = true
+	PauseBlockAddition = false
+	println("New block checked")
+
+	// TODO: solve disagreement (equal time change to block created eaarlier)
+	if CreatedBlock.Time == block.Time {
+
+	}
+
+	AddBlockToBlockchain(block)
+	BreakBlockAddition = false
+	println("New block Added")
+	log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1) + "\n")
+	println()
+	IncrBcHeight()
+
+	AllowCreateBlock = true
+	CreatedBlock.MerkleRoot = ""
+	println("Came block is added!")
 	return true
 }

@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"runtime"
 	"strings"
+	"time"
 )
 
 var BcLength uint64
@@ -19,10 +20,24 @@ var LastBlock Block
 var IsMempAdded bool
 var BlockForMining Block
 
+var CreatedBlock Block
+var AllowCreateBlock bool = true
+
+var PauseBlockAddition bool
+var BreakBlockAddition bool
+
 var RewardAddress string = "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
 
 // Warning: it is considered that the block is valid
-func AddBlockToBlockchain(block Block) {
+func AddBlockToBlockchain(block Block) bool {
+	for PauseBlockAddition {
+		time.Sleep(10 * time.Millisecond)
+		if BreakBlockAddition {
+			BreakBlockAddition = false
+			return false
+		}
+	}
+
 	for i := 0; i < len(block.Transactions); i++ {
 		txInpList := block.Transactions[i].Inputs
 
@@ -42,6 +57,7 @@ func AddBlockToBlockchain(block Block) {
 	WriteBlock(BcLength, block)
 
 	IsMempAdded = false
+	return true
 }
 
 func GetBits(allowPrint bool) uint64 {
@@ -58,9 +74,9 @@ func GetBits(allowPrint bool) uint64 {
 func MineBlock(block Block, miningFlag int, allowPrint bool) Block {
 	BlockForMining = block
 	if miningFlag == 0 {
-		block.Nonce = MineThreads(block, 1, allowPrint)
+		block = MineThreads(block, 1, allowPrint)
 	} else if miningFlag == 1 {
-		block.Nonce = MineThreads(block, uint64(runtime.NumCPU()), allowPrint)
+		block = MineThreads(block, uint64(runtime.NumCPU()), allowPrint)
 	}
 
 	return block
@@ -80,6 +96,10 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 			if !isBlockFound {
 				return false
 			}
+		}
+
+		if block.Time < prevBlock.Time {
+			return false
 		}
 
 		lastBlockHash = hashing.SHA1(BlockHeaderToString(prevBlock))
@@ -138,7 +158,7 @@ func InitBlockchain() {
 	}
 }
 
-func FormGenesisBlock() {
+func FormGenesisBlock() Block {
 	log.Println("Creating initial block")
 
 	var rewardAdr byteArr.ByteArr
@@ -151,11 +171,13 @@ func FormGenesisBlock() {
 	if VerifyBlock(genesisBlock, int(BcLength), true, false) {
 		AddBlockToBlockchain(genesisBlock)
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
+
 	} else {
 		log.Println("Block is not added")
 		println()
 	}
 	IncrBcHeight()
+	return genesisBlock
 }
 
 func (block *Block) ToByteArr() ([]byte, bool) {

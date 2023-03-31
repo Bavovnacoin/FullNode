@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"time"
 )
 
-var allowParallelMining bool
+var AllowMining bool
+var IsMiningDone bool = true
 
 type ParMineData struct {
 	thrId, thrCount uint64
@@ -27,13 +29,15 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 	var start uint64 = (uint64(data.thrId) + data.thrCount*(step-1)) * data.iterPerStep
 	var end uint64 = (uint64(data.thrId+1) + data.thrCount*(step-1)) * data.iterPerStep
 
-	for ; allowParallelMining; step++ {
+	for ; AllowMining; step++ {
 		var nonce uint64 = start
 
 		for ; nonce < end; nonce++ {
-			if !allowParallelMining {
+			if !AllowMining {
 				data.isFound = false
 				ch <- data
+				AllowMining = true
+				return
 			}
 
 			data.block.Nonce = nonce
@@ -42,7 +46,8 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 				data.isFound = true
 				data.nonce = nonce
 				ch <- data
-				allowParallelMining = false
+				AllowMining = false
+				return
 			}
 			command_executor.PauseCommand()
 		}
@@ -56,17 +61,16 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 	}
 }
 
-func MineThreads(block Block, threadsCount uint64, allowPrint bool) uint64 {
+func MineThreads(block Block, threadsCount uint64, allowPrint bool) Block {
 	if allowPrint {
 		log.Println("Mining started")
 	}
-
-	allowParallelMining = true
+	println(block.HashPrevBlock)
+	AllowMining = true
 	var thrcount uint64
 	thrcount = uint64(node_settings.Settings.GetThreadsAmmountForMining())
 
 	resChan := make(chan ParMineData, thrcount)
-	var foundNounce uint64
 
 	var iterPerStep uint64 = 10000
 
@@ -84,12 +88,16 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) uint64 {
 	for ; i < thrcount; i++ {
 		data := <-resChan
 		if data.isFound {
-			foundNounce = data.nonce
+			block.Time = time.Now().UTC().Unix()
+			block.Nonce = data.nonce
+		} else {
+			println("DATA IS NOT FOUND", block.HashPrevBlock)
 		}
 	}
 
 	if allowPrint {
 		log.Println("Mining done")
 	}
-	return foundNounce
+	IsMiningDone = true
+	return block
 }

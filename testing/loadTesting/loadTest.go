@@ -136,15 +136,15 @@ func (lt *LoadTest) tryCallRandRpc() {
 }
 
 func (lt *LoadTest) testAddBlock() bool {
-	if node.AllowCreateBlock {
+	if blockchain.AllowCreateBlock {
 		go node.CreateBlockLog(blockchain.GetBits(false), false)
-		node.AllowCreateBlock = false
+		blockchain.AllowCreateBlock = false
 	}
 
-	if node.CreatedBlock.MerkleRoot != "" { // Is block mined check
-		isBlockValid := blockchain.VerifyBlock(node.CreatedBlock, int(blockchain.BcLength), true, false)
+	if blockchain.CreatedBlock.MerkleRoot != "" { // Is block mined check
+		isBlockValid := blockchain.VerifyBlock(blockchain.CreatedBlock, int(blockchain.BcLength), true, false)
 		node.AddBlockLog(false, isBlockValid)
-		node.CreatedBlock.MerkleRoot = ""
+		blockchain.CreatedBlock.MerkleRoot = ""
 		return true
 	}
 	command_executor.PauseCommand()

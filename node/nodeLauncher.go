@@ -61,7 +61,8 @@ func LaunchFullNode() {
 	}
 
 	if blockchain.BcLength == 0 {
-		blockchain.FormGenesisBlock()
+		genBlock := blockchain.FormGenesisBlock()
+		networking.ProposeBlockToSettingsNodes(genBlock, "")
 	}
 	// panic(fmt.Sprintf("Bc len: %d", blockchain.BcLength))
 
