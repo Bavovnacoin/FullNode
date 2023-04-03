@@ -64,7 +64,6 @@ func LaunchFullNode() {
 		genBlock := blockchain.FormGenesisBlock()
 		networking.ProposeBlockToSettingsNodes(genBlock, "")
 	}
-	// panic(fmt.Sprintf("Bc len: %d", blockchain.BcLength))
 
 	go NodeProcess()
 	node_controller.CommandHandler()

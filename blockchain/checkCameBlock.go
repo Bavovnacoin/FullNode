@@ -37,10 +37,9 @@ func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 }
 
 func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
-	println("Trying to add a new block")
 	PauseBlockAddition = true
 	blockVer := !VerifyBlock(block, int(BcLength), true, true)
-	println("Block verefication completed")
+
 	if blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
 		PauseBlockAddition = false
 		println("Came block is NOOTTT added!")
@@ -49,7 +48,6 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	AllowMining = false
 	BreakBlockAddition = true
 	PauseBlockAddition = false
-	println("New block checked")
 
 	// TODO: solve disagreement (equal time change to block created eaarlier)
 	if CreatedBlock.Time == block.Time {
@@ -58,13 +56,12 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 
 	AddBlockToBlockchain(block)
 	BreakBlockAddition = false
-	println("New block Added")
-	log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1) + "\n")
-	println()
+	log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1))
 	IncrBcHeight()
 
 	AllowCreateBlock = true
 	CreatedBlock.MerkleRoot = ""
 	println("Came block is added!")
+	println()
 	return true
 }

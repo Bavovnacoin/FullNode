@@ -36,7 +36,6 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 			if !AllowMining {
 				data.isFound = false
 				ch <- data
-				AllowMining = true
 				return
 			}
 
@@ -49,6 +48,7 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 				AllowMining = false
 				return
 			}
+
 			command_executor.PauseCommand()
 		}
 
@@ -61,7 +61,7 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 	}
 }
 
-func MineThreads(block Block, threadsCount uint64, allowPrint bool) Block {
+func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool) {
 	if allowPrint {
 		log.Println("Mining started")
 	}
@@ -84,6 +84,7 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) Block {
 		bits: block.Bits, block: block}
 	go mineParTask(thrData, resChan)
 
+	miningRes := true
 	i = 0
 	for ; i < thrcount; i++ {
 		data := <-resChan
@@ -91,7 +92,8 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) Block {
 			block.Time = time.Now().UTC().Unix()
 			block.Nonce = data.nonce
 		} else {
-			println("DATA IS NOT FOUND", block.HashPrevBlock)
+			miningRes = false
+			println("DATA IS NOT FOUND", hashing.SHA1(BlockHeaderToString(block)))
 		}
 	}
 
@@ -99,5 +101,5 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) Block {
 		log.Println("Mining done")
 	}
 	IsMiningDone = true
-	return block
+	return block, miningRes
 }

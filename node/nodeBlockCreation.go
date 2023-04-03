@@ -13,7 +13,6 @@ import (
 func AddBlock(allowLogPrint bool) bool {
 	for !blockchain.IsMiningDone { //Waiting for mining to be done
 		time.Sleep(1 * time.Millisecond)
-		blockchain.IsMiningDone = false
 	}
 
 	if blockchain.AllowCreateBlock {
@@ -39,7 +38,12 @@ func CreateBlockLog(bits uint64, allowPrint bool) {
 	rewardAdr.SetFromHexString(blockchain.RewardAddress, 20)
 	newBlock := blockchain.CreateBlock(rewardAdr, allowPrint)
 	newBlock.Bits = bits
-	newBlock = blockchain.MineBlock(newBlock, 1, allowPrint)
+	var miningRes bool
+	newBlock, miningRes = blockchain.MineBlock(newBlock, 1, allowPrint)
+	if !miningRes {
+		return
+	}
+
 	blockchain.RemoveTxsFromMempool(newBlock.Transactions[1:])
 	blockchain.CreatedBlock = newBlock
 	networking.ProposeBlockToSettingsNodes(blockchain.CreatedBlock, "")

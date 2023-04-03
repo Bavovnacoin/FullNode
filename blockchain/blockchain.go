@@ -71,15 +71,16 @@ func GetBits(allowPrint bool) uint64 {
 	return bits
 }
 
-func MineBlock(block Block, miningFlag int, allowPrint bool) Block {
+func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 	BlockForMining = block
+	miningRes := true
 	if miningFlag == 0 {
-		block = MineThreads(block, 1, allowPrint)
+		block, miningRes = MineThreads(block, 1, allowPrint)
 	} else if miningFlag == 1 {
-		block = MineThreads(block, uint64(runtime.NumCPU()), allowPrint)
+		block, miningRes = MineThreads(block, uint64(runtime.NumCPU()), allowPrint)
 	}
 
-	return block
+	return block, miningRes
 }
 
 func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
@@ -94,11 +95,13 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 			var isBlockFound bool
 			prevBlock, isBlockFound = GetBlock(uint64(height) - 1)
 			if !isBlockFound {
+				println("Block found problem")
 				return false
 			}
 		}
 
 		if block.Time < prevBlock.Time {
+			println("Block time problem")
 			return false
 		}
 
@@ -112,6 +115,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	if checkBits {
 		bits := GetCurrBitsValue()
 		if bits != block.Bits {
+			println("Bits problem")
 			return false
 		}
 	}
@@ -119,6 +123,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	// Check nonce
 	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockHeaderToString(block)), 16)
 	if BitsToTarget(block.Bits).Cmp(hashNonce) != 1 {
+		println("Nonce problem", block.Nonce)
 		return false
 	}
 
@@ -128,12 +133,15 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 		allFee += transaction.GetTxFee(block.Transactions[i])
 	}
 	if !CheckEmitedCoins(block.Transactions[0].Outputs[0].Value-allFee, height) {
+		println("Emited coins problem")
 		return false
 	}
 
 	// Check block hash values
 	if block.HashPrevBlock != lastBlockHash ||
 		block.MerkleRoot != merkleRoot {
+		println(block.HashPrevBlock, lastBlockHash)
+		println("Hash problem")
 		return false
 	}
 
@@ -141,6 +149,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	if allowCheckTxs {
 		for i := 1; i < int(len(block.Transactions)); i++ {
 			if !transaction.VerifyTransaction(block.Transactions[i]) {
+				println("Tx problem")
 				return false
 			}
 		}
@@ -165,7 +174,7 @@ func FormGenesisBlock() Block {
 	rewardAdr.SetFromHexString(RewardAddress, 20)
 	genesisBlock := CreateBlock(rewardAdr, true)
 	genesisBlock.Bits = GetBits(true)
-	genesisBlock = MineBlock(genesisBlock, 1, true)
+	genesisBlock, _ = MineBlock(genesisBlock, 1, true)
 	genesisBlock.Bits = STARTBITS
 
 	if VerifyBlock(genesisBlock, int(BcLength), true, false) {

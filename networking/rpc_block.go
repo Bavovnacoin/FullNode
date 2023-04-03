@@ -87,9 +87,7 @@ func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.
 	if err != nil {
 		return false // Problem when accessing an RPC function
 	}
-	println("Proposal checked")
 	if repl.Data[0] == 1 {
-		println("Proposal approved")
 		repl.Data = []byte{}
 
 		var blockProp BlockProposal
@@ -98,12 +96,10 @@ func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.
 		propBytes, _ := c.ToByteArr(blockProp)
 
 		err := c.client.Call("Listener.AddProposedBlockToMemp", propBytes, &repl)
-		println("Block trying to add")
 		if err != nil || repl.Data[0] == 0 {
 			return false // The node reverted this block
 		}
 	} else {
-		println("Proposal is not approved")
 		return false // The node is already has this block
 	}
 
@@ -111,7 +107,6 @@ func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.
 }
 
 func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bool {
-	println("Proposition 1")
 	var blockHash byteArr.ByteArr
 	blockHashString := hashing.SHA1(blockchain.BlockHeaderToString(block))
 	blockHash.SetFromHexString(blockHashString, 20)
@@ -126,12 +121,7 @@ func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bo
 			return false
 		}
 
-		println("Proposition 2")
-		if connection.ProposeBlockToOtherNode(blockHash.ByteArr, block) {
-			println("Block proposed")
-		} else {
-			println("Block is not proposed")
-		}
+		connection.ProposeBlockToOtherNode(blockHash.ByteArr, block)
 	}
 	return true
 }
