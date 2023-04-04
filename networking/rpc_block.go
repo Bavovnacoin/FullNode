@@ -55,10 +55,10 @@ func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, 
 	return blockReq.Blocks, blockReq.BcHeight, true
 }
 
-func (l *Listener) AddProposedBlockToMemp(blockProposalByteArr []byte, reply *Reply) error {
+func (l *Listener) AddProposedBlock(blockProposalByteArr []byte, reply *Reply) error {
 	var blockProp BlockProposal
 	byteArr.FromByteArr(blockProposalByteArr, &blockProp)
-
+	println("Got block with hash", hashing.SHA1(blockchain.BlockHeaderToString(blockProp.Block)))
 	if blockchain.TryCameBlockToAdd(blockProp.Block, GetSettingsNodesTime()) {
 		*reply = Reply{[]byte{1}}
 	} else {
@@ -67,12 +67,11 @@ func (l *Listener) AddProposedBlockToMemp(blockProposalByteArr []byte, reply *Re
 	return nil
 }
 
-func (l *Listener) GetBlockProposal(blockHashByteArr []byte, reply *Reply) error {
-	var blockHash byteArr.ByteArr
-	blockHash.ByteArr = blockHashByteArr
-	var lastBlockHash byteArr.ByteArr
-	lastBlockHash.SetFromHexString(hashing.SHA1(blockchain.BlockHeaderToString(blockchain.LastBlock)), 20)
-	if !lastBlockHash.IsEqual(blockHash) {
+func (l *Listener) GetBlockProposal(blockHashPropByteArr []byte, reply *Reply) error {
+	var blockHashProposal BlockHashProposal
+	byteArr.FromByteArr(blockHashPropByteArr, &blockHashProposal)
+
+	if !blockchain.IsBlockExists(blockHashProposal.BlockHash, blockHashProposal.Height) { //TODO: check block hash on a specific height
 		*reply = Reply{[]byte{1}}
 	} else {
 		*reply = Reply{[]byte{0}}
@@ -81,9 +80,14 @@ func (l *Listener) GetBlockProposal(blockHashByteArr []byte, reply *Reply) error
 	return nil
 }
 
-func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.Block) bool {
+func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.Block, blockHeight uint64) bool {
 	var repl Reply
-	err := c.client.Call("Listener.GetBlockProposal", blockHash, &repl)
+	var blockHashProposal BlockHashProposal
+	blockHashProposal.BlockHash.ByteArr = blockHash
+	blockHashProposal.Height = blockHeight
+	bhPropBytes, _ := c.ToByteArr(blockHashProposal)
+
+	err := c.client.Call("Listener.GetBlockProposal", bhPropBytes, &repl)
 	if err != nil {
 		return false // Problem when accessing an RPC function
 	}
@@ -94,8 +98,8 @@ func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.
 		blockProp.Block = block
 		blockProp.Address = node_settings.Settings.MyAddress
 		propBytes, _ := c.ToByteArr(blockProp)
-
-		err := c.client.Call("Listener.AddProposedBlockToMemp", propBytes, &repl)
+		println("Sent block with hash", hashing.SHA1(blockchain.BlockHeaderToString(block)))
+		err := c.client.Call("Listener.AddProposedBlock", propBytes, &repl)
 		if err != nil || repl.Data[0] == 0 {
 			return false // The node reverted this block
 		}
@@ -121,7 +125,7 @@ func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bo
 			return false
 		}
 
-		connection.ProposeBlockToOtherNode(blockHash.ByteArr, block)
+		connection.ProposeBlockToOtherNode(blockHash.ByteArr, block, blockchain.BcLength-1)
 	}
 	return true
 }

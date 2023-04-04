@@ -200,3 +200,22 @@ func (block *Block) ToByteArr() ([]byte, bool) {
 
 	return network.Bytes(), true
 }
+
+func IsBlockExists(blockHash byteArr.ByteArr, height uint64) bool {
+	println("Checking block hash", blockHash.ToHexString(), height)
+	block, res := GetBlock(height)
+	if !res {
+		println("Block with such a height is not found")
+		return false
+	}
+
+	var bcBlockHash byteArr.ByteArr
+	bcBlockHash.SetFromHexString(hashing.SHA1(BlockHeaderToString(block)), 20)
+
+	if bcBlockHash.IsEqual(blockHash) {
+		println("Block is found")
+		return true
+	}
+	println("Block is not found", bcBlockHash.ToHexString(), blockHash.ToHexString())
+	return false
+}
