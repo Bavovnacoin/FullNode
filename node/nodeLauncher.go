@@ -11,6 +11,7 @@ import (
 	"bavovnacoin/txo"
 	"fmt"
 	"log"
+	"os"
 	"runtime"
 )
 
@@ -85,6 +86,8 @@ func Launch() {
 	command_executor.ComContr.OpSys = runtime.GOOS
 	node_settings.Settings.GetSettings()
 	node_settings.Settings.InitSettingsValues()
+
+	os.RemoveAll("data") // TODO: remove!
 
 	var variant string
 	for NodeLaunched {

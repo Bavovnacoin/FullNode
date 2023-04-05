@@ -121,9 +121,12 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	}
 
 	// Check nonce
-	hashNonce, _ := new(big.Int).SetString(hashing.SHA1(BlockHeaderToString(block)), 16)
-	if BitsToTarget(block.Bits).Cmp(hashNonce) != 1 {
-		println("Nonce problem", block.Nonce)
+	h := hashing.SHA1(BlockHeaderToString(block))
+	hashNonce, _ := new(big.Int).SetString(h, 16)
+	if BitsToTarget(block.Bits).Cmp(hashNonce) == -1 {
+		fmt.Println(hashNonce.Bytes())
+		println(fmt.Sprintf("%x", hashNonce), fmt.Sprintf("%x", BitsToTarget(block.Bits)))
+		println("Nonce problem", hashing.SHA1(BlockHeaderToString(block)), fmt.Sprintf("%x", BitsToTarget(block.Bits)))
 		return false
 	}
 

@@ -40,13 +40,15 @@ func CreateBlockLog(bits uint64, allowPrint bool) {
 	newBlock.Bits = bits
 	var miningRes bool
 	newBlock, miningRes = blockchain.MineBlock(newBlock, 1, allowPrint)
+
 	if !miningRes {
+		blockchain.AllowCreateBlock = true
 		return
 	}
 
+	blockchain.IsMiningDone = true
 	blockchain.RemoveTxsFromMempool(newBlock.Transactions[1:])
 	blockchain.CreatedBlock = newBlock
-	networking.ProposeBlockToSettingsNodes(blockchain.CreatedBlock, "")
 	command_executor.PauseCommand()
 }
 
@@ -65,6 +67,7 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 		blockchain.IncrBcHeight()
 		isBlockAdded = true
 		println()
+		networking.ProposeBlockToSettingsNodes(blockchain.CreatedBlock, "")
 	} else {
 		if allowPrint {
 			log.Println("Created block is not valid.")

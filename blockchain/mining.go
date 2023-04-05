@@ -31,6 +31,9 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 
 	for ; AllowMining; step++ {
 		var nonce uint64 = start
+		if BcLength == 0 { //TODO: remove!
+			nonce = 381000
+		}
 
 		for ; nonce < end; nonce++ {
 			if !AllowMining {
@@ -63,9 +66,9 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 
 func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool) {
 	if allowPrint {
-		log.Println("Mining started")
+		log.Println("Mining started. Prev block header: ", block.HashPrevBlock)
 	}
-	println(block.HashPrevBlock)
+
 	AllowMining = true
 	var thrcount uint64
 	thrcount = uint64(node_settings.Settings.GetThreadsAmmountForMining())
@@ -98,7 +101,7 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool
 	}
 
 	if allowPrint {
-		log.Println("Mining done")
+		log.Println("Mining done. Prev hash:", block.HashPrevBlock)
 	}
 	IsMiningDone = true
 	return block, miningRes

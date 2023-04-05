@@ -36,6 +36,17 @@ func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 	return true
 }
 
+// func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
+// 	PauseBlockAddition = true
+// 	blockVer := VerifyBlock(block, int(BcLength), true, true)
+// 	if !blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
+// 		PauseBlockAddition = false
+// 		println("Came block is NOOTTT added!")
+// 		return false
+// 	}
+// 	return true
+// }
+
 func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	PauseBlockAddition = true
 	blockVer := !VerifyBlock(block, int(BcLength), true, true)
@@ -56,12 +67,11 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	}
 
 	AddBlockToBlockchain(block)
-	BreakBlockAddition = false
 	log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1))
 	IncrBcHeight()
 
-	AllowCreateBlock = true
-	CreatedBlock.MerkleRoot = ""
+	//AllowCreateBlock = true
+	//CreatedBlock.MerkleRoot = ""
 	println("Came block is added!")
 	println()
 	return true
