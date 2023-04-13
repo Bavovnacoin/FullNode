@@ -11,7 +11,6 @@ import (
 	"bavovnacoin/txo"
 	"fmt"
 	"log"
-	"os"
 	"runtime"
 )
 
@@ -87,7 +86,7 @@ func Launch() {
 	node_settings.Settings.GetSettings()
 	node_settings.Settings.InitSettingsValues()
 
-	os.RemoveAll("data") // TODO: remove!
+	//os.RemoveAll("data") // TODO: remove!
 
 	var variant string
 	for NodeLaunched {

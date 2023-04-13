@@ -56,7 +56,7 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 	isBlockAdded := false
 
 	if isBlockValid {
-		blockAddRes := blockchain.AddBlockToBlockchain(blockchain.CreatedBlock)
+		blockAddRes := blockchain.AddBlockToBlockchain(blockchain.CreatedBlock, 0)
 		if !blockAddRes {
 			return false
 		}

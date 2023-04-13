@@ -52,7 +52,7 @@ func GetCheckpHashes(args ...uint64) {
 	blockchain.InitBlockchain()
 
 	for _, ind := range args {
-		b, _ := blockchain.GetBlock(ind)
+		b, _ := blockchain.GetBlock(ind, 0)
 		println(hashing.SHA1(blockchain.BlockHeaderToString(b)))
 	}
 }

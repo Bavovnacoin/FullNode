@@ -29,7 +29,7 @@ var BreakBlockAddition bool
 var RewardAddress string = "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
 
 // Warning: it is considered that the block is valid
-func AddBlockToBlockchain(block Block) bool {
+func AddBlockToBlockchain(block Block, chainId uint64) bool {
 	for PauseBlockAddition {
 		time.Sleep(10 * time.Millisecond)
 		if BreakBlockAddition {
@@ -54,7 +54,7 @@ func AddBlockToBlockchain(block Block) bool {
 	}
 
 	LastBlock = block
-	WriteBlock(BcLength, block)
+	WriteBlock(BcLength, chainId, block)
 
 	IsMempAdded = false
 	return true
@@ -84,30 +84,30 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 }
 
 func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
-	var lastBlockHash string
-
+	//var lastBlockHash string
+	var lastBlockHashes []string
 	if int(BcLength) != 0 {
-		var prevBlock Block
+		//var prevBlock Block
+		var prevBlocks []Block
 
 		if uint64(height) == BcLength {
-			prevBlock = LastBlock
+			//prevBlock = LastBlock
+			prevBlocks = append(prevBlocks, LastBlock)
 		} else {
 			var isBlockFound bool
-			prevBlock, isBlockFound = GetBlock(uint64(height) - 1)
+			//prevBlock, isBlockFound = GetBlock(uint64(height)-1, chainId)
+			prevBlocks, isBlockFound = GetBlocksOnHeight(uint64(height) - 1)
 			if !isBlockFound {
 				println("Block found problem")
 				return false
 			}
 		}
 
-		if block.Time < prevBlock.Time {
-			println("Block time problem")
-			return false
+		for i := 0; i < len(prevBlocks); i++ {
+			lastBlockHashes = append(lastBlockHashes, hashing.SHA1(BlockHeaderToString(prevBlocks[i])))
 		}
-
-		lastBlockHash = hashing.SHA1(BlockHeaderToString(prevBlock))
 	} else {
-		lastBlockHash = "0000000000000000000000000000000000000000"
+		lastBlockHashes = append(lastBlockHashes, "0000000000000000000000000000000000000000")
 	}
 	merkleRoot := GenMerkleRoot(block.Transactions)
 
@@ -141,10 +141,21 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	}
 
 	// Check block hash values
-	if block.HashPrevBlock != lastBlockHash ||
-		block.MerkleRoot != merkleRoot {
-		println(block.HashPrevBlock, lastBlockHash)
+	var hashFound bool
+	for i := 0; i < len(lastBlockHashes); i++ {
+		if block.HashPrevBlock == lastBlockHashes[i] {
+			hashFound = true
+			break
+		}
+	}
+	if !hashFound {
 		println("Hash problem")
+		return false
+	}
+
+	// Check Merkle root
+	if block.MerkleRoot != merkleRoot {
+		println("Merkle root problem")
 		return false
 	}
 
@@ -164,7 +175,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 func InitBlockchain() {
 	BcLength, _ = GetBcHeight()
 	if BcLength != 0 {
-		LastBlock, _ = GetBlock(BcLength - 1)
+		LastBlock, _ = GetBlock(BcLength-1, 0)
 
 		log.Println("Data is restored from db. Blockchain height:", BcLength)
 	}
@@ -181,9 +192,8 @@ func FormGenesisBlock() Block {
 	genesisBlock.Bits = STARTBITS
 
 	if VerifyBlock(genesisBlock, int(BcLength), true, false) {
-		AddBlockToBlockchain(genesisBlock)
+		AddBlockToBlockchain(genesisBlock, 0)
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
-
 	} else {
 		log.Println("Block is not added")
 		println()
@@ -206,19 +216,22 @@ func (block *Block) ToByteArr() ([]byte, bool) {
 
 func IsBlockExists(blockHash byteArr.ByteArr, height uint64) bool {
 	println("Checking block hash", blockHash.ToHexString(), height)
-	block, res := GetBlock(height)
+
+	blockArr, res := GetBlocksOnHeight(height)
 	if !res {
 		println("Block with such a height is not found")
 		return false
 	}
 
 	var bcBlockHash byteArr.ByteArr
-	bcBlockHash.SetFromHexString(hashing.SHA1(BlockHeaderToString(block)), 20)
-
-	if bcBlockHash.IsEqual(blockHash) {
-		println("Block is found")
-		return true
+	for i := 0; i < len(blockArr); i++ {
+		bcBlockHash.SetFromHexString(hashing.SHA1(BlockHeaderToString(blockArr[i])), 20)
+		if bcBlockHash.IsEqual(blockHash) {
+			println("Block is found")
+			return true
+		}
 	}
+
 	println("Block is not found", bcBlockHash.ToHexString(), blockHash.ToHexString())
 	return false
 }

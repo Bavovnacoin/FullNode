@@ -15,7 +15,7 @@ var STARTBITS uint64 = 0xffff12
 func GetCurrBitsValue() uint64 {
 	var bits uint64
 	if int(BcLength)%BLOCK_DIFF_CHECK == 0 && BcLength != 0 {
-		blockDiff, _ := GetBlock(uint64(int(BcLength) - BLOCK_DIFF_CHECK))
+		blockDiff, _ := GetBlock(uint64(int(BcLength)-BLOCK_DIFF_CHECK), 0)
 		bits = GenBits(blockDiff.Time, LastBlock.Time, LastBlock.Bits)
 	} else if BcLength != 0 {
 		bits = LastBlock.Bits

@@ -15,13 +15,14 @@ type BlockRequest struct {
 	Blocks   []blockchain.Block
 }
 
+// TODO: chaneg according to the altchain idea
 func (l *Listener) SendBlocks(startFromBlock []byte, reply *Reply) error {
 	var startBlockToRetrieve uint64
 	byteArr.FromByteArr(startFromBlock, &startBlockToRetrieve)
 	var request BlockRequest
 
 	for i := startBlockToRetrieve; i < startBlockToRetrieve+retrStep && i < blockchain.BcLength; i++ {
-		block, res := blockchain.GetBlock(i)
+		block, res := blockchain.GetBlock(i, 0)
 		if res {
 			request.Blocks = append(request.Blocks, block)
 		} else {

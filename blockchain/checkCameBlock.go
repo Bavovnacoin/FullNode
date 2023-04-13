@@ -17,7 +17,7 @@ func initPastBlocksTime() {
 		}
 
 		for i := uint64(0); i < blocksToAddAmmount; i++ {
-			block, _ := GetBlock(BcLength - i - 1)
+			block, _ := GetBlock(BcLength-i-1, 0)
 			pastElevenBlocksSortedTime = util.InsertSorted(pastElevenBlocksSortedTime, block.Time)
 		}
 
@@ -36,17 +36,6 @@ func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 	return true
 }
 
-// func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
-// 	PauseBlockAddition = true
-// 	blockVer := VerifyBlock(block, int(BcLength), true, true)
-// 	if !blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
-// 		PauseBlockAddition = false
-// 		println("Came block is NOOTTT added!")
-// 		return false
-// 	}
-// 	return true
-// }
-
 func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	PauseBlockAddition = true
 	blockVer := !VerifyBlock(block, int(BcLength), true, true)
@@ -63,10 +52,10 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 
 	// TODO: solve disagreement (equal time change to block created eaarlier)
 	if CreatedBlock.Time == block.Time {
-
+		//AddBlockToBlockchain(block, num) set num to chain id
 	}
 
-	AddBlockToBlockchain(block)
+	AddBlockToBlockchain(block, 0)
 	log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1))
 	IncrBcHeight()
 

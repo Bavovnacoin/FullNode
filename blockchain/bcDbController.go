@@ -4,10 +4,12 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"fmt"
+
+	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func SetBcHeight(hgt uint64) bool {
-	byteVal, isConv := byteArr.ToByteArr(hgt)
+func SetBcHeight(height uint64) bool {
+	byteVal, isConv := byteArr.ToByteArr(height)
 	if !isConv {
 		return false
 	}
@@ -33,17 +35,18 @@ func GetBcHeight() (uint64, bool) {
 	return len, true
 }
 
-func WriteBlock(height uint64, block Block) bool {
+func WriteBlock(height uint64, chainId uint64, block Block) bool {
 	byteVal, isConv := byteArr.ToByteArr(block)
 	if !isConv {
 		return false
 	}
-	return dbController.DB.SetValue("bc"+fmt.Sprint(height), byteVal)
+	return dbController.DB.SetValue("bc"+fmt.Sprint(height)+":"+fmt.Sprint(chainId), byteVal)
 }
 
-func GetBlock(height uint64) (Block, bool) {
+func GetBlock(height uint64, chainId uint64) (Block, bool) {
 	var block Block
-	value, isGotten := dbController.DB.GetValue("bc" + fmt.Sprint(height))
+
+	value, isGotten := dbController.DB.GetValue("bc" + fmt.Sprint(height) + ":" + fmt.Sprint(chainId))
 	if !isGotten {
 		return block, false
 	}
@@ -53,4 +56,22 @@ func GetBlock(height uint64) (Block, bool) {
 		return block, false
 	}
 	return block, true
+}
+
+func GetBlocksOnHeight(height uint64) ([]Block, bool) {
+	var blockArr []Block
+	var block Block
+
+	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("bc"+fmt.Sprint(height)+":")), nil)
+	for iter.Next() {
+		byteArr.FromByteArr(iter.Value(), &block)
+		blockArr = append(blockArr, block)
+	}
+	iter.Release()
+
+	if iter.Error() != nil {
+		return blockArr, false
+	}
+
+	return blockArr, true
 }

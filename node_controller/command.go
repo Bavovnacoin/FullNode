@@ -135,7 +135,7 @@ func bcPrinter() {
 
 				log.Println("Blockchain from", commandValues[0], "to", commandValues[1])
 				for i := commandValues[0]; i < commandValues[1]; i++ {
-					block, _ := blockchain.GetBlock(uint64(i))
+					block, _ := blockchain.GetBlock(uint64(i), 0)
 					blockchain.PrintBlockTitle(block, uint64(i))
 					println()
 				}
@@ -160,7 +160,7 @@ func blockTxPrinter() {
 
 		if err == nil {
 			if len(commandValues) == 2 {
-				block, _ := blockchain.GetBlock(uint64(commandValues[0]))
+				block, _ := blockchain.GetBlock(uint64(commandValues[0]), 0)
 				if commandValues[0] < 0 || commandValues[1] < 0 ||
 					commandValues[0] > int64(blockchain.BcLength) ||
 					commandValues[1] >= int64(len(block.Transactions)) {
