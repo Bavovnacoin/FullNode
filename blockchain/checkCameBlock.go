@@ -50,17 +50,20 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	BreakBlockAddition = true
 	PauseBlockAddition = false
 
-	// TODO: solve disagreement (equal time change to block created eaarlier)
-	if CreatedBlock.Time == block.Time {
-		//AddBlockToBlockchain(block, num) set num to chain id
+	if CreatedBlock.Time <= block.Time {
+		blocks, _ := GetBlocksOnHeight(BcLength - 1)
+		AddBlockToBlockchain(block, uint64(len(blocks))) // TODO: choose where to add (prev block) - or it's done? decide!
 	}
 
 	AddBlockToBlockchain(block, 0)
+
+	if TryReorganize() {
+		log.Println("Reorganization happened")
+	}
+
 	log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1))
 	IncrBcHeight()
 
-	//AllowCreateBlock = true
-	//CreatedBlock.MerkleRoot = ""
 	println("Came block is added!")
 	println()
 	return true

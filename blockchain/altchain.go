@@ -1,3 +1,6 @@
 package blockchain
 
-// TODO: reorganize
+func TryReorganize() bool {
+
+	return true
+}

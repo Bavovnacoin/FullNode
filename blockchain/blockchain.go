@@ -84,18 +84,14 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 }
 
 func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
-	//var lastBlockHash string
 	var lastBlockHashes []string
 	if int(BcLength) != 0 {
-		//var prevBlock Block
 		var prevBlocks []Block
 
 		if uint64(height) == BcLength {
-			//prevBlock = LastBlock
 			prevBlocks = append(prevBlocks, LastBlock)
 		} else {
 			var isBlockFound bool
-			//prevBlock, isBlockFound = GetBlock(uint64(height)-1, chainId)
 			prevBlocks, isBlockFound = GetBlocksOnHeight(uint64(height) - 1)
 			if !isBlockFound {
 				println("Block found problem")
