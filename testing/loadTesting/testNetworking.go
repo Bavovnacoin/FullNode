@@ -2,6 +2,8 @@ package loadtesting
 
 import (
 	"bavovnacoin/byteArr"
+	"bavovnacoin/networking"
+	"bavovnacoin/node_controller/node_settings"
 	"bavovnacoin/transaction"
 	"bytes"
 	"encoding/gob"
@@ -20,8 +22,10 @@ type Reply struct {
 
 func (c *Connection) Establish() bool {
 	var err error
-	c.client, err = rpc.Dial("tcp", "localhost:12345")
+	node_settings.Settings.GetSettings()
+	c.client, err = rpc.Dial("tcp", "localhost:8080") //node_settings.Settings.MyAddress
 	if err != nil {
+		log.Println(err)
 		return false
 	}
 	return true
@@ -59,8 +63,9 @@ func (c *Connection) SendTransaction(tx transaction.Transaction, isAccepted *boo
 		return false
 	}
 
-	var repl Reply
-	err := c.client.Call("Listener.AddNewTxToMemp", byteArr, &repl)
+	var l networking.Listener
+	var repl networking.Reply
+	err := l.AddNewTxToMemp(byteArr, &repl)
 	if err != nil {
 		log.Println(err)
 		return false
@@ -96,8 +101,9 @@ func (c *Connection) GetUtxoByAddress(addresses []byteArr.ByteArr) bool {
 		return false
 	}
 
-	var repl Reply
-	err := c.client.Call("Listener.GetUtxoByAddr", byteArr, &repl)
+	var repl networking.Reply
+	var l networking.Listener
+	err := l.GetUtxoByAddr(byteArr, &repl)
 	if err != nil {
 		log.Println(err)
 		return false

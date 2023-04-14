@@ -94,15 +94,16 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 
 func RemoveTxsFromMempool(txs []transaction.Transaction) {
 	remCount := 0
-	for mempInd, mempVal := range Mempool {
-		mempTxHash := hashing.SHA1(transaction.GetCatTxFields(mempVal))
+	for mempInd := 0; mempInd < len(Mempool); mempInd++ {
+		mempTxHash := hashing.SHA1(transaction.GetCatTxFields(Mempool[mempInd]))
 		for _, txVal := range txs {
 			currTxHash := hashing.SHA1(transaction.GetCatTxFields(txVal))
 			if mempTxHash == currTxHash {
-				RemInputsFromMempInpHashes(Mempool[mempInd].Inputs)
-				delete(MempTxHashes, hashing.SHA1(transaction.GetCatTxFields(Mempool[mempInd])))
 				Mempool = append(Mempool[:mempInd], Mempool[mempInd+1:]...)
+				RemInputsFromMempInpHashes(txVal.Inputs)
+				delete(MempTxHashes, hashing.SHA1(transaction.GetCatTxFields(txVal)))
 				remCount++
+				mempInd--
 				break
 			}
 		}

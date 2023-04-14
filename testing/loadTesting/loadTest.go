@@ -48,7 +48,6 @@ func (lt *LoadTest) initTestData(txAmmount, rpcAmmount int) {
 	lt.source = rand.NewSource(time.Now().Unix())
 	lt.random = rand.New(lt.source)
 	lt.rpcStep = (lt.txAmmount) / lt.rpcAmmount
-	//lt.initRandTxValues()
 }
 
 func (lt *LoadTest) GenRandValues() {
@@ -57,41 +56,8 @@ func (lt *LoadTest) GenRandValues() {
 	go testing.GenTestUtxo(lt.txAmmount, lt.random)
 }
 
-// func (lt *LoadTest) genRandTx() transaction.Transaction {
-// 	newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
-
-// 	if lt.currAccInd == lt.incTxInd && lt.incTxCounter <= lt.incTxAmmount {
-// 		stStep := lt.step * lt.incTxCounter
-// 		if lt.incTxAmmount-1 == lt.incTxCounter {
-// 			lt.step = lt.txAmmount - stStep
-// 		}
-// 		println(lt.step)
-// 		lt.incTxInd = lt.random.Intn(lt.step) + stStep
-
-// 		newTx, _ = testing.MakeTxIncorrect(newTx, lt.incTxCounter, lt.random)
-// 		lt.incTxCounter++
-// 	}
-
-// 	lt.currAccInd++
-
-// 	return newTx
-// }
-
-// func (lt *LoadTest) initRandTxValues() {
-// 	lt.step = int(lt.txAmmount / lt.incTxAmmount)
-// 	lt.incTxInd = -1
-// 	if lt.incTxAmmount != 0 {
-// 		stStep := lt.step * lt.incTxCounter
-// 		lt.incTxInd = lt.random.Intn(lt.step) + stStep
-
-// 		lt.incTxCounter++
-// 	}
-// }
-
 func (lt *LoadTest) startTestTxSending() {
 	var conn Connection
-	conn.Establish()
-	defer conn.Close()
 
 	var isAccepted bool
 	var start time.Time
@@ -110,17 +76,16 @@ func (lt *LoadTest) callRandRpc(rpcInd int) {
 	addr.SetFromHexString(hashing.SHA1("Glory to Ukraine"), 20)
 
 	var conn Connection
-	conn.Establish()
-	defer conn.Close()
 
 	start := time.Now()
 	if rpcInd%2 == 0 {
 		conn.GetUtxoByAddress([]byteArr.ByteArr{addr})
 		lt.rpcExecTimeUtxoByAddr = append(lt.rpcExecTimeUtxoByAddr, time.Since(start))
-	} else if rpcInd%2 == 1 {
-		conn.IsAddrExist(addr)
-		lt.rpcExecTimeisAddrExist = append(lt.rpcExecTimeisAddrExist, time.Since(start))
 	}
+	// else if rpcInd%2 == 1 {
+	// 	conn.IsAddrExist(addr)
+	// 	lt.rpcExecTimeisAddrExist = append(lt.rpcExecTimeisAddrExist, time.Since(start))
+	// }
 }
 
 func (lt *LoadTest) tryCallRandRpc() {
@@ -171,14 +136,16 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, rpcAmmount int) {
 	println("Initializing transactions")
 	time.Sleep(1 * time.Second)
 
-	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 1 ||
-		len(lt.rpcExecTimeUtxoByAddr)+len(lt.rpcExecTimeisAddrExist) < lt.rpcAmmount {
-		var isAdded bool = lt.testAddBlock()
+	var isAdded bool
+	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 0 {
+		isAdded = lt.testAddBlock()
 
 		if isAdded {
 			lt.txHandled += len(blockchain.LastBlock.Transactions) - 1
 			log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n",
 				blockchain.BcLength, len(blockchain.LastBlock.Transactions)-1)
+			println(len(blockchain.Mempool))
+			blockchain.BlockForMining = blockchain.Block{}
 		}
 
 		lt.tryCallRandRpc()

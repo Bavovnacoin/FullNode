@@ -2,6 +2,7 @@ package loadtesting
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -36,10 +37,10 @@ func printfunRes(funExecTime []time.Duration, funName string, timeSpecif uint64)
 }
 
 func (lt *LoadTest) printResults() {
-	println("Load test results.")
+	log.Println("Load test results.")
 	println("RPC exec mean time results (ms):")
 	printfunRes(lt.rpcExecTimeUtxoByAddr, "1. Get utxo by address: ", uint64(time.Millisecond))
-	printfunRes(lt.rpcExecTimeisAddrExist, "2. Is address exists: ", uint64(time.Millisecond))
+	//printfunRes(lt.rpcExecTimeisAddrExist, "2. Is address exists: ", uint64(time.Millisecond))
 	println()
 	println("New tx verification mean time results (s):")
 	printfunRes(lt.txVerifTime, "Tx verification: ", uint64(time.Second))
