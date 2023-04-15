@@ -2,9 +2,14 @@ package hashing
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 )
+
+const BitLength = 160
+
+var MaxNum = new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(160), big.NewInt(0)), big.NewInt(1))
 
 func binary(s string) string {
 	res := ""

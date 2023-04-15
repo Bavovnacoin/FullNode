@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/big"
 	"time"
 )
 
@@ -20,9 +21,11 @@ type Block struct {
 	MerkleRoot    string
 	Bits          uint64
 	Nonce         uint64
+	Chainwork     *big.Int
 	Transactions  []transaction.Transaction
 }
 
+// TODO: add Time to header
 func BlockHeaderToString(block Block) string {
 	str := ""
 	str += fmt.Sprint(block.Blocksize)
@@ -31,7 +34,13 @@ func BlockHeaderToString(block Block) string {
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
 	str += fmt.Sprint(block.Nonce)
+	str += block.Chainwork.String()
 	return str
+}
+
+func getCurrBlockChainwork(block Block) *big.Int {
+	blockTarget := BitsToTarget(block.Bits)
+	return new(big.Int).Div(hashing.MaxNum, new(big.Int).Add(blockTarget, big.NewInt(1)))
 }
 
 func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
@@ -64,6 +73,7 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	}
 
 	newBlock.Blocksize = uint(len(BlockHeaderToString(newBlock)))
+	newBlock.Chainwork = getChainwork(newBlock)
 	return newBlock
 }
 
@@ -76,6 +86,7 @@ func PrintBlockTitle(block Block, height uint64) {
 	println("Bits:", block.Bits)
 	println("Nonce:", block.Nonce)
 	println("Transactions count:", len(block.Transactions))
+	println("Chainwork:", block.Chainwork.String())
 }
 
 func (block *Block) SetFromByteArr(byteArr []byte) bool {

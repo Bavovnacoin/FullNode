@@ -5,8 +5,6 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"log"
 	"math/big"
@@ -27,6 +25,10 @@ var PauseBlockAddition bool
 var BreakBlockAddition bool
 
 var RewardAddress string = "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
+
+func getChainwork(block Block) *big.Int {
+	return new(big.Int).Add(LastBlock.Chainwork, getCurrBlockChainwork(block))
+}
 
 // Warning: it is considered that the block is valid
 func AddBlockToBlockchain(block Block, chainId uint64) bool {
@@ -165,6 +167,12 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 		}
 	}
 
+	// Check chainwork
+	chainwork := getChainwork(block)
+	if block.Chainwork.Cmp(chainwork) != 0 {
+		return false
+	}
+
 	return true
 }
 
@@ -196,18 +204,6 @@ func FormGenesisBlock() Block {
 	}
 	IncrBcHeight()
 	return genesisBlock
-}
-
-func (block *Block) ToByteArr() ([]byte, bool) {
-	var network bytes.Buffer
-	enc := gob.NewEncoder(&network)
-	err := enc.Encode(block)
-	if err != nil {
-		log.Fatal("encode error:", err)
-		return nil, false
-	}
-
-	return network.Bytes(), true
 }
 
 func IsBlockExists(blockHash byteArr.ByteArr, height uint64) bool {
