@@ -4,6 +4,7 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"fmt"
+	"strconv"
 
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
@@ -58,14 +59,30 @@ func GetBlock(height uint64, chainId uint64) (Block, bool) {
 	return block, true
 }
 
-func GetBlocksOnHeight(height uint64) ([]Block, bool) {
-	var blockArr []Block
-	var block Block
+type BlockChainId struct {
+	block   Block
+	chainId uint64
+}
+
+func getChainIdFromKey(key string) uint64 {
+	for i := len(key) - 1; i >= 0; i-- {
+		if key[i] == ':' {
+			num, _ := strconv.ParseUint(key[i+1:], 10, 64)
+			return num
+		}
+	}
+	return 0
+}
+
+func GetBlocksOnHeight(height uint64) ([]BlockChainId, bool) {
+	var blockArr []BlockChainId
+	var block_id BlockChainId
 
 	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("bc"+fmt.Sprint(height)+":")), nil)
 	for iter.Next() {
-		byteArr.FromByteArr(iter.Value(), &block)
-		blockArr = append(blockArr, block)
+		byteArr.FromByteArr(iter.Value(), &block_id.block)
+		block_id.chainId = getChainIdFromKey(string(iter.Key()))
+		blockArr = append(blockArr, block_id)
 	}
 	iter.Release()
 

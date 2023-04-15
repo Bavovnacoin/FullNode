@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"bavovnacoin/hashing"
 	"bavovnacoin/util"
 	"fmt"
 	"log"
@@ -50,12 +51,19 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	BreakBlockAddition = true
 	PauseBlockAddition = false
 
+	var blocks []BlockChainId
 	if CreatedBlock.Time <= block.Time {
-		blocks, _ := GetBlocksOnHeight(BcLength - 1)
-		AddBlockToBlockchain(block, uint64(len(blocks))) // TODO: choose where to add (prev block) - or it's done? decide!
+		blocks, _ = GetBlocksOnHeight(BcLength - 1)
+		AddBlockToBlockchain(block, uint64(len(blocks)))
 	}
 
-	AddBlockToBlockchain(block, 0)
+	// Decide to what chain add a new block
+	for i := 0; i < len(blocks); i++ {
+		blockHash := hashing.SHA1(BlockHeaderToString(blocks[i].block))
+		if blockHash == block.HashPrevBlock {
+			AddBlockToBlockchain(block, blocks[i].chainId)
+		}
+	}
 
 	if TryReorganize() {
 		log.Println("Reorganization happened")

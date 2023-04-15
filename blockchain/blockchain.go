@@ -26,7 +26,11 @@ var BreakBlockAddition bool
 
 var RewardAddress string = "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
 
-func getChainwork(block Block) *big.Int {
+func GetChainwork(block Block) *big.Int {
+	if LastBlock.Chainwork == nil {
+		LastBlock.Chainwork = big.NewInt(0)
+	}
+	//fmt.Printf("%d\n", getCurrBlockChainwork(block))
 	return new(big.Int).Add(LastBlock.Chainwork, getCurrBlockChainwork(block))
 }
 
@@ -88,10 +92,10 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
 	var lastBlockHashes []string
 	if int(BcLength) != 0 {
-		var prevBlocks []Block
+		var prevBlocks []BlockChainId
 
 		if uint64(height) == BcLength {
-			prevBlocks = append(prevBlocks, LastBlock)
+			prevBlocks = append(prevBlocks, BlockChainId{block: LastBlock})
 		} else {
 			var isBlockFound bool
 			prevBlocks, isBlockFound = GetBlocksOnHeight(uint64(height) - 1)
@@ -102,7 +106,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 		}
 
 		for i := 0; i < len(prevBlocks); i++ {
-			lastBlockHashes = append(lastBlockHashes, hashing.SHA1(BlockHeaderToString(prevBlocks[i])))
+			lastBlockHashes = append(lastBlockHashes, hashing.SHA1(BlockHeaderToString(prevBlocks[i].block)))
 		}
 	} else {
 		lastBlockHashes = append(lastBlockHashes, "0000000000000000000000000000000000000000")
@@ -168,8 +172,10 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	}
 
 	// Check chainwork
-	chainwork := getChainwork(block)
+	chainwork := GetChainwork(block)
 	if block.Chainwork.Cmp(chainwork) != 0 {
+		println("Chainwork problem")
+		println(fmt.Sprintf("%d - %d", chainwork, block.Chainwork))
 		return false
 	}
 
@@ -192,6 +198,7 @@ func FormGenesisBlock() Block {
 	rewardAdr.SetFromHexString(RewardAddress, 20)
 	genesisBlock := CreateBlock(rewardAdr, true)
 	genesisBlock.Bits = GetBits(true)
+	genesisBlock.Chainwork = GetChainwork(genesisBlock)
 	genesisBlock, _ = MineBlock(genesisBlock, 1, true)
 	genesisBlock.Bits = STARTBITS
 
@@ -217,7 +224,7 @@ func IsBlockExists(blockHash byteArr.ByteArr, height uint64) bool {
 
 	var bcBlockHash byteArr.ByteArr
 	for i := 0; i < len(blockArr); i++ {
-		bcBlockHash.SetFromHexString(hashing.SHA1(BlockHeaderToString(blockArr[i])), 20)
+		bcBlockHash.SetFromHexString(hashing.SHA1(BlockHeaderToString(blockArr[i].block)), 20)
 		if bcBlockHash.IsEqual(blockHash) {
 			println("Block is found")
 			return true

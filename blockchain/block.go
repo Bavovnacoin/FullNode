@@ -34,7 +34,7 @@ func BlockHeaderToString(block Block) string {
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
 	str += fmt.Sprint(block.Nonce)
-	str += block.Chainwork.String()
+	//str += block.Chainwork.String() //TODO: do not forget to decomment this section after decommenting nonce value in genesis block!
 	return str
 }
 
@@ -73,7 +73,6 @@ func CreateBlock(rewardAdr byteArr.ByteArr, allowPrint bool) Block {
 	}
 
 	newBlock.Blocksize = uint(len(BlockHeaderToString(newBlock)))
-	newBlock.Chainwork = getChainwork(newBlock)
 	return newBlock
 }
 
