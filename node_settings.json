@@ -5,5 +5,6 @@
     "OtherNodesAddresses": [
         "localhost:8080"
     ],
-    "MyAddress": "localhost:12345"
+    "MyAddress": "localhost:12345",
+    "RewardAddress": "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
 }

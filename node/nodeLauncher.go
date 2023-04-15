@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"strings"
 )
 
 var NodeLaunched bool
@@ -69,15 +70,26 @@ func LaunchFullNode() {
 	node_controller.CommandHandler()
 }
 
-func funcChoser(variant string) {
-	if variant == "1" {
+func funcChoser(variant string, isNodeLaunchAllowed bool) {
+	if variant == "1" && isNodeLaunchAllowed {
 		command_executor.ComContr.ClearConsole()
 		LaunchFullNode()
-	} else if variant == "2" {
+	} else if variant == "2" && isNodeLaunchAllowed || variant == "1" && !isNodeLaunchAllowed {
 		node_settings.LaunchMenu(&node_settings.Settings)
-	} else if variant == "3" {
+	} else if variant == "3" && isNodeLaunchAllowed || variant == "2" && !isNodeLaunchAllowed {
 		NodeLaunched = false
 	}
+}
+
+func getNodeLaunchSettingsError() string {
+	var errMess []string
+	if node_settings.Settings.RewardAddress == "" {
+		errMess = append(errMess, "reward address (1-6)")
+	}
+	if node_settings.Settings.MyAddress == "" {
+		errMess = append(errMess, "node address (1-5)")
+	}
+	return strings.Join(errMess, ", ")
 }
 
 func Launch() {
@@ -92,12 +104,22 @@ func Launch() {
 	for NodeLaunched {
 		command_executor.ComContr.ClearConsole()
 		println("Choose a variant and press the right button")
-		println("1. Launch node")
-		println("2. Manage settings")
-		println("3. Exit")
+
+		launchMesErr := getNodeLaunchSettingsError()
+		if launchMesErr != "" {
+			fmt.Printf("Can't start a node. You need to manage: %s\n", launchMesErr)
+		}
+
+		var btn int = 1
+		if launchMesErr == "" {
+			fmt.Printf("%d. Launch node\n", btn)
+			btn++
+		}
+		fmt.Printf("%d. Manage settings\n", btn)
+		fmt.Printf("%d. Exit\n", btn+1)
 
 		fmt.Scan(&variant)
-		funcChoser(variant)
+		funcChoser(variant, launchMesErr == "")
 	}
 
 	command_executor.ComContr.ClearConsole()

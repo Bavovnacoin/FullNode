@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"os"
 	"regexp"
 	"runtime"
@@ -18,6 +19,7 @@ type NodeSettings struct {
 	NodeType            uint     // For now there's two types: full node, audithor
 	OtherNodesAddresses []string // Addresses of other nodes to communicate
 	MyAddress           string
+	RewardAddress       string
 
 	NodeTypesNames []string `json:"-"`
 }
@@ -101,4 +103,19 @@ func (ns *NodeSettings) AddAddress(address string) bool {
 
 func (ns *NodeSettings) RemAddress(ind int) {
 	ns.OtherNodesAddresses = append(ns.OtherNodesAddresses[:ind], ns.OtherNodesAddresses[ind+1:]...)
+}
+
+func (ns *NodeSettings) GetRewAddress() string {
+	if ns.RewardAddress == "" {
+		return "none"
+	}
+	return ns.RewardAddress
+}
+
+func (ns *NodeSettings) IsRewAddrWalid(rewAddr string) bool {
+	_, res := new(big.Int).SetString(rewAddr, 16)
+	if len(rewAddr) != 40 || !res {
+		return false
+	}
+	return true
 }

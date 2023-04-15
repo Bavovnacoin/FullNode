@@ -3,6 +3,7 @@ package blockchain
 import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
+	"bavovnacoin/node_controller/node_settings"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
 	"fmt"
@@ -24,7 +25,7 @@ var AllowCreateBlock bool = true
 var PauseBlockAddition bool
 var BreakBlockAddition bool
 
-var RewardAddress string = "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
+var RewardAddress string = node_settings.Settings.RewardAddress
 
 func GetChainwork(block Block) *big.Int {
 	if LastBlock.Chainwork == nil {
