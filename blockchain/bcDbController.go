@@ -9,21 +9,21 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func SetBcHeight(height uint64) bool {
+func SetBcHeight(height uint64, chainId uint64) bool {
 	byteVal, isConv := byteArr.ToByteArr(height)
 	if !isConv {
 		return false
 	}
-	return dbController.DB.SetValue("bcLength", byteVal)
+	return dbController.DB.SetValue("bcLength"+fmt.Sprintf("%d:", chainId), byteVal)
 }
 
-func IncrBcHeight() {
+func IncrBcHeight(chainId uint64) {
 	BcLength++
-	SetBcHeight(BcLength)
+	SetBcHeight(BcLength, chainId)
 }
 
-func GetBcHeight() (uint64, bool) {
-	value, isGotten := dbController.DB.GetValue("bcLength")
+func GetBcHeight(chainId uint64) (uint64, bool) {
+	value, isGotten := dbController.DB.GetValue("bcLength" + fmt.Sprintf("%d:", chainId))
 	if !isGotten {
 		return 0, false
 	}

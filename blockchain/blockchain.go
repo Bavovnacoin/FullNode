@@ -182,7 +182,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 }
 
 func InitBlockchain() {
-	BcLength, _ = GetBcHeight()
+	BcLength, _ = GetBcHeight(0)
 	if BcLength != 0 {
 		LastBlock, _ = GetBlock(BcLength-1, 0)
 
@@ -208,7 +208,7 @@ func FormGenesisBlock() Block {
 		log.Println("Block is not added")
 		println()
 	}
-	IncrBcHeight()
+	IncrBcHeight(0)
 	return genesisBlock
 }
 

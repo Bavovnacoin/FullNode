@@ -32,7 +32,7 @@ func StartSync(printLog bool, startBlock uint64) bool {
 				checkpCorresp = checkForBlockCorrespondence(blockReqInd, blocks[i])
 				if checkpCorresp {
 					blockchain.AddBlockToBlockchain(blocks[i], 0) // TODO: make synchronization with altchains
-					blockchain.IncrBcHeight()
+					blockchain.IncrBcHeight(0)                    // TODO: make synchronization with altchains (height)
 					blockReqInd++
 				} else {
 					if printLog {

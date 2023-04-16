@@ -66,7 +66,7 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 		if allowPrint {
 			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(blockchain.BcLength+1) + "\n")
 		}
-		blockchain.IncrBcHeight()
+		blockchain.IncrBcHeight(0)
 		isBlockAdded = true
 		println()
 		networking.ProposeBlockToSettingsNodes(blockchain.CreatedBlock, "")

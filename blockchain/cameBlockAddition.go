@@ -58,10 +58,12 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	}
 
 	// Decide to what chain add a new block
+	var chainId uint64
 	for i := 0; i < len(blocks); i++ {
 		blockHash := hashing.SHA1(BlockHeaderToString(blocks[i].block))
 		if blockHash == block.HashPrevBlock {
-			AddBlockToBlockchain(block, blocks[i].chainId)
+			chainId = blocks[i].chainId
+			AddBlockToBlockchain(block, chainId)
 		}
 	}
 
@@ -70,7 +72,7 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	}
 
 	log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1))
-	IncrBcHeight()
+	IncrBcHeight(chainId)
 
 	println("Came block is added!")
 	println()
