@@ -25,8 +25,6 @@ var AllowCreateBlock bool = true
 var PauseBlockAddition bool
 var BreakBlockAddition bool
 
-var RewardAddress string = node_settings.Settings.RewardAddress
-
 func GetChainwork(block Block) *big.Int {
 	if LastBlock.Chainwork == nil {
 		LastBlock.Chainwork = big.NewInt(0)
@@ -196,7 +194,7 @@ func FormGenesisBlock() Block {
 	log.Println("Creating initial block")
 
 	var rewardAdr byteArr.ByteArr
-	rewardAdr.SetFromHexString(RewardAddress, 20)
+	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
 	genesisBlock := CreateBlock(rewardAdr, true)
 	genesisBlock.Bits = GetBits(true)
 	genesisBlock.Chainwork = GetChainwork(genesisBlock)

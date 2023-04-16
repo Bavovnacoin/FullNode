@@ -5,6 +5,7 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/networking"
 	"bavovnacoin/node_controller/command_executor"
+	"bavovnacoin/node_controller/node_settings"
 	"fmt"
 	"log"
 	"time"
@@ -35,7 +36,7 @@ func AddBlock(allowLogPrint bool) bool {
 
 func CreateBlockLog(bits uint64, allowPrint bool) {
 	var rewardAdr byteArr.ByteArr
-	rewardAdr.SetFromHexString(blockchain.RewardAddress, 20)
+	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
 	newBlock := blockchain.CreateBlock(rewardAdr, allowPrint)
 	newBlock.Bits = bits
 	newBlock.Chainwork = blockchain.GetChainwork(newBlock)

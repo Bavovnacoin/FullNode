@@ -104,7 +104,6 @@ func Launch() {
 	for NodeLaunched {
 		command_executor.ComContr.ClearConsole()
 		println("Choose a variant and press the right button")
-
 		launchMesErr := getNodeLaunchSettingsError()
 		if launchMesErr != "" {
 			fmt.Printf("Can't start a node. You need to manage: %s\n", launchMesErr)
