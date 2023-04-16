@@ -18,10 +18,10 @@ func IsTxInMempool(txHash byteArr.ByteArr) bool {
 func AreInputsInMempool(inputs []transaction.Input) bool {
 	for _, inp := range inputs {
 		if MempInputHashes[inp.GetHash()] {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 func AddInputsToMempInpHashes(inputs []transaction.Input) {
@@ -37,11 +37,10 @@ func RemInputsFromMempInpHashes(inputs []transaction.Input) {
 }
 
 func AddTxToMempool(tx transaction.Transaction, allowVerify bool) bool {
-	if allowVerify && !(transaction.VerifyTransaction(tx) || AreInputsInMempool(tx.Inputs)) {
+	if allowVerify && (!transaction.VerifyTransaction(tx) || AreInputsInMempool(tx.Inputs)) {
 		return false
 	} else {
 		insInd := findIndexSorted(transaction.GetTxFee(tx), tx.Locktime)
-
 		if len(Mempool) != 0 {
 			if insInd < len(Mempool) {
 				Mempool = append(Mempool[:insInd+1], Mempool[insInd:]...)

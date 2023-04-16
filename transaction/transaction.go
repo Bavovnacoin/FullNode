@@ -36,7 +36,7 @@ type UtxoForInput struct {
 func (inp *Input) GetHash() string {
 	serField := ""
 	serField += inp.TxHash.ToHexString()
-	serField += inp.ScriptSig.ToHexString()
+	//serField += inp.ScriptSig.ToHexString()
 	serField += fmt.Sprint(inp.OutInd)
 	return hashing.SHA1(serField)
 }
