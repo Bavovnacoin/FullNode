@@ -248,6 +248,30 @@ func PrintTransaction(tx Transaction) {
 	println(inpValue-outValue, ")")
 }
 
+func (tx *Transaction) IsDoubleSpendingAttack() bool {
+	var inpValue uint64
+	var outValue uint64
+	for i := 0; i < len(tx.Inputs); i++ {
+		utxo, res := txo.GetUtxo(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
+		if !res {
+			return true
+		}
+
+		curVal := utxo.Value
+		inpValue += curVal
+	}
+
+	for i := 0; i < len(tx.Outputs); i++ {
+		outValue += tx.Outputs[i].Value
+	}
+
+	// Checking presence of coins to be spent
+	if inpValue < outValue {
+		return true
+	}
+	return false
+}
+
 // Verifies transaction
 func VerifyTransaction(tx Transaction) bool {
 	if tx.Version == 0 {

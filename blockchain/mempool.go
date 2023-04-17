@@ -84,8 +84,15 @@ func GetTransactionsFromMempool(coinbaseTxSize int) []transaction.Transaction {
 
 	for MempoolInd := 0; allSize < 1000000-coinbaseTxSize && MempoolInd < len(Mempool); MempoolInd++ {
 		if Mempool[MempoolInd].Locktime < uint(BcLength) {
-			allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
-			txForBlock = append(txForBlock, Mempool[MempoolInd])
+			if !Mempool[MempoolInd].IsDoubleSpendingAttack() {
+				allSize += transaction.ComputeTxSize(Mempool[MempoolInd])
+				txForBlock = append(txForBlock, Mempool[MempoolInd])
+			} else {
+				RemInputsFromMempInpHashes(Mempool[MempoolInd].Inputs)
+				delete(MempTxHashes, hashing.SHA1(transaction.GetCatTxFields(Mempool[MempoolInd])))
+				Mempool = append(Mempool[:MempoolInd], Mempool[MempoolInd+1:]...)
+				MempoolInd--
+			}
 		}
 	}
 	return txForBlock
