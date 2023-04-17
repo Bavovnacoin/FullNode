@@ -14,7 +14,6 @@ var TransitionFactor = big.NewFloat(1.5)
 
 	What do we do with the current mempool state (transactions in it are reffered to the old chain)
 	Nothing!
-	TODO: add a double spending tx check when creating a block
 */
 func reorganize(chainId uint64, height uint64) bool {
 	// TODO: add "forkHeight" which indicates where does the block fork happened and start from that height
@@ -32,7 +31,6 @@ func reorganize(chainId uint64, height uint64) bool {
 }
 
 func TryReorganize() bool {
-	// TODO: check chainwork of all chains and decide if there is a need of reorganization.
 	lastBlocks, chainIds, heights := getAllLastBlocks()
 	var mainchainArrId int = -1
 

@@ -57,6 +57,7 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 		blocks, _ = GetBlocksOnHeight(BcLength - 1)
 		AddBlockToBlockchain(block, uint64(len(blocks)), false)
 		chainId = uint64(len(blocks))
+		SetBlockForkHeight(BcLength, chainId)
 	} else {
 		// Decide to what chain add a new block
 		for i := 0; i < len(blocks); i++ {

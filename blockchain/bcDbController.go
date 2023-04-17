@@ -113,3 +113,25 @@ func GetBlocksOnHeight(height uint64) ([]BlockChainId, bool) {
 
 	return blockArr, true
 }
+
+func SetBlockForkHeight(height uint64, chainId uint64) bool {
+	byteVal, isConv := byteArr.ToByteArr(height)
+	if !isConv {
+		return false
+	}
+	return dbController.DB.SetValue("forkHeight"+fmt.Sprintf("%d:", chainId), byteVal)
+}
+
+func GetBlockForkHeight(chainId uint64) (uint64, bool) {
+	value, isGotten := dbController.DB.GetValue("forkHeight" + fmt.Sprintf("%d:", chainId))
+	if !isGotten {
+		return 0, false
+	}
+
+	var len uint64
+	isConv := byteArr.FromByteArr(value, &len)
+	if !isConv {
+		return 0, false
+	}
+	return len, true
+}
