@@ -25,12 +25,12 @@ var AllowCreateBlock bool = true
 var PauseBlockAddition bool
 var BreakBlockAddition bool
 
-func GetChainwork(block Block) *big.Int {
-	if LastBlock.Chainwork == nil {
-		LastBlock.Chainwork = big.NewInt(0)
+func GetChainwork(block Block, lastBlock Block) *big.Int {
+	if lastBlock.Chainwork == nil {
+		lastBlock.Chainwork = big.NewInt(0)
 	}
-	//fmt.Printf("%d\n", getCurrBlockChainwork(block))
-	return new(big.Int).Add(LastBlock.Chainwork, getCurrBlockChainwork(block))
+
+	return new(big.Int).Add(lastBlock.Chainwork, getCurrBlockChainwork(block))
 }
 
 // Warning: it is considered that the block is valid
@@ -92,10 +92,11 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 
 func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
 	var lastBlockHashes []string
-	if int(BcLength) != 0 {
-		var prevBlocks []BlockChainId
+	var prevBlocks []BlockChainId
 
-		if uint64(height) == BcLength {
+	if int(BcLength) != 0 {
+
+		if uint64(height) == BcLength { //TODO: check this
 			prevBlocks = append(prevBlocks, BlockChainId{block: LastBlock})
 		} else {
 			var isBlockFound bool
@@ -110,9 +111,26 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 			lastBlockHashes = append(lastBlockHashes, hashing.SHA1(BlockHeaderToString(prevBlocks[i].block)))
 		}
 	} else {
+		prevBlocks = append(prevBlocks, BlockChainId{block: LastBlock})
 		lastBlockHashes = append(lastBlockHashes, "0000000000000000000000000000000000000000")
 	}
 	merkleRoot := GenMerkleRoot(block.Transactions)
+
+	var lastBlock Block
+
+	// Check block hash values
+	var hashFound bool
+	for i := 0; i < len(lastBlockHashes); i++ {
+		if block.HashPrevBlock == lastBlockHashes[i] {
+			lastBlock = prevBlocks[i].block
+			hashFound = true
+			break
+		}
+	}
+	if !hashFound {
+		println("Hash problem")
+		return false
+	}
 
 	// Check bits value
 	if checkBits {
@@ -143,19 +161,6 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 		return false
 	}
 
-	// Check block hash values
-	var hashFound bool
-	for i := 0; i < len(lastBlockHashes); i++ {
-		if block.HashPrevBlock == lastBlockHashes[i] {
-			hashFound = true
-			break
-		}
-	}
-	if !hashFound {
-		println("Hash problem")
-		return false
-	}
-
 	// Check Merkle root
 	if block.MerkleRoot != merkleRoot {
 		println("Merkle root problem")
@@ -173,7 +178,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	}
 
 	// Check chainwork
-	chainwork := GetChainwork(block)
+	chainwork := GetChainwork(block, lastBlock)
 	if block.Chainwork.Cmp(chainwork) != 0 {
 		println("Chainwork problem")
 		println(fmt.Sprintf("%d - %d", chainwork, block.Chainwork))
@@ -199,7 +204,7 @@ func FormGenesisBlock() Block {
 	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
 	genesisBlock := CreateBlock(rewardAdr, true)
 	genesisBlock.Bits = GetBits(true)
-	genesisBlock.Chainwork = GetChainwork(genesisBlock)
+	genesisBlock.Chainwork = GetChainwork(genesisBlock, LastBlock)
 	genesisBlock, _ = MineBlock(genesisBlock, 1, true)
 	genesisBlock.Bits = STARTBITS
 

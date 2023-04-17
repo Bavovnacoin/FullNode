@@ -39,7 +39,7 @@ func CreateBlockLog(bits uint64, allowPrint bool) {
 	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
 	newBlock := blockchain.CreateBlock(rewardAdr, allowPrint)
 	newBlock.Bits = bits
-	newBlock.Chainwork = blockchain.GetChainwork(newBlock)
+	newBlock.Chainwork = blockchain.GetChainwork(newBlock, blockchain.LastBlock)
 	var miningRes bool
 	newBlock, miningRes = blockchain.MineBlock(newBlock, 1, allowPrint)
 

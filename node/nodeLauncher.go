@@ -52,6 +52,9 @@ func LaunchFullNode() {
 			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
 			fmt.Scan(&input)
 			if input == "Yes" {
+				// NodeLaunched = true
+				// blockchain.AllowCreateBlock = true
+				// blockchain.AllowMining = true
 				break
 			} else if input == "back" {
 				return
