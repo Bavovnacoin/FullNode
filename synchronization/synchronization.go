@@ -31,8 +31,8 @@ func StartSync(printLog bool, startBlock uint64) bool {
 			for i := 0; i < len(blocks); i++ {
 				checkpCorresp = checkForBlockCorrespondence(blockReqInd, blocks[i])
 				if checkpCorresp {
-					blockchain.AddBlockToBlockchain(blocks[i], 0) // TODO: make synchronization with altchains
-					blockchain.IncrBcHeight(0)                    // TODO: make synchronization with altchains (height)
+					blockchain.AddBlockToBlockchain(blocks[i], 0, true) // TODO: make synchronization with altchains (swap true to false in that case)
+					blockchain.IncrBcHeight(0)                          // TODO: make synchronization with altchains (height)
 					blockReqInd++
 				} else {
 					if printLog {

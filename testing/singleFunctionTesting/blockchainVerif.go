@@ -156,7 +156,7 @@ func (bvt *BlockchainVerifTest) genBlocks() {
 		}
 
 		if blockchain.VerifyBlock(block, int(blockchain.BcLength), false, false) {
-			blockchain.AddBlockToBlockchain(block, 0)
+			blockchain.AddBlockToBlockchain(block, 0, true)
 			bvt.factBlockCorrectness = append(bvt.factBlockCorrectness, true)
 			blockchain.BcLength++
 		} else {

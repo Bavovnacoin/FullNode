@@ -36,6 +36,27 @@ func GetBcHeight(chainId uint64) (uint64, bool) {
 	return len, true
 }
 
+func getAllLastBlocks() ([]Block, []uint64, []uint64) {
+	var heights []uint64
+	var chainIds []uint64
+	var height uint64
+
+	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("bcLength")), nil)
+	for iter.Next() {
+		byteArr.FromByteArr(iter.Value(), &height)
+		heights = append(heights, height)
+		chainIds = append(chainIds, getChainIdFromKey(string(iter.Key())))
+	}
+	iter.Release()
+
+	var blocks []Block
+	for i := 0; i < len(heights); i++ {
+		block, _ := GetBlock(heights[i]-1, chainIds[i])
+		blocks = append(blocks, block)
+	}
+	return blocks, chainIds, heights
+}
+
 func WriteBlock(height uint64, chainId uint64, block Block) bool {
 	byteVal, isConv := byteArr.ToByteArr(block)
 	if !isConv {

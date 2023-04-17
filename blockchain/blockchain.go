@@ -34,7 +34,7 @@ func GetChainwork(block Block) *big.Int {
 }
 
 // Warning: it is considered that the block is valid
-func AddBlockToBlockchain(block Block, chainId uint64) bool {
+func AddBlockToBlockchain(block Block, chainId uint64, allowManageTxo bool) bool {
 	for PauseBlockAddition {
 		time.Sleep(10 * time.Millisecond)
 		if BreakBlockAddition {
@@ -43,18 +43,20 @@ func AddBlockToBlockchain(block Block, chainId uint64) bool {
 		}
 	}
 
-	for i := 0; i < len(block.Transactions); i++ {
-		txInpList := block.Transactions[i].Inputs
+	if allowManageTxo {
+		for i := 0; i < len(block.Transactions); i++ {
+			txInpList := block.Transactions[i].Inputs
 
-		for j := 0; j < len(txInpList); j++ {
-			txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
-		}
+			for j := 0; j < len(txInpList); j++ {
+				txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
+			}
 
-		txOutList := block.Transactions[i].Outputs
-		for j := 0; j < len(txOutList); j++ {
-			var txByteArr byteArr.ByteArr
-			txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
-			txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
+			txOutList := block.Transactions[i].Outputs
+			for j := 0; j < len(txOutList); j++ {
+				var txByteArr byteArr.ByteArr
+				txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
+				txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
+			}
 		}
 	}
 
@@ -202,7 +204,7 @@ func FormGenesisBlock() Block {
 	genesisBlock.Bits = STARTBITS
 
 	if VerifyBlock(genesisBlock, int(BcLength), true, false) {
-		AddBlockToBlockchain(genesisBlock, 0)
+		AddBlockToBlockchain(genesisBlock, 0, true)
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
 		log.Println("Block is not added")

@@ -50,20 +50,25 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	AllowMining = false
 	BreakBlockAddition = true
 	PauseBlockAddition = false
+	var chainId uint64
 
 	var blocks []BlockChainId
 	if CreatedBlock.Time <= block.Time {
 		blocks, _ = GetBlocksOnHeight(BcLength - 1)
-		AddBlockToBlockchain(block, uint64(len(blocks)))
-	}
-
-	// Decide to what chain add a new block
-	var chainId uint64
-	for i := 0; i < len(blocks); i++ {
-		blockHash := hashing.SHA1(BlockHeaderToString(blocks[i].block))
-		if blockHash == block.HashPrevBlock {
-			chainId = blocks[i].chainId
-			AddBlockToBlockchain(block, chainId)
+		AddBlockToBlockchain(block, uint64(len(blocks)), false)
+		chainId = uint64(len(blocks))
+	} else {
+		// Decide to what chain add a new block
+		for i := 0; i < len(blocks); i++ {
+			blockHash := hashing.SHA1(BlockHeaderToString(blocks[i].block))
+			if blockHash == block.HashPrevBlock {
+				chainId = blocks[i].chainId
+				allowManageTxo := false
+				if chainId == 0 {
+					allowManageTxo = true
+				}
+				AddBlockToBlockchain(block, chainId, allowManageTxo)
+			}
 		}
 	}
 
