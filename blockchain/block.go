@@ -25,7 +25,6 @@ type Block struct {
 	Transactions  []transaction.Transaction
 }
 
-// TODO: add Time to header
 func BlockHeaderToString(block Block) string {
 	str := ""
 	str += fmt.Sprint(block.Blocksize)
@@ -33,8 +32,9 @@ func BlockHeaderToString(block Block) string {
 	str += block.HashPrevBlock
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
-	str += fmt.Sprint(block.Nonce)
+	//str += fmt.Sprint(block.Time) // TODO: add Time to header
 	//str += block.Chainwork.String() //TODO: do not forget to decomment this section after decommenting nonce value in genesis block!
+	str += fmt.Sprint(block.Nonce)
 	return str
 }
 
