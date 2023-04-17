@@ -95,16 +95,11 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	var prevBlocks []BlockChainId
 
 	if int(BcLength) != 0 {
-
-		if uint64(height) == BcLength { //TODO: check this
-			prevBlocks = append(prevBlocks, BlockChainId{block: LastBlock})
-		} else {
-			var isBlockFound bool
-			prevBlocks, isBlockFound = GetBlocksOnHeight(uint64(height) - 1)
-			if !isBlockFound {
-				println("Block found problem")
-				return false
-			}
+		var isBlockFound bool
+		prevBlocks, isBlockFound = GetBlocksOnHeight(uint64(height) - 1)
+		if !isBlockFound {
+			println("Block found problem")
+			return false
 		}
 
 		for i := 0; i < len(prevBlocks); i++ {

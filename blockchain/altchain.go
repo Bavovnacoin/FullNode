@@ -16,7 +16,7 @@ var TransitionFactor = big.NewFloat(1.5)
 	Nothing!
 */
 func reorganize(chainId uint64, height uint64) bool {
-	// TODO: add "forkHeight" which indicates where does the block fork happened and start from that height
+	// Use "forkheight"
 	// for true {
 	// 	altchBlock, isAltBlockGotten := GetBlock(height-1, chainId)
 	// 	if !isAltBlockGotten {
