@@ -6,7 +6,7 @@ var TransitionFactor = big.NewFloat(1.5)
 
 /*
 	Reorganize procedure:
-	1. store altchain and mainchain blocks;
+	1. store altchain and mainchain blocks; (DONE)
 	2. Rem utxo from mainchain, add from altchain
 	3. delete them (do not delete from mainchain if altchain is higher then mainchain);
 	4. add under a new chainId and height;
@@ -17,7 +17,17 @@ var TransitionFactor = big.NewFloat(1.5)
 	TODO: add a double spending tx check when creating a block
 */
 func reorganize(chainId uint64, height uint64) bool {
+	// TODO: add "forkHeight" which indicates where does the block fork happened and start from that height
+	// for true {
+	// 	altchBlock, isAltBlockGotten := GetBlock(height-1, chainId)
+	// 	if !isAltBlockGotten {
+	// 		return true
+	// 	}
 
+	// 	mainchBlock, isMnBlockGotten := GetBlock(height-1, 0)
+
+	// 	height--
+	// }
 	return true
 }
 
