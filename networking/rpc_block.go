@@ -62,6 +62,7 @@ func (l *Listener) AddProposedBlock(blockProposalByteArr []byte, reply *Reply) e
 
 	if blockchain.TryCameBlockToAdd(blockProp.Block, GetSettingsNodesTime()) {
 		*reply = Reply{[]byte{1}}
+		ProposeBlockToSettingsNodes(blockProp.Block, blockProp.Address)
 	} else {
 		*reply = Reply{[]byte{0}}
 	}

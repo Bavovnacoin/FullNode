@@ -46,7 +46,7 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 		println("Came block is NOOTTT added!")
 		return false
 	}
-	// TODO: send block to other nodes except the node from what we get the block
+
 	AllowMining = false
 	BreakBlockAddition = true
 	PauseBlockAddition = false
