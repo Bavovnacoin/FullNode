@@ -29,6 +29,12 @@ func GetUtxo(outTxHash byteArr.ByteArr, outInd int) (TXO, bool) {
 	return utxo, false
 }
 
+func RemUtxo(OutTxHash byteArr.ByteArr, OutTxInd, blockHeight uint64) bool {
+	key := "utxo" + hashing.SHA1(OutTxHash.ToHexString()+fmt.Sprint(OutTxInd)+fmt.Sprint(blockHeight))
+	res := dbController.DB.RemoveValue(key)
+	return res
+}
+
 func RestoreCoinDatabase() bool {
 	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("utxo")), nil)
 	for iter.Next() {
@@ -51,20 +57,28 @@ func RestoreCoinDatabase() bool {
 	return true
 }
 
-func RemUtxo(OutTxHash byteArr.ByteArr, OutTxInd, blockHeight uint64) bool {
-	key := "utxo" + hashing.SHA1(OutTxHash.ToHexString()+fmt.Sprint(OutTxInd)+fmt.Sprint(blockHeight))
-	res := dbController.DB.RemoveValue(key)
-	return res
-}
-
 func SetTxo(txo TXO) bool {
 	byteVal, isConv := byteArr.ToByteArr(txo)
 	if !isConv {
-		println("Problem with conversion txo")
 		return false
 	}
 	key := "txo" + hashing.SHA1(txo.OutTxHash.ToHexString()+fmt.Sprint(txo.TxOutInd)+fmt.Sprint(txo.BlockHeight))
 	return dbController.DB.SetValue(key, byteVal)
+}
+
+func GetTxo(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) (TXO, bool) {
+	utxoByteArr, isValid := dbController.DB.GetValue("txo" + hashing.SHA1(outTxHash.ToHexString()+fmt.Sprint(outInd)+fmt.Sprint(BlockHeight)))
+	var txo TXO
+	if isValid {
+		byteArr.FromByteArr(utxoByteArr, &txo)
+		return txo, true
+	}
+	return txo, false
+}
+
+func RemoveTxo(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) bool {
+	return dbController.DB.Db.Delete([]byte("txo"+
+		hashing.SHA1(outTxHash.ToHexString()+fmt.Sprint(outInd)+fmt.Sprint(BlockHeight))), nil) == nil
 }
 
 func IsOutAddrExist(addr byteArr.ByteArr) bool {

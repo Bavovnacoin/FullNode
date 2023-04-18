@@ -1,33 +1,103 @@
 package blockchain
 
-import "math/big"
+import (
+	"bavovnacoin/byteArr"
+	"bavovnacoin/hashing"
+	"bavovnacoin/transaction"
+	"bavovnacoin/txo"
+	"math/big"
+)
 
 var TransitionFactor = big.NewFloat(1.5)
 
+func returnBlockTxo(block Block, height uint64) {
+	for i := 0; i < len(block.Transactions); i++ {
+		var txByteArr byteArr.ByteArr
+		txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[i])), 20)
+
+		outList := block.Transactions[i].Outputs
+		for j := 0; j < len(outList); j++ {
+			for k := 0; k < len(txo.CoinDatabase); k++ {
+				if txo.CoinDatabase[k].OutTxHash.IsEqual(txByteArr) &&
+					txo.CoinDatabase[k].TxOutInd == uint64(j) {
+					txo.CoinDatabase = append(txo.CoinDatabase[:k], txo.CoinDatabase[k+1:]...)
+					txo.RemUtxo(txByteArr, uint64(j), height)
+					break
+				}
+			}
+		}
+
+		inpList := block.Transactions[i].Inputs
+		for j := 0; j < len(inpList); j++ {
+			txoToAdd, _ := txo.GetTxo(inpList[j].TxHash, inpList[j].OutInd, height)
+			txo.RemoveTxo(inpList[j].TxHash, inpList[j].OutInd, height)
+
+			txo.AddUtxo(txoToAdd.OutTxHash, txoToAdd.TxOutInd, txoToAdd.Value, txoToAdd.OutAddress, txoToAdd.BlockHeight)
+			txo.CoinDatabase = append(txo.CoinDatabase, txoToAdd)
+		}
+	}
+}
+
+func addAltchBlockTxo(txs []transaction.Transaction) {
+	for i := 0; i < len(txs); i++ {
+		txInpList := txs[i].Inputs
+
+		for j := 0; j < len(txInpList); j++ {
+			txo.Spend(txInpList[j].TxHash, uint64(txInpList[j].OutInd))
+		}
+
+		txOutList := txs[i].Outputs
+		for j := 0; j < len(txOutList); j++ {
+			var txByteArr byteArr.ByteArr
+			txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(txs[i])), 20)
+			txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
+		}
+	}
+}
+
 /*
-	Reorganize procedure:
-	1. store altchain and mainchain blocks; (DONE)
-	2. Rem utxo from mainchain, add from altchain
-	3. delete them (do not delete from mainchain if altchain is higher then mainchain);
-	4. add under a new chainId and height;
-	5. swap heights in the end.
+Reorganize procedure:
+1. Store altchain and mainchain blocks; (DONE)
+2. Rem utxo from mainchain (inputs -> (rem txo, add utxo), outputs -> remove utxo), add from altchain (DONE)
+3. Delete them (do not delete from mainchain if altchain is higher then mainchain); (DONE)
+4. Add under a new chainId and height; (DONE)
+5. Swap heights in the end.
 
-	What do we do with the current mempool state (transactions in it are reffered to the old chain)
-	Nothing!
+What do we do with the current mempool state (transactions in it are reffered to the old chain)
+Nothing! - Solved by double spending check
 */
-func reorganize(chainId uint64, height uint64) bool {
-	// Use "forkheight"
-	// for true {
-	// 	altchBlock, isAltBlockGotten := GetBlock(height-1, chainId)
-	// 	if !isAltBlockGotten {
-	// 		return true
-	// 	}
+func reorganize(chainId uint64, altchHeight uint64) bool {
+	blockIdToGet := altchHeight
+	if altchHeight < BcLength {
+		blockIdToGet = BcLength
+	}
 
-	// 	mainchBlock, isMnBlockGotten := GetBlock(height-1, 0)
+	forkHeight, _ := GetBlockForkHeight(chainId)
+	for ; forkHeight < blockIdToGet; forkHeight++ {
+		// Get blocks to swap
+		altChBlock, isAltGotten := GetBlock(forkHeight-1, chainId)
+		mainChBlock, isMainGotten := GetBlock(forkHeight-1, chainId)
 
-	// 	height--
-	// }
-	return true
+		// Manage outputs and blocks
+		if isMainGotten {
+			returnBlockTxo(mainChBlock, forkHeight)
+			RemBlock(forkHeight, 0)
+			WriteBlock(forkHeight, chainId, mainChBlock)
+		}
+
+		if isAltGotten {
+			addAltchBlockTxo(altChBlock.Transactions)
+			RemBlock(forkHeight, chainId)
+			WriteBlock(forkHeight, 0, altChBlock)
+			LastBlock = altChBlock
+		}
+	}
+
+	SetBcHeight(altchHeight, 0)
+	SetBcHeight(BcLength, chainId)
+	BcLength = altchHeight
+
+	return false
 }
 
 func TryReorganize() bool {
@@ -48,7 +118,7 @@ func TryReorganize() bool {
 
 	biggestFact := TransitionFactor
 	biggestFactChainId := uint64(0)
-	var biggestChainIdHeight uint64
+	biggestChainIdHeight := uint64(0)
 	allowReorg := false
 
 	mainchWork := new(big.Float).SetInt(lastBlocks[mainchainArrId].Chainwork)

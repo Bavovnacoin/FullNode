@@ -65,6 +65,10 @@ func WriteBlock(height uint64, chainId uint64, block Block) bool {
 	return dbController.DB.SetValue("bc"+fmt.Sprint(height)+":"+fmt.Sprint(chainId), byteVal)
 }
 
+func RemBlock(height uint64, chainId uint64) bool {
+	return dbController.DB.Db.Delete([]byte("bc"+fmt.Sprint(height)+":"+fmt.Sprint(chainId)), nil) == nil
+}
+
 func GetBlock(height uint64, chainId uint64) (Block, bool) {
 	var block Block
 
