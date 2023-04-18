@@ -17,6 +17,7 @@ import (
 )
 
 type BlockchainVerifTest struct {
+	SingleFunctionTesting
 	blockAmmount          int // Total ammount of blocks
 	incorrectblockAmmount int // Total ammount of incorrect blocks
 	txPerBlockAmmount     int // Ammount of transactions per block
@@ -26,12 +27,6 @@ type BlockchainVerifTest struct {
 
 	source rand.Source
 	random *rand.Rand
-}
-
-func (bvt *BlockchainVerifTest) genBlockTestAccounts(ammount int) {
-	for i := 0; i < ammount; i++ {
-		account.Wallet = append(account.Wallet, account.GenAccount(fmt.Sprint(len(account.Wallet))))
-	}
 }
 
 func (bvt *BlockchainVerifTest) createValidTx() transaction.Transaction {
@@ -198,7 +193,7 @@ func (bvt *BlockchainVerifTest) printResults() {
 	log.Printf("Test result: %d\\%d. %s\n", bvt.blockAmmount-resultNotMatchedCounter, bvt.blockAmmount, result)
 }
 
-func (bvt *BlockchainVerifTest) BlockchainVerefication(blockAmmount int, incorrectblockAmmount int, txPerBlockAmmount int) {
+func (bvt *BlockchainVerifTest) Launch(blockAmmount int, incorrectblockAmmount int, txPerBlockAmmount int) {
 	bvt.blockAmmount = blockAmmount
 	bvt.incorrectblockAmmount = incorrectblockAmmount
 	bvt.txPerBlockAmmount = txPerBlockAmmount

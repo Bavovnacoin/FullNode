@@ -90,6 +90,7 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 	return block, miningRes
 }
 
+// TODO: remove "println" functions
 func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
 	var lastBlockHashes []string
 	var prevBlocks []BlockChainId

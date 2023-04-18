@@ -33,6 +33,20 @@ func NodeProcess() {
 	}
 }
 
+func BlockGen(allowCommandHandler bool) {
+	if blockchain.BcLength == 0 {
+		genBlock := blockchain.FormGenesisBlock()
+		networking.ProposeBlockToSettingsNodes(genBlock, "")
+	}
+
+	if allowCommandHandler {
+		go NodeProcess()
+		node_controller.CommandHandler()
+	} else {
+		NodeProcess()
+	}
+}
+
 func LaunchFullNode() {
 	command_executor.ComContr.FullNodeWorking = true
 	dbController.DB.OpenDb()
@@ -64,13 +78,7 @@ func LaunchFullNode() {
 		log.Println("Db synchronization done")
 	}
 
-	if blockchain.BcLength == 0 {
-		genBlock := blockchain.FormGenesisBlock()
-		networking.ProposeBlockToSettingsNodes(genBlock, "")
-	}
-
-	go NodeProcess()
-	node_controller.CommandHandler()
+	BlockGen(true)
 }
 
 func funcChoser(variant string, isNodeLaunchAllowed bool) {

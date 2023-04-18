@@ -1,0 +1,6 @@
+=============== Apr 18, 2023 (EEST) ===============
+22:13:04.078918 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+22:13:04.277481 db@open opening
+22:13:04.279402 version@stat F·[] S·0B[] Sc·[]
+22:13:04.317322 db@janitor F·2 G·0
+22:13:04.317322 db@open done T·39.8415ms
