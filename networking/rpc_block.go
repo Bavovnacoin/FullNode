@@ -82,6 +82,7 @@ func (l *Listener) GetBlockProposal(blockHashPropByteArr []byte, reply *Reply) e
 	return nil
 }
 
+// TODO: make in a single function (probability of using second funxtion directly)
 func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.Block, blockHeight uint64) bool {
 	var repl Reply
 	var blockHashProposal BlockHashProposal
