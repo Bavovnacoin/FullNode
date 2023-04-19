@@ -130,7 +130,15 @@ func (bvt *BlockchainVerifTest) genBlocks() {
 
 		var rewAddress byteArr.ByteArr
 		rewAddress.SetFromHexString(hashing.SHA1(account.Wallet[accId].KeyPairList[0].PublKey), 20)
-		block := blockchain.CreateBlock(rewAddress, false)
+
+		var prevHash string
+		if blockchain.BcLength > 0 {
+			prevHash = hashing.SHA1(blockchain.BlockHeaderToString(blockchain.LastBlock))
+		} else {
+			prevHash = "0000000000000000000000000000000000000000"
+		}
+
+		block := blockchain.CreateBlock(rewAddress, prevHash, false)
 		block.Bits = 0xf00fff14
 		block.Chainwork = blockchain.GetChainwork(block, blockchain.LastBlock)
 		block, _ = blockchain.MineBlock(block, 1, false)
@@ -152,6 +160,7 @@ func (bvt *BlockchainVerifTest) genBlocks() {
 
 		if blockchain.VerifyBlock(block, int(blockchain.BcLength), false, false) {
 			blockchain.AddBlockToBlockchain(block, 0, true)
+			blockchain.LastBlock = block
 			bvt.factBlockCorrectness = append(bvt.factBlockCorrectness, true)
 			blockchain.BcLength++
 		} else {

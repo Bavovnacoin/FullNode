@@ -102,7 +102,14 @@ func (lt *LoadTest) tryCallRandRpc() {
 
 func (lt *LoadTest) testAddBlock() bool {
 	if blockchain.AllowCreateBlock {
-		go node.CreateBlockLog(blockchain.GetBits(false), false)
+		var prevHash string
+		if blockchain.BcLength > 0 {
+			prevHash = hashing.SHA1(blockchain.BlockHeaderToString(blockchain.LastBlock))
+		} else {
+			prevHash = "0000000000000000000000000000000000000000"
+		}
+
+		go node.CreateBlockLog(blockchain.GetBits(false), prevHash, false)
 		blockchain.AllowCreateBlock = false
 	}
 

@@ -85,8 +85,8 @@ func GetBlock(height uint64, chainId uint64) (Block, bool) {
 }
 
 type BlockChainId struct {
-	block   Block
-	chainId uint64
+	Block   Block
+	ChainId uint64
 }
 
 func getChainIdFromKey(key string) uint64 {
@@ -105,8 +105,8 @@ func GetBlocksOnHeight(height uint64) ([]BlockChainId, bool) {
 
 	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("bc"+fmt.Sprint(height)+":")), nil)
 	for iter.Next() {
-		byteArr.FromByteArr(iter.Value(), &block_id.block)
-		block_id.chainId = getChainIdFromKey(string(iter.Key()))
+		byteArr.FromByteArr(iter.Value(), &block_id.Block)
+		block_id.ChainId = getChainIdFromKey(string(iter.Key()))
 		blockArr = append(blockArr, block_id)
 	}
 	iter.Release()

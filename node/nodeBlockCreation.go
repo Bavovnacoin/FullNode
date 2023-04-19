@@ -3,6 +3,7 @@ package node
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
+	"bavovnacoin/hashing"
 	"bavovnacoin/networking"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/node_controller/node_settings"
@@ -20,7 +21,14 @@ func AddBlock(allowLogPrint bool) bool {
 		if allowLogPrint {
 			log.Println("Creating a new block")
 		}
-		go CreateBlockLog(blockchain.GetBits(allowLogPrint), allowLogPrint)
+
+		var prevHash string
+		if blockchain.BcLength > 0 {
+			prevHash = hashing.SHA1(blockchain.BlockHeaderToString(blockchain.LastBlock))
+		} else {
+			prevHash = "0000000000000000000000000000000000000000"
+		}
+		go CreateBlockLog(blockchain.GetBits(allowLogPrint), prevHash, allowLogPrint)
 		blockchain.AllowCreateBlock = false
 	}
 
@@ -34,10 +42,10 @@ func AddBlock(allowLogPrint bool) bool {
 	return false
 }
 
-func CreateBlockLog(bits uint64, allowPrint bool) {
+func CreateBlockLog(bits uint64, prevHash string, allowPrint bool) {
 	var rewardAdr byteArr.ByteArr
 	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
-	newBlock := blockchain.CreateBlock(rewardAdr, allowPrint)
+	newBlock := blockchain.CreateBlock(rewardAdr, prevHash, allowPrint)
 	newBlock.Bits = bits
 	newBlock.Chainwork = blockchain.GetChainwork(newBlock, blockchain.LastBlock)
 	var miningRes bool
@@ -59,6 +67,7 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 
 	if isBlockValid {
 		blockAddRes := blockchain.AddBlockToBlockchain(blockchain.CreatedBlock, 0, true)
+		blockchain.LastBlock = blockchain.CreatedBlock
 		if !blockAddRes {
 			return false
 		}

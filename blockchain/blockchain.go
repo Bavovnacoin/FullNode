@@ -60,7 +60,6 @@ func AddBlockToBlockchain(block Block, chainId uint64, allowManageTxo bool) bool
 		}
 	}
 
-	LastBlock = block
 	WriteBlock(BcLength, chainId, block)
 
 	IsMempAdded = false
@@ -104,24 +103,23 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 		}
 
 		for i := 0; i < len(prevBlocks); i++ {
-			lastBlockHashes = append(lastBlockHashes, hashing.SHA1(BlockHeaderToString(prevBlocks[i].block)))
+			lastBlockHashes = append(lastBlockHashes, hashing.SHA1(BlockHeaderToString(prevBlocks[i].Block)))
 		}
 	} else {
-		prevBlocks = append(prevBlocks, BlockChainId{block: LastBlock})
+		prevBlocks = append(prevBlocks, BlockChainId{Block: LastBlock})
 		lastBlockHashes = append(lastBlockHashes, "0000000000000000000000000000000000000000")
 	}
 	merkleRoot := GenMerkleRoot(block.Transactions)
-
-	var lastBlock Block
 
 	// Check block hash values
 	var hashFound bool
 	for i := 0; i < len(lastBlockHashes); i++ {
 		if block.HashPrevBlock == lastBlockHashes[i] {
-			lastBlock = prevBlocks[i].block
+
 			hashFound = true
 			break
 		}
+		println(block.HashPrevBlock, lastBlockHashes[i])
 	}
 	if !hashFound {
 		println("Hash problem")
@@ -173,13 +171,13 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 		}
 	}
 
-	// Check chainwork
-	chainwork := GetChainwork(block, lastBlock)
-	if block.Chainwork.Cmp(chainwork) != 0 {
-		println("Chainwork problem")
-		println(fmt.Sprintf("%d - %d", chainwork, block.Chainwork))
-		return false
-	}
+	// TODO: remove Check chainwork
+	// chainwork := GetChainwork(block, lastBlock)
+	// if block.Chainwork.Cmp(chainwork) != 0 {
+	// 	println("Chainwork problem")
+	// 	println(fmt.Sprintf("%d - %d", chainwork, block.Chainwork))
+	// 	return false
+	// }
 
 	return true
 }
@@ -198,7 +196,7 @@ func FormGenesisBlock() Block {
 
 	var rewardAdr byteArr.ByteArr
 	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
-	genesisBlock := CreateBlock(rewardAdr, true)
+	genesisBlock := CreateBlock(rewardAdr, "0000000000000000000000000000000000000000", true)
 	genesisBlock.Bits = GetBits(true)
 	genesisBlock.Chainwork = GetChainwork(genesisBlock, LastBlock)
 	genesisBlock, _ = MineBlock(genesisBlock, 1, true)
@@ -206,6 +204,7 @@ func FormGenesisBlock() Block {
 
 	if VerifyBlock(genesisBlock, int(BcLength), true, false) {
 		AddBlockToBlockchain(genesisBlock, 0, true)
+		LastBlock = genesisBlock
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {
 		log.Println("Block is not added")
@@ -226,7 +225,7 @@ func IsBlockExists(blockHash byteArr.ByteArr, height uint64) bool {
 
 	var bcBlockHash byteArr.ByteArr
 	for i := 0; i < len(blockArr); i++ {
-		bcBlockHash.SetFromHexString(hashing.SHA1(BlockHeaderToString(blockArr[i].block)), 20)
+		bcBlockHash.SetFromHexString(hashing.SHA1(BlockHeaderToString(blockArr[i].Block)), 20)
 		if bcBlockHash.IsEqual(blockHash) {
 			println("Block is found")
 			return true

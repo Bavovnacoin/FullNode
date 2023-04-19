@@ -39,13 +39,13 @@ func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 
 func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	PauseBlockAddition = true
-	blockVer := !VerifyBlock(block, int(BcLength), true, true)
+	//blockVer := !VerifyBlock(block, int(BcLength)-1, true, true)
 
-	if blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
-		PauseBlockAddition = false
-		println("Came block is NOOTTT added!")
-		return false
-	}
+	// if blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
+	// 	PauseBlockAddition = false
+	// 	println("Came block is NOOTTT added!")
+	// 	return false
+	// }
 
 	AllowMining = false
 	BreakBlockAddition = true
@@ -53,22 +53,23 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 	var chainId uint64
 
 	var blocks []BlockChainId
-	if CreatedBlock.Time <= block.Time {
+	if CreatedBlock.Time >= block.Time {
 		blocks, _ = GetBlocksOnHeight(BcLength - 1)
-		AddBlockToBlockchain(block, uint64(len(blocks)), false)
 		chainId = uint64(len(blocks))
+		AddBlockToBlockchain(block, chainId, false)
 		SetBlockForkHeight(BcLength, chainId)
 	} else {
 		// Decide to what chain add a new block
 		for i := 0; i < len(blocks); i++ {
-			blockHash := hashing.SHA1(BlockHeaderToString(blocks[i].block))
+			blockHash := hashing.SHA1(BlockHeaderToString(blocks[i].Block))
 			if blockHash == block.HashPrevBlock {
-				chainId = blocks[i].chainId
+				chainId = blocks[i].ChainId
 				allowManageTxo := false
 				if chainId == 0 {
 					allowManageTxo = true
 				}
 				AddBlockToBlockchain(block, chainId, allowManageTxo)
+				LastBlock = block
 			}
 		}
 	}
