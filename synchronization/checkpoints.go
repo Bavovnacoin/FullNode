@@ -24,7 +24,7 @@ func setCheckpoint(height uint64, hashValue string) CheckPoint {
 
 func InitCheckpoints() {
 	checkpInd = 0
-	// Checkpoints = append(Checkpoints, setCheckpoint(2, "00051ebaef762eea0932bb97d61c76061899868d"))
+	Checkpoints = append(Checkpoints, setCheckpoint(1, "00004b3e6648b1ccaa64f45634d0c2d15c7e7c02"))
 	// Checkpoints = append(Checkpoints, setCheckpoint(5, "000ab237e87118a9c4077ae20854b304d0ca8424"))
 }
 

@@ -62,6 +62,7 @@ func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool 
 		isAdded = WriteBlock(height, chainId, block)
 		SetBlockForkHeight(height+1, chainId)
 		SetBcHeight(height+1, chainId)
+		println(1)
 	} else { // Decide to what chain attach a new block
 		blocks, chaindIds, _ := getAllLastBlocks()
 
@@ -90,7 +91,7 @@ func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool 
 
 	if isAdded {
 		if chainId == 0 {
-			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1))
+			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength))
 		}
 		println("Came block is added!")
 		println()

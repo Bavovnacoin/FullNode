@@ -1,7 +1,7 @@
 {
     "TxMinFee": 0,
     "MiningThreads": 0,
-    "NodeType": 1,
+    "NodeType": 0,
     "OtherNodesAddresses": [
         "localhost:8080"
     ],

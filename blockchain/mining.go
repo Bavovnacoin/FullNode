@@ -31,6 +31,9 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 
 	for ; AllowMining; step++ {
 		var nonce uint64 = start
+		if BcLength == 0 {
+			nonce = 381000
+		}
 
 		for ; nonce < end; nonce++ {
 			if !AllowMining {
@@ -93,7 +96,6 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool
 			block.Nonce = data.nonce
 		} else {
 			miningRes = false
-			println("DATA IS NOT FOUND", hashing.SHA1(BlockHeaderToString(block)))
 		}
 	}
 

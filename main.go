@@ -7,6 +7,6 @@ func main() {
 	// rv.Launch()
 
 	node.Launch()
-	//synchronization.GetCheckpHashes(2, 5)
+	//synchronization.GetCheckpHashes(1)
 
 }
