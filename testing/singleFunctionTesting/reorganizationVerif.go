@@ -1,11 +1,14 @@
 package singleFunctionTesting
 
 import (
+	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
+	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node"
 	"bavovnacoin/node_controller/command_executor"
+	"bavovnacoin/transaction"
 	"fmt"
 	"math/rand"
 	"os"
@@ -14,11 +17,33 @@ import (
 
 type ReorganizationVerifTest struct {
 	SingleFunctionTesting
-	blockAmmount uint64
-	prevHeight   uint64
+	mcBlockAmmount uint64
+	acBlockAmmount uint64
+	prevHeight     uint64
+	currAccInd     int
 
 	source rand.Source
 	random *rand.Rand
+}
+
+func (rv *ReorganizationVerifTest) CreateTx() transaction.Transaction {
+	fee := rv.random.Intn(5) + 1
+	isGenLocktime := rv.random.Intn(5)
+	var locktime uint
+	if isGenLocktime == 2 {
+		locktime = uint(int(blockchain.BcLength+1) + rv.random.Intn(2) + 1)
+	}
+
+	var outAddr []byteArr.ByteArr
+	outAddr = append(outAddr, byteArr.ByteArr{})
+	outAddr[0].SetFromHexString(hashing.SHA1(account.Wallet[rv.currAccInd].KeyPairList[0].PublKey), 20)
+
+	var outValue []uint64
+	outValue = append(outValue, account.CurrAccount.Balance/2)
+
+	tx, _ := transaction.CreateTransaction(fmt.Sprint(rv.currAccInd), outAddr, outValue, fee, locktime)
+	rv.currAccInd++
+	return tx
 }
 
 func (rv *ReorganizationVerifTest) nodeWorkListener(blocksCount uint64) {
@@ -30,23 +55,23 @@ func (rv *ReorganizationVerifTest) nodeWorkListener(blocksCount uint64) {
 
 		if rv.prevHeight != blockchain.BcLength {
 			rv.prevHeight = blockchain.BcLength
-
+			blockchain.AddTxToMempool(rv.CreateTx(), false)
 		}
 	}
 }
 
 func (rv *ReorganizationVerifTest) genBlocks() {
 	command_executor.ComContr.FullNodeWorking = true
-	go rv.nodeWorkListener(rv.blockAmmount)
+	go rv.nodeWorkListener(rv.mcBlockAmmount)
 	node.BlockGen(false)
 }
 
 func (rv *ReorganizationVerifTest) genAltchBlocks() {
 	bl, _ := blockchain.GetBlock(blockchain.BcLength-2, 0)
-	blockchain.PrintBlockTitle(bl, blockchain.BcLength-2)
 	var prevHash string = hashing.SHA1(blockchain.BlockHeaderToString(bl))
 
-	for i := uint64(0); i < rv.blockAmmount; i++ {
+	for i := uint64(0); i < rv.acBlockAmmount; i++ {
+		blockchain.AddTxToMempool(rv.CreateTx(), false)
 		node.CreateBlockLog(blockchain.GetBits(true), prevHash, bl, true)
 		blockchain.AllowCreateBlock = false
 
@@ -54,7 +79,6 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 		otherNodesTime = append(otherNodesTime, time.Now().UTC().Unix())
 		if i == 0 {
 			blockchain.CreatedBlock.Time = bl.Time
-			//blockchain.CreatedBlock.Chainwork = bl.Chainwork
 		}
 		blockchain.CreatedBlock.Version = 1
 		blockchain.TryCameBlockToAdd(blockchain.CreatedBlock, blockchain.BcLength-1+uint64(i), otherNodesTime)
@@ -64,7 +88,6 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 }
 
 func (rv *ReorganizationVerifTest) printResult() {
-	//TODO: check TXO
 	println("Results:")
 	println("Blockchain scheme:")
 	for height := 0; true; height++ {
@@ -92,7 +115,8 @@ func (rv *ReorganizationVerifTest) printResult() {
 }
 
 func (rv *ReorganizationVerifTest) Launch() {
-	rv.blockAmmount = 3
+	rv.mcBlockAmmount = 2
+	rv.acBlockAmmount = 3
 
 	dbController.DbPath = "testing/testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {
@@ -105,7 +129,7 @@ func (rv *ReorganizationVerifTest) Launch() {
 	rv.source = rand.NewSource(time.Now().Unix())
 	rv.random = rand.New(rv.source)
 
-	rv.genBlockTestAccounts(int(rv.blockAmmount))
+	rv.genBlockTestAccounts(int(rv.mcBlockAmmount) + int(rv.acBlockAmmount))
 	rv.genBlocks() // Generating blocks in mainchain
 
 	rv.genAltchBlocks()
