@@ -60,7 +60,7 @@ func (l *Listener) AddProposedBlock(blockProposalByteArr []byte, reply *Reply) e
 	var blockProp BlockProposal
 	byteArr.FromByteArr(blockProposalByteArr, &blockProp)
 
-	if blockchain.TryCameBlockToAdd(blockProp.Block, GetSettingsNodesTime()) {
+	if blockchain.TryCameBlockToAdd(blockProp.Block, blockProp.Height, GetSettingsNodesTime()) {
 		*reply = Reply{[]byte{1}}
 		ProposeBlockToSettingsNodes(blockProp.Block, blockProp.Address)
 	} else {
@@ -100,6 +100,7 @@ func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.
 		var blockProp BlockProposal
 		blockProp.Block = block
 		blockProp.Address = node_settings.Settings.MyAddress
+		blockProp.Height = blockHeight
 		propBytes, _ := c.ToByteArr(blockProp)
 
 		println("Sent block with hash", hashing.SHA1(blockchain.BlockHeaderToString(block)))

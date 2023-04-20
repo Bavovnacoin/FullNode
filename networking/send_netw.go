@@ -22,6 +22,7 @@ type BlockHashProposal struct {
 type BlockProposal struct {
 	Block   blockchain.Block
 	Address string
+	Height  uint64
 }
 
 type Connection struct {

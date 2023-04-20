@@ -6,6 +6,7 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/node"
 	"bavovnacoin/node_controller/command_executor"
+	"fmt"
 	"math/rand"
 	"os"
 	"time"
@@ -39,19 +40,20 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 	blockchain.PrintBlockTitle(bl, blockchain.BcLength-2)
 	var prevHash string = hashing.SHA1(blockchain.BlockHeaderToString(bl))
 
-	for i := 0; i < 1; i++ {
-		node.CreateBlockLog(blockchain.GetBits(true), prevHash, true)
+	for i := uint64(0); i < rv.blockAmmount; i++ {
+		node.CreateBlockLog(blockchain.GetBits(true), prevHash, bl, true)
 		blockchain.AllowCreateBlock = false
-		// bl, _ := blockchain.GetBlock(blockchain.BcLength-2, 1)
-		// hashing.SHA1(blockchain.BlockHeaderToString(bl))
 
 		var otherNodesTime []int64
 		otherNodesTime = append(otherNodesTime, time.Now().UTC().Unix())
 		if i == 0 {
 			blockchain.CreatedBlock.Time = bl.Time
+			//blockchain.CreatedBlock.Chainwork = bl.Chainwork
 		}
 		blockchain.CreatedBlock.Version = 1
-		blockchain.TryCameBlockToAdd(blockchain.CreatedBlock, otherNodesTime)
+		blockchain.TryCameBlockToAdd(blockchain.CreatedBlock, blockchain.BcLength-1+uint64(i), otherNodesTime)
+		prevHash = hashing.SHA1(blockchain.BlockHeaderToString(blockchain.CreatedBlock))
+		bl = blockchain.CreatedBlock
 	}
 }
 
@@ -74,26 +76,32 @@ func (rv *ReorganizationVerifTest) joinChainToString(arr []string) string {
 
 func (rv *ReorganizationVerifTest) printResult() {
 	//TODO: check TXO
-	var top []string
-	var bot []string
-
+	println("Results:")
+	println("Blockchain scheme:")
 	for height := 0; true; height++ {
 		blocks, res := blockchain.GetBlocksOnHeight(uint64(height))
 		if !res || len(blocks) == 0 {
 			break
 		}
-		println()
-		blockchain.PrintBlockTitle(blocks[0].Block, uint64(height))
 
-		// if len(blocks) == 1 {
-		// 	println(1)
-		// } else {
-		// 	println(2)
-		// }
+		var str string
+		if len(blocks) == 1 {
+			if blocks[0].ChainId == 0 {
+				str += fmt.Sprint(blocks[0].Block.Version)
+				str += "  "
+			} else {
+				str += "  "
+				str += fmt.Sprint(blocks[0].Block.Version)
+				//fmt.Printf("%d\n", blocks[0].Block.Chainwork)
+			}
+		} else {
+			str += fmt.Sprintf("%s %s", fmt.Sprint(blocks[0].Block.Version), fmt.Sprint(blocks[1].Block.Version))
+			//fmt.Printf("%d\n", blocks[1].Block.Chainwork)
+		}
+
+		println(str)
 	}
 
-	println(rv.joinChainToString(top))
-	println(rv.joinChainToString(bot))
 }
 
 func (rv *ReorganizationVerifTest) Launch() {

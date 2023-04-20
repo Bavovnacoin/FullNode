@@ -14,16 +14,21 @@ func SetBcHeight(height uint64, chainId uint64) bool {
 	if !isConv {
 		return false
 	}
-	return dbController.DB.SetValue("bcLength"+fmt.Sprintf("%d:", chainId), byteVal)
+	return dbController.DB.SetValue("bcLength"+fmt.Sprintf(":%d", chainId), byteVal)
 }
 
 func IncrBcHeight(chainId uint64) {
-	BcLength++
-	SetBcHeight(BcLength, chainId)
+	if chainId == 0 {
+		BcLength++
+		SetBcHeight(BcLength, chainId)
+	} else {
+		height, _ := GetBcHeight(chainId)
+		SetBcHeight(height+1, chainId)
+	}
 }
 
 func GetBcHeight(chainId uint64) (uint64, bool) {
-	value, isGotten := dbController.DB.GetValue("bcLength" + fmt.Sprintf("%d:", chainId))
+	value, isGotten := dbController.DB.GetValue("bcLength" + fmt.Sprintf(":%d", chainId))
 	if !isGotten {
 		return 0, false
 	}
@@ -45,7 +50,7 @@ func getAllLastBlocks() ([]Block, []uint64, []uint64) {
 	for iter.Next() {
 		byteArr.FromByteArr(iter.Value(), &height)
 		heights = append(heights, height)
-		chainIds = append(chainIds, getChainIdFromKey(string(iter.Key())))
+		chainIds = append(chainIds, getChainIdFromKey(string(iter.Key()), ':'))
 	}
 	iter.Release()
 
@@ -89,9 +94,9 @@ type BlockChainId struct {
 	ChainId uint64
 }
 
-func getChainIdFromKey(key string) uint64 {
+func getChainIdFromKey(key string, separator byte) uint64 {
 	for i := len(key) - 1; i >= 0; i-- {
-		if key[i] == ':' {
+		if key[i] == separator {
 			num, _ := strconv.ParseUint(key[i+1:], 10, 64)
 			return num
 		}
@@ -106,7 +111,7 @@ func GetBlocksOnHeight(height uint64) ([]BlockChainId, bool) {
 	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("bc"+fmt.Sprint(height)+":")), nil)
 	for iter.Next() {
 		byteArr.FromByteArr(iter.Value(), &block_id.Block)
-		block_id.ChainId = getChainIdFromKey(string(iter.Key()))
+		block_id.ChainId = getChainIdFromKey(string(iter.Key()), ':')
 		blockArr = append(blockArr, block_id)
 	}
 	iter.Release()

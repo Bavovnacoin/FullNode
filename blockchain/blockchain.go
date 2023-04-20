@@ -97,8 +97,9 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	if int(BcLength) != 0 {
 		var isBlockFound bool
 		prevBlocks, isBlockFound = GetBlocksOnHeight(uint64(height) - 1)
-		if !isBlockFound {
-			println("Block found problem")
+
+		if !isBlockFound || len(prevBlocks) == 0 {
+			println("Prev block is not found")
 			return false
 		}
 

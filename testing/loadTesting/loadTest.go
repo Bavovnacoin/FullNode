@@ -109,7 +109,7 @@ func (lt *LoadTest) testAddBlock() bool {
 			prevHash = "0000000000000000000000000000000000000000"
 		}
 
-		go node.CreateBlockLog(blockchain.GetBits(false), prevHash, false)
+		go node.CreateBlockLog(blockchain.GetBits(false), prevHash, blockchain.LastBlock, false)
 		blockchain.AllowCreateBlock = false
 	}
 

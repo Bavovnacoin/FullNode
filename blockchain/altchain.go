@@ -5,6 +5,7 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
+	"fmt"
 	"math/big"
 )
 
@@ -130,6 +131,7 @@ func TryReorganize() bool {
 		}
 
 		fact := new(big.Float).Quo(new(big.Float).SetInt(lastBlocks[i].Chainwork), mainchWork)
+		fmt.Printf("%f - factor\n", fact)
 		if fact.Cmp(biggestFact) == 1 {
 			biggestFact = fact
 			biggestFactChainId = chainIds[i]

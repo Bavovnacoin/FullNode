@@ -28,7 +28,7 @@ func AddBlock(allowLogPrint bool) bool {
 		} else {
 			prevHash = "0000000000000000000000000000000000000000"
 		}
-		go CreateBlockLog(blockchain.GetBits(allowLogPrint), prevHash, allowLogPrint)
+		go CreateBlockLog(blockchain.GetBits(allowLogPrint), prevHash, blockchain.LastBlock, allowLogPrint)
 		blockchain.AllowCreateBlock = false
 	}
 
@@ -42,12 +42,12 @@ func AddBlock(allowLogPrint bool) bool {
 	return false
 }
 
-func CreateBlockLog(bits uint64, prevHash string, allowPrint bool) {
+func CreateBlockLog(bits uint64, prevHash string, lastBlock blockchain.Block, allowPrint bool) {
 	var rewardAdr byteArr.ByteArr
 	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
 	newBlock := blockchain.CreateBlock(rewardAdr, prevHash, allowPrint)
 	newBlock.Bits = bits
-	newBlock.Chainwork = blockchain.GetChainwork(newBlock, blockchain.LastBlock)
+	newBlock.Chainwork = blockchain.GetChainwork(newBlock, lastBlock)
 	var miningRes bool
 	newBlock, miningRes = blockchain.MineBlock(newBlock, 1, allowPrint)
 

@@ -37,39 +37,57 @@ func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 	return true
 }
 
-func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
+func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool {
 	PauseBlockAddition = true
-	//blockVer := !VerifyBlock(block, int(BcLength)-1, true, true)
+	blockVer := !VerifyBlock(block, int(height), true, true)
 
-	// if blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
-	// 	PauseBlockAddition = false
-	// 	println("Came block is NOOTTT added!")
-	// 	return false
-	// }
+	if blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
+		PauseBlockAddition = false
+		println("Came block is NOOTTT added!")
+		return false
+	}
 
 	AllowMining = false
 	BreakBlockAddition = true
 	PauseBlockAddition = false
 	var chainId uint64
 
+	mainchBlock, _ := GetBlock(height-1, 0)
+	// if !res {
+	// 	println("ay")
+	// 	return false
+	// }
+
+	var isAdded bool
 	var blocks []BlockChainId
-	if CreatedBlock.Time >= block.Time {
-		blocks, _ = GetBlocksOnHeight(BcLength - 1)
+	if mainchBlock.Time >= block.Time && block.HashPrevBlock == hashing.SHA1(BlockHeaderToString(mainchBlock)) { // Fork from a mainchain
+		blocks, _ = GetBlocksOnHeight(height)
 		chainId = uint64(len(blocks))
-		AddBlockToBlockchain(block, chainId, false)
-		SetBlockForkHeight(BcLength, chainId)
-	} else {
-		// Decide to what chain add a new block
+		isAdded = WriteBlock(height, chainId, block)
+		SetBlockForkHeight(height, chainId)
+		SetBcHeight(height+1, chainId)
+		println("bb")
+	} else { // Decide to what chain attach a new block
+		println("aa")
+		blocks, chaindIds, _ := getAllLastBlocks()
+
 		for i := 0; i < len(blocks); i++ {
-			blockHash := hashing.SHA1(BlockHeaderToString(blocks[i].Block))
+			blockHash := hashing.SHA1(BlockHeaderToString(blocks[i]))
+			println()
 			if blockHash == block.HashPrevBlock {
-				chainId = blocks[i].ChainId
-				allowManageTxo := false
+				chainId = chaindIds[i]
 				if chainId == 0 {
-					allowManageTxo = true
+					println(111)
+					isAdded = AddBlockToBlockchain(block, chainId, true)
+					LastBlock = block
+					IncrBcHeight(chainId)
+					break
+				} else {
+					println(222)
+					isAdded = WriteBlock(height, chainId, block)
+					IncrBcHeight(chainId)
+					break
 				}
-				AddBlockToBlockchain(block, chainId, allowManageTxo)
-				LastBlock = block
 			}
 		}
 	}
@@ -78,10 +96,13 @@ func TryCameBlockToAdd(block Block, otherNodesTime []int64) bool {
 		log.Println("Reorganization happened")
 	}
 
-	log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1))
-	IncrBcHeight(chainId)
-
-	println("Came block is added!")
-	println()
-	return true
+	if isAdded {
+		if chainId == 0 {
+			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength+1))
+		}
+		println("Came block is added!")
+		println()
+		return true
+	}
+	return false
 }

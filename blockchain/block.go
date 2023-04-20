@@ -21,7 +21,7 @@ type Block struct {
 	MerkleRoot    string
 	Bits          uint64
 	Nonce         uint64
-	Chainwork     *big.Int // TODO: use txs to calculate chainwork? Replace to weight?
+	Chainwork     *big.Int // TODO: use txs to calculate chainwork?
 	Transactions  []transaction.Transaction
 }
 
@@ -47,11 +47,6 @@ func CreateBlock(rewardAdr byteArr.ByteArr, prevHash string, allowPrint bool) Bl
 	var newBlock Block
 
 	newBlock.HashPrevBlock = prevHash
-	// if BcLength > 0 {
-	// 	newBlock.HashPrevBlock = hashing.SHA1(BlockHeaderToString(LastBlock))
-	// } else {
-	// 	newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
-	// }
 
 	var coinbaseTx transaction.Transaction
 	coinbaseTx.Outputs = append(coinbaseTx.Outputs, transaction.Output{Address: rewardAdr, Value: GetCoinsForEmition()})
