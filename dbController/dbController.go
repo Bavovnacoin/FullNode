@@ -10,7 +10,7 @@ type Database struct {
 	Db *leveldb.DB
 }
 
-var DbPath string = "data"
+var DbPath string = "data/FullNode"
 
 func (database *Database) OpenDb() bool {
 	db, err := leveldb.OpenFile(DbPath, nil)

@@ -36,7 +36,6 @@ func (l *Listener) SendBlocks(startFromBlock []byte, reply *Reply) error {
 	return nil
 }
 
-// TODO: add a parameter of ammount of blocks to request (where 0 - max)
 func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, uint64, bool) {
 	var blockReq BlockRequest
 	startByteArr, isConv := c.ToByteArr(startFromHeight)

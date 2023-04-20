@@ -4,6 +4,7 @@ import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/dbController"
 	"bavovnacoin/networking"
+	"bavovnacoin/node_audithor"
 	"bavovnacoin/node_controller"
 	"bavovnacoin/node_controller/command_executor"
 	"bavovnacoin/node_controller/node_settings"
@@ -66,9 +67,6 @@ func LaunchFullNode() {
 			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
 			fmt.Scan(&input)
 			if input == "Yes" {
-				// NodeLaunched = true
-				// blockchain.AllowCreateBlock = true
-				// blockchain.AllowMining = true
 				break
 			} else if input == "back" {
 				return
@@ -84,7 +82,12 @@ func LaunchFullNode() {
 func funcChoser(variant string, isNodeLaunchAllowed bool) {
 	if variant == "1" && isNodeLaunchAllowed {
 		command_executor.ComContr.ClearConsole()
-		LaunchFullNode()
+		if node_settings.Settings.NodeType == 0 {
+			LaunchFullNode()
+		} else if node_settings.Settings.NodeType == 1 {
+			node_audithor.LaunchAudithor()
+		}
+
 	} else if variant == "2" && isNodeLaunchAllowed || variant == "1" && !isNodeLaunchAllowed {
 		node_settings.LaunchMenu(&node_settings.Settings)
 	} else if variant == "3" && isNodeLaunchAllowed || variant == "2" && !isNodeLaunchAllowed {
@@ -92,7 +95,8 @@ func funcChoser(variant string, isNodeLaunchAllowed bool) {
 	}
 }
 
-func getNodeLaunchSettingsError() string {
+func getNodeLaunchSettingsError() (string, string) {
+	nodeType := ""
 	var errMess []string
 	if node_settings.Settings.RewardAddress == "" {
 		errMess = append(errMess, "reward address (1-6)")
@@ -100,7 +104,13 @@ func getNodeLaunchSettingsError() string {
 	if node_settings.Settings.MyAddress == "" {
 		errMess = append(errMess, "node address (1-5)")
 	}
-	return strings.Join(errMess, ", ")
+
+	if node_settings.Settings.NodeType == 0 {
+		nodeType = "full"
+	} else if node_settings.Settings.NodeType == 1 {
+		nodeType = "audithor"
+	}
+	return strings.Join(errMess, ", "), nodeType
 }
 
 func Launch() {
@@ -109,20 +119,18 @@ func Launch() {
 	node_settings.Settings.GetSettings()
 	node_settings.Settings.InitSettingsValues()
 
-	//os.RemoveAll("data") // TODO: remove!
-
 	var variant string
 	for NodeLaunched {
 		command_executor.ComContr.ClearConsole()
 		println("Choose a variant and press the right button")
-		launchMesErr := getNodeLaunchSettingsError()
+		launchMesErr, nodeType := getNodeLaunchSettingsError()
 		if launchMesErr != "" {
 			fmt.Printf("Can't start a node. You need to manage: %s\n", launchMesErr)
 		}
 
 		var btn int = 1
 		if launchMesErr == "" {
-			fmt.Printf("%d. Launch node\n", btn)
+			fmt.Printf("%d. Launch %s node\n", btn, nodeType)
 			btn++
 		}
 		fmt.Printf("%d. Manage settings\n", btn)
