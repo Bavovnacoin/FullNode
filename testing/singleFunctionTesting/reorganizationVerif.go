@@ -15,6 +15,7 @@ import (
 type ReorganizationVerifTest struct {
 	SingleFunctionTesting
 	blockAmmount uint64
+	prevHeight   uint64
 
 	source rand.Source
 	random *rand.Rand
@@ -25,6 +26,11 @@ func (rv *ReorganizationVerifTest) nodeWorkListener(blocksCount uint64) {
 		if blockchain.BcLength >= blocksCount {
 			command_executor.ComContr.FullNodeWorking = false
 			return
+		}
+
+		if rv.prevHeight != blockchain.BcLength {
+			rv.prevHeight = blockchain.BcLength
+
 		}
 	}
 }
@@ -57,23 +63,6 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 	}
 }
 
-func (rv *ReorganizationVerifTest) joinChainToString(arr []string) string {
-	var res string
-
-	for i := 0; i < len(arr); i++ {
-		res += arr[i]
-		if arr[i] != " " {
-			if i < len(arr)-1 {
-				res += "-"
-			}
-		} else {
-			res += " "
-
-		}
-	}
-	return res
-}
-
 func (rv *ReorganizationVerifTest) printResult() {
 	//TODO: check TXO
 	println("Results:")
@@ -92,11 +81,9 @@ func (rv *ReorganizationVerifTest) printResult() {
 			} else {
 				str += "  "
 				str += fmt.Sprint(blocks[0].Block.Version)
-				//fmt.Printf("%d\n", blocks[0].Block.Chainwork)
 			}
 		} else {
 			str += fmt.Sprintf("%s %s", fmt.Sprint(blocks[0].Block.Version), fmt.Sprint(blocks[1].Block.Version))
-			//fmt.Printf("%d\n", blocks[1].Block.Chainwork)
 		}
 
 		println(str)
@@ -123,6 +110,5 @@ func (rv *ReorganizationVerifTest) Launch() {
 
 	rv.genAltchBlocks()
 
-	// TODO: gen last block, so it can be verified that it added to the new mainchain
 	rv.printResult()
 }

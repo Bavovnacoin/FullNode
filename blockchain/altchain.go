@@ -5,7 +5,6 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
-	"fmt"
 	"math/big"
 )
 
@@ -74,22 +73,27 @@ func reorganize(chainId uint64, altchHeight uint64) bool {
 	}
 
 	forkHeight, _ := GetBlockForkHeight(chainId)
-	for ; forkHeight < blockIdToGet; forkHeight++ {
+	for ; forkHeight <= blockIdToGet; forkHeight++ {
 		// Get blocks to swap
 		altChBlock, isAltGotten := GetBlock(forkHeight-1, chainId)
-		mainChBlock, isMainGotten := GetBlock(forkHeight-1, chainId)
+		mainChBlock, isMainGotten := GetBlock(forkHeight-1, 0)
 
 		// Manage outputs and blocks
 		if isMainGotten {
-			returnBlockTxo(mainChBlock, forkHeight)
-			RemBlock(forkHeight, 0)
-			WriteBlock(forkHeight, chainId, mainChBlock)
+			returnBlockTxo(mainChBlock, forkHeight-1)
+			RemBlock(forkHeight-1, 0)
 		}
 
 		if isAltGotten {
 			addAltchBlockTxo(altChBlock.Transactions)
-			RemBlock(forkHeight, chainId)
-			WriteBlock(forkHeight, 0, altChBlock)
+			RemBlock(forkHeight-1, chainId)
+		}
+
+		if isMainGotten {
+			WriteBlock(forkHeight-1, chainId, mainChBlock)
+		}
+		if isAltGotten {
+			WriteBlock(forkHeight-1, 0, altChBlock)
 			LastBlock = altChBlock
 		}
 	}
@@ -97,8 +101,7 @@ func reorganize(chainId uint64, altchHeight uint64) bool {
 	SetBcHeight(altchHeight, 0)
 	SetBcHeight(BcLength, chainId)
 	BcLength = altchHeight
-
-	return false
+	return true
 }
 
 func TryReorganize() bool {
@@ -131,7 +134,7 @@ func TryReorganize() bool {
 		}
 
 		fact := new(big.Float).Quo(new(big.Float).SetInt(lastBlocks[i].Chainwork), mainchWork)
-		fmt.Printf("%f - factor\n", fact)
+
 		if fact.Cmp(biggestFact) == 1 {
 			biggestFact = fact
 			biggestFactChainId = chainIds[i]

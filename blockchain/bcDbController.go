@@ -67,6 +67,7 @@ func WriteBlock(height uint64, chainId uint64, block Block) bool {
 	if !isConv {
 		return false
 	}
+
 	return dbController.DB.SetValue("bc"+fmt.Sprint(height)+":"+fmt.Sprint(chainId), byteVal)
 }
 
@@ -106,13 +107,12 @@ func getChainIdFromKey(key string, separator byte) uint64 {
 
 func GetBlocksOnHeight(height uint64) ([]BlockChainId, bool) {
 	var blockArr []BlockChainId
-	var block_id BlockChainId
 
 	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("bc"+fmt.Sprint(height)+":")), nil)
 	for iter.Next() {
-		byteArr.FromByteArr(iter.Value(), &block_id.Block)
-		block_id.ChainId = getChainIdFromKey(string(iter.Key()), ':')
-		blockArr = append(blockArr, block_id)
+		chId := getChainIdFromKey(string(iter.Key()), ':')
+		bl, _ := GetBlock(height, chId)
+		blockArr = append(blockArr, BlockChainId{Block: bl, ChainId: chId})
 	}
 	iter.Release()
 
