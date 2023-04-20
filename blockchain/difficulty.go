@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var BLOCK_DIFF_CHECK int = 10
+var BLOCK_DIFF_CHECK int = 480
 var BLOCK_CREATION_SEC int = 60
 var STARTBITS uint64 = 0xffff12
 

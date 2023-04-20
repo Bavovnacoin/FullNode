@@ -31,7 +31,7 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 
 	for ; AllowMining; step++ {
 		var nonce uint64 = start
-		if BcLength == 0 { //TODO: remove!
+		if BcLength == 0 {
 			nonce = 381000
 		}
 
