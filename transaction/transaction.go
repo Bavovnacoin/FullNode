@@ -1,11 +1,11 @@
 package transaction
 
 import (
-	"bavovnacoin/account"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
+	"bavovnacoin/testing/account"
 	"bavovnacoin/txo"
 	"fmt"
 )

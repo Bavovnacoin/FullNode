@@ -1,9 +1,9 @@
 package singleFunctionTesting
 
 import (
-	"bavovnacoin/account"
 	"bavovnacoin/dbController"
 	"bavovnacoin/testing"
+	"bavovnacoin/testing/account"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
 	"fmt"

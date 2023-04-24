@@ -1,7 +1,7 @@
 package singleFunctionTesting
 
 import (
-	"bavovnacoin/account"
+	"bavovnacoin/testing/account"
 	"fmt"
 )
 

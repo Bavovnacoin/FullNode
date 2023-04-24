@@ -1,7 +1,6 @@
 package loadtesting
 
 import (
-	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
@@ -9,6 +8,7 @@ import (
 	"bavovnacoin/node/node_controller/command_executor"
 	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing"
+	"bavovnacoin/testing/account"
 	"bavovnacoin/txo"
 	"fmt"
 	"log"

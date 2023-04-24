@@ -1,13 +1,13 @@
 package singleFunctionTesting
 
 import (
-	"bavovnacoin/account"
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node/node_controller/command_executor"
 	"bavovnacoin/node/node_validator"
+	"bavovnacoin/testing/account"
 	"bavovnacoin/transaction"
 	"fmt"
 	"math/rand"

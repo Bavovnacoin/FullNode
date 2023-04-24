@@ -1,11 +1,11 @@
 package singleFunctionTesting
 
 import (
-	"bavovnacoin/account"
 	"bavovnacoin/dbController"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
 	"bavovnacoin/testing"
+	"bavovnacoin/testing/account"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
 	"fmt"
