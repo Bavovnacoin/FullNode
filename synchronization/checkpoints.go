@@ -25,25 +25,24 @@ func setCheckpoint(height uint64, hashValue string) CheckPoint {
 func InitCheckpoints() {
 	checkpInd = 0
 	Checkpoints = append(Checkpoints, setCheckpoint(1, "00004b3e6648b1ccaa64f45634d0c2d15c7e7c02"))
-	// Checkpoints = append(Checkpoints, setCheckpoint(5, "000ab237e87118a9c4077ae20854b304d0ca8424"))
 }
 
 func checkForBlockCorrespondence(height uint64, block blockchain.Block) bool {
-	if checkpInd < uint64(len(Checkpoints)) && height == Checkpoints[checkpInd].height {
-		var blockHash byteArr.ByteArr
-		blockHash.SetFromHexString(hashing.SHA1(blockchain.BlockHeaderToString(block)), 20)
-		if blockHash.IsEqual(Checkpoints[checkpInd].blockHash) {
-			checkpInd++
-			return true
-		} else {
-			return false
+	if blockchain.VerifyBlock(block, int(height), true, true) {
+		if checkpInd < uint64(len(Checkpoints)) && height == Checkpoints[checkpInd].height {
+			var blockHash byteArr.ByteArr
+			blockHash.SetFromHexString(hashing.SHA1(blockchain.BlockHeaderToString(block)), 20)
+			if blockHash.IsEqual(Checkpoints[checkpInd].blockHash) {
+				checkpInd++
+				return true
+			} else {
+				return false
+			}
 		}
-	} else if checkpInd >= uint64(len(Checkpoints)) {
-		isVal := blockchain.VerifyBlock(block, int(height), true, true)
-		return isVal
+		return true
 	}
 
-	return true
+	return false
 }
 
 func GetCheckpHashes(args ...uint64) {
