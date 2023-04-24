@@ -6,8 +6,8 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
-	"bavovnacoin/node"
-	"bavovnacoin/node_controller/command_executor"
+	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing"
 	"bavovnacoin/txo"
 	"fmt"
@@ -109,13 +109,13 @@ func (lt *LoadTest) testAddBlock() bool {
 			prevHash = "0000000000000000000000000000000000000000"
 		}
 
-		go node.CreateBlockLog(blockchain.GetBits(false), prevHash, blockchain.LastBlock, false)
+		go node_validator.CreateBlockLog(blockchain.GetBits(false), prevHash, blockchain.LastBlock, false)
 		blockchain.AllowCreateBlock = false
 	}
 
 	if blockchain.CreatedBlock.MerkleRoot != "" { // Is block mined check
 		isBlockValid := blockchain.VerifyBlock(blockchain.CreatedBlock, int(blockchain.BcLength), true, false)
-		node.AddBlockLog(false, isBlockValid)
+		node_validator.AddBlockLog(false, isBlockValid)
 		blockchain.CreatedBlock.MerkleRoot = ""
 		return true
 	}
@@ -132,7 +132,7 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, rpcAmmount int) {
 		println("Removed test db from a previous test.")
 	}
 	dbController.DB.OpenDb()
-	node.StartRPC()
+	node_validator.StartRPC()
 
 	testing.GenTestAccounts(lt.txAmmount)
 	fmt.Printf("Generated %d test accounts\n", len(account.Wallet))

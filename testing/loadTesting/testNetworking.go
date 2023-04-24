@@ -3,7 +3,7 @@ package loadtesting
 import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/networking"
-	"bavovnacoin/node_controller/node_settings"
+	"bavovnacoin/node/node_controller/node_settings"
 	"bavovnacoin/transaction"
 	"bytes"
 	"encoding/gob"

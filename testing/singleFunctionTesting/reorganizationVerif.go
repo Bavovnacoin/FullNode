@@ -6,8 +6,8 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
-	"bavovnacoin/node"
-	"bavovnacoin/node_controller/command_executor"
+	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_validator"
 	"bavovnacoin/transaction"
 	"fmt"
 	"math/rand"
@@ -63,7 +63,7 @@ func (rv *ReorganizationVerifTest) nodeWorkListener(blocksCount uint64) {
 func (rv *ReorganizationVerifTest) genBlocks() {
 	command_executor.ComContr.FullNodeWorking = true
 	go rv.nodeWorkListener(rv.mcBlockAmmount)
-	node.BlockGen(false)
+	node_validator.BlockGen(false)
 }
 
 func (rv *ReorganizationVerifTest) genAltchBlocks() {
@@ -72,7 +72,7 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 
 	for i := uint64(0); i < rv.acBlockAmmount; i++ {
 		blockchain.AddTxToMempool(rv.CreateTx(), false)
-		node.CreateBlockLog(blockchain.GetBits(true), prevHash, bl, true)
+		node_validator.CreateBlockLog(blockchain.GetBits(true), prevHash, bl, true)
 		blockchain.AllowCreateBlock = false
 
 		var otherNodesTime []int64

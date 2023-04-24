@@ -1,89 +1,22 @@
 package node
 
 import (
-	"bavovnacoin/blockchain"
-	"bavovnacoin/dbController"
-	"bavovnacoin/networking"
-	"bavovnacoin/node_audithor"
-	"bavovnacoin/node_controller"
-	"bavovnacoin/node_controller/command_executor"
-	"bavovnacoin/node_controller/node_settings"
-	"bavovnacoin/synchronization"
-	"bavovnacoin/txo"
+	"bavovnacoin/node/node_audithor"
+	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_validator"
 	"fmt"
-	"log"
 	"runtime"
 	"strings"
 )
 
 var NodeLaunched bool
 
-func StartRPC() {
-	isRpcStarted, err := networking.StartRPCListener()
-	if !isRpcStarted {
-		fmt.Println("Can't start RPC listener")
-		fmt.Println(err)
-	} else {
-		fmt.Println("RPC listener started")
-	}
-}
-
-func NodeProcess() {
-	for command_executor.ComContr.FullNodeWorking {
-		AddBlock(true)
-	}
-}
-
-func BlockGen(allowCommandHandler bool) {
-	if blockchain.BcLength == 0 {
-		genBlock := blockchain.FormGenesisBlock()
-		networking.ProposeBlockToSettingsNodes(genBlock, "")
-	}
-
-	if allowCommandHandler {
-		go NodeProcess()
-		node_controller.CommandHandler()
-	} else {
-		NodeProcess()
-	}
-}
-
-func LaunchFullNode() {
-	command_executor.ComContr.FullNodeWorking = true
-	dbController.DB.OpenDb()
-	defer dbController.DB.CloseDb()
-	StartRPC()
-	defer networking.StopRPCListener()
-	blockchain.InitBlockchain()
-	txo.RestoreCoinDatabase()
-
-	log.Println("Db synchronization...")
-	syncRes := synchronization.StartSync(true, blockchain.BcLength)
-	if !syncRes {
-		input := ""
-		for true {
-			command_executor.ComContr.ClearConsole()
-			log.Println("An error occured when synchronizing DB")
-			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
-			fmt.Scan(&input)
-			if input == "Yes" {
-				break
-			} else if input == "back" {
-				return
-			}
-		}
-	} else {
-		log.Println("Db synchronization done")
-	}
-
-	BlockGen(true)
-}
-
 func funcChoser(variant string, isNodeLaunchAllowed bool) {
 	if variant == "1" && isNodeLaunchAllowed {
 		command_executor.ComContr.ClearConsole()
 		if node_settings.Settings.NodeType == 0 {
-			LaunchFullNode()
+			node_validator.LaunchValidatorNode()
 		} else if node_settings.Settings.NodeType == 1 {
 			node_audithor.LaunchAudithor()
 		}
@@ -106,7 +39,7 @@ func getNodeLaunchSettingsError() (string, string) {
 	}
 
 	if node_settings.Settings.NodeType == 0 {
-		nodeType = "full"
+		nodeType = "validator"
 	} else if node_settings.Settings.NodeType == 1 {
 		nodeType = "audithor"
 	}

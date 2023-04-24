@@ -4,7 +4,7 @@ import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
-	"bavovnacoin/node_controller/node_settings"
+	"bavovnacoin/node/node_controller/node_settings"
 	"bavovnacoin/transaction"
 )
 

@@ -1,7 +1,7 @@
 package networking
 
 import (
-	"bavovnacoin/node_controller/node_settings"
+	"bavovnacoin/node/node_controller/node_settings"
 	"encoding/binary"
 	"fmt"
 	"time"

@@ -3,7 +3,7 @@ package node_audithor
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/networking"
-	"bavovnacoin/node_controller/node_settings"
+	"bavovnacoin/node/node_controller/node_settings"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"

@@ -1,17 +1,36 @@
-package node_audithor
+package node_validator
 
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/dbController"
 	"bavovnacoin/networking"
-	"bavovnacoin/node_controller"
-	"bavovnacoin/node_controller/command_executor"
+	"bavovnacoin/node/node_controller"
+	"bavovnacoin/node/node_controller/command_executor"
 	"bavovnacoin/synchronization"
 	"bavovnacoin/txo"
 	"fmt"
 	"log"
-	"time"
 )
+
+func NodeProcess() {
+	for command_executor.ComContr.FullNodeWorking {
+		AddBlock(true)
+	}
+}
+
+func BlockGen(allowCommandHandler bool) {
+	if blockchain.BcLength == 0 {
+		genBlock := blockchain.FormGenesisBlock()
+		networking.ProposeBlockToSettingsNodes(genBlock, "")
+	}
+
+	if allowCommandHandler {
+		go NodeProcess()
+		node_controller.CommandHandler()
+	} else {
+		NodeProcess()
+	}
+}
 
 func StartRPC() {
 	isRpcStarted, err := networking.StartRPCListener()
@@ -23,28 +42,8 @@ func StartRPC() {
 	}
 }
 
-func NodeProcess() {
-	for command_executor.ComContr.FullNodeWorking {
-		blocks, res := RecieveBlocks()
-		if res == 1 {
-			println("Can not connect to any address. Please, manage your addresses in the settings")
-			time.Sleep(time.Second * 10)
-		} else {
-			ReorgTests(blocks)
-		}
-
-	}
-}
-
-func MakeAudit() {
-	GetReorgData()
-	go NodeProcess()
-	node_controller.CommandHandler()
-}
-
-func LaunchAudithor() {
+func LaunchValidatorNode() {
 	command_executor.ComContr.FullNodeWorking = true
-	dbController.DbPath = "data/AudNode"
 	dbController.DB.OpenDb()
 	defer dbController.DB.CloseDb()
 	StartRPC()
@@ -59,9 +58,11 @@ func LaunchAudithor() {
 		for true {
 			command_executor.ComContr.ClearConsole()
 			log.Println("An error occured when synchronizing DB")
-			log.Println("To back to the menu enter \"back\". ")
+			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
 			fmt.Scan(&input)
-			if input == "back" {
+			if input == "Yes" {
+				break
+			} else if input == "back" {
 				return
 			}
 		}
@@ -69,6 +70,5 @@ func LaunchAudithor() {
 		log.Println("Db synchronization done")
 	}
 
-	MakeAudit()
-	//BlockGen(true)
+	BlockGen(true)
 }

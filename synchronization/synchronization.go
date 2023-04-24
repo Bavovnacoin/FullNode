@@ -3,7 +3,7 @@ package synchronization
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/networking"
-	"bavovnacoin/node_controller/node_settings"
+	"bavovnacoin/node/node_controller/node_settings"
 	"log"
 )
 

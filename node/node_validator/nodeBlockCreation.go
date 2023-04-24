@@ -1,12 +1,12 @@
-package node
+package node_validator
 
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
 	"bavovnacoin/networking"
-	"bavovnacoin/node_controller/command_executor"
-	"bavovnacoin/node_controller/node_settings"
+	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_controller/node_settings"
 	"fmt"
 	"log"
 	"time"

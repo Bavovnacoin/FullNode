@@ -25,7 +25,7 @@ type NodeSettings struct {
 }
 
 func (ns *NodeSettings) InitSettingsValues() {
-	ns.NodeTypesNames = []string{"Full node", "Audithor node"}
+	ns.NodeTypesNames = []string{"Validator node", "Audithor node"}
 }
 
 func (ns *NodeSettings) GetSettings() {

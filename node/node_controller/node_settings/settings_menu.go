@@ -1,7 +1,7 @@
 package node_settings
 
 import (
-	"bavovnacoin/node_controller/command_executor"
+	"bavovnacoin/node/node_controller/command_executor"
 	"fmt"
 	"strconv"
 )
