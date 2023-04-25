@@ -32,8 +32,8 @@ func BlockHeaderToString(block Block) string {
 	str += block.HashPrevBlock
 	str += block.MerkleRoot
 	str += fmt.Sprintf("%x", block.Bits)
-	//str += fmt.Sprint(block.Time) // TODO: add Time to header
-	//str += block.Chainwork.String() //TODO: do not forget to decomment this section after decommenting nonce value in genesis block!
+	str += block.Chainwork.String()
+	str += fmt.Sprint(block.Time)
 	str += fmt.Sprint(block.Nonce)
 	return str
 }

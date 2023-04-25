@@ -89,7 +89,6 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 	return block, miningRes
 }
 
-// TODO: remove "println" functions
 func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
 	var lastBlockHashes []string
 	var prevBlocks []BlockChainId
@@ -140,7 +139,6 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	h := hashing.SHA1(BlockHeaderToString(block))
 	hashNonce, _ := new(big.Int).SetString(h, 16)
 	if BitsToTarget(block.Bits).Cmp(hashNonce) == -1 {
-		fmt.Println(hashNonce.Bytes())
 		println(fmt.Sprintf("%x", hashNonce), fmt.Sprintf("%x", BitsToTarget(block.Bits)))
 		println("Nonce problem", hashing.SHA1(BlockHeaderToString(block)), fmt.Sprintf("%x", BitsToTarget(block.Bits)))
 		return false
@@ -201,7 +199,7 @@ func FormGenesisBlock() Block {
 	genesisBlock.Bits = GetBits(true)
 	genesisBlock.Chainwork = GetChainwork(genesisBlock, LastBlock)
 	genesisBlock, _ = MineBlock(genesisBlock, 1, true)
-	genesisBlock.Bits = STARTBITS
+	//genesisBlock.Bits = STARTBITS
 
 	if VerifyBlock(genesisBlock, int(BcLength), true, false) {
 		AddBlockToBlockchain(genesisBlock, 0, true)
