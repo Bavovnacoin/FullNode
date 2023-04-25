@@ -34,6 +34,9 @@ func GetSettingsNodesTime() []int64 {
 
 	for allowConnect {
 		allowConnect, currAddrInd = conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, currAddrInd, "")
+		if !allowConnect {
+			break
+		}
 		nodeTime := conn.GetNodeTime()
 
 		if nodeTime != -1 {
