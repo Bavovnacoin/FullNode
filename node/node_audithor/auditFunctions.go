@@ -42,9 +42,14 @@ func RecieveBlocks() ([]blockchain.Block, int) {
 		return nil, 1
 	}
 
-	blocks, height, res := conn.RequestBlocks(blockchain.BcLength)
-	if !res || len(blocks) == 0 || height == blockchain.BcLength {
+	blocksOnH, height, res := conn.RequestBlocks(blockchain.BcLength)
+	if !res || len(blocksOnH) == 0 || height == blockchain.BcLength {
 		return nil, 2
+	}
+
+	var blocks []blockchain.Block
+	for _, bl := range blocksOnH[0].Blocks {
+		blocks = append(blocks, bl.Block)
 	}
 
 	return blocks, 0

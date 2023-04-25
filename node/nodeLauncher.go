@@ -39,9 +39,9 @@ func getNodeLaunchSettingsError() (string, string) {
 	}
 
 	if node_settings.Settings.NodeType == 0 {
-		nodeType = "validator"
+		nodeType = "a validator"
 	} else if node_settings.Settings.NodeType == 1 {
-		nodeType = "audithor"
+		nodeType = "an audithor"
 	}
 	return strings.Join(errMess, ", "), nodeType
 }

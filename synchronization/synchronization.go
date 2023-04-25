@@ -21,7 +21,7 @@ func StartSync(printLog bool, startBlock uint64) bool {
 	var blockReqInd uint64 = startBlock
 	checkpCorresp := false
 	for true {
-		blocks, currBcHeight, res := conn.RequestBlocks(blockReqInd)
+		blocks, currBcHeight, res := conn.RequestBlocks(blockReqInd) //TODO: sign that we done with synchronizing
 		if res {
 			if len(blocks) == 0 {
 				return true
@@ -29,19 +29,21 @@ func StartSync(printLog bool, startBlock uint64) bool {
 
 			var blocksDownlSuccess bool = true
 			for i := 0; i < len(blocks); i++ {
-				checkpCorresp = checkForBlockCorrespondence(blockReqInd, blocks[i])
-				if checkpCorresp {
-					blockchain.AddBlockToBlockchain(blocks[i], 0, true) // TODO: make synchronization with altchains (swap true to false in that case)
-					blockchain.IncrBcHeight(0)                          // TODO: make synchronization with altchains (height)
-					blockchain.LastBlock = blocks[i]
-					blockReqInd++
-				} else {
-					if printLog {
-						log.Printf("Address %s sent an incorrect block. Selecting next address\n",
-							node_settings.Settings.OtherNodesAddresses[addrInd])
+				for _, bl := range blocks[i].Blocks {
+					checkpCorresp = checkForBlockCorrespondence(blockReqInd, bl.Block)
+					if checkpCorresp {
+						blockchain.AddBlockToBlockchain(bl.Block, bl.ChainId, bl.ChainId == 0)
+						blockchain.IncrBcHeight(bl.ChainId)
+						blockchain.LastBlock = bl.Block
+						blockReqInd++
+					} else {
+						if printLog {
+							log.Printf("Address %s sent an incorrect block. Selecting next address\n",
+								node_settings.Settings.OtherNodesAddresses[addrInd])
+						}
+						blocksDownlSuccess = false
+						break
 					}
-					blocksDownlSuccess = false
-					break
 				}
 			}
 			if blocksDownlSuccess && printLog {

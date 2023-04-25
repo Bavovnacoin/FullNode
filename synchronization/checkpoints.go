@@ -24,7 +24,7 @@ func setCheckpoint(height uint64, hashValue string) CheckPoint {
 
 func InitCheckpoints() {
 	checkpInd = 0
-	Checkpoints = append(Checkpoints, setCheckpoint(1, "00004b3e6648b1ccaa64f45634d0c2d15c7e7c02"))
+	//Checkpoints = append(Checkpoints, setCheckpoint(1, "00004b3e6648b1ccaa64f45634d0c2d15c7e7c02"))
 }
 
 func checkForBlockCorrespondence(height uint64, block blockchain.Block) bool {

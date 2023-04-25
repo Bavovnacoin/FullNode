@@ -10,9 +10,14 @@ import (
 
 const retrStep uint64 = 4
 
+type BlocksOnHeight struct {
+	Blocks []blockchain.BlockChainId
+	Height uint64
+}
+
 type BlockRequest struct {
 	BcHeight uint64
-	Blocks   []blockchain.Block
+	Blocks   []BlocksOnHeight
 }
 
 // TODO: chaneg according to the altchain idea
@@ -22,9 +27,9 @@ func (l *Listener) SendBlocks(startFromBlock []byte, reply *Reply) error {
 	var request BlockRequest
 
 	for i := startBlockToRetrieve; i < startBlockToRetrieve+retrStep && i < blockchain.BcLength; i++ {
-		block, res := blockchain.GetBlock(i, 0)
+		blocks, res := blockchain.GetBlocksOnHeight(i)
 		if res {
-			request.Blocks = append(request.Blocks, block)
+			request.Blocks = append(request.Blocks, BlocksOnHeight{Blocks: blocks, Height: i})
 		} else {
 			break
 		}
@@ -36,7 +41,7 @@ func (l *Listener) SendBlocks(startFromBlock []byte, reply *Reply) error {
 	return nil
 }
 
-func (c *Connection) RequestBlocks(startFromHeight uint64) ([]blockchain.Block, uint64, bool) {
+func (c *Connection) RequestBlocks(startFromHeight uint64) ([]BlocksOnHeight, uint64, bool) {
 	var blockReq BlockRequest
 	startByteArr, isConv := c.ToByteArr(startFromHeight)
 	if !isConv {
