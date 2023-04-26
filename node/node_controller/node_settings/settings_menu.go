@@ -120,7 +120,7 @@ func addressesSetValid(input string, settings *NodeSettings) bool {
 }
 
 func myAddrSetValid(address string, settings *NodeSettings) bool {
-	if address != settings.MyAddress && settings.IsAddressValid(address) {
+	if address != settings.MyAddress {
 		settings.MyAddress = address
 		settings.WriteSettings()
 		return true

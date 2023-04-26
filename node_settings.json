@@ -5,6 +5,7 @@
     "OtherNodesAddresses": [
         "localhost:8081"
     ],
-    "MyAddress": "localhost:12345",
+    "MyAddress": "/ip4/127.0.0.1/tcp/58818",
+    "PrivKey": "Lfo/tpkTV4ZFs53ETep/oz/Sk02SXoSBo0t1vOGWAj8=",
     "RewardAddress": "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375"
 }

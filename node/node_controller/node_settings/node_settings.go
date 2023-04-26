@@ -1,12 +1,12 @@
 package node_settings
 
 import (
+	"bavovnacoin/ecdsa"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
-	"regexp"
 	"runtime"
 )
 
@@ -19,6 +19,7 @@ type NodeSettings struct {
 	NodeType            uint     // For now there's two types: full node, audithor
 	OtherNodesAddresses []string // Addresses of other nodes to communicate
 	MyAddress           string
+	PrivKey             []byte
 	RewardAddress       string
 
 	NodeTypesNames []string `json:"-"`
@@ -88,13 +89,8 @@ func (ns *NodeSettings) IsAddressAdded(address string) bool {
 	return false
 }
 
-func (ns *NodeSettings) IsAddressValid(address string) bool {
-	isAddrMatch, _ := regexp.MatchString("^(?:http(s)?:\\/\\/)?[\\w.-]+(?:(\\.)|(:[0-9]+))+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$", address)
-	return isAddrMatch
-}
-
 func (ns *NodeSettings) AddAddress(address string) bool {
-	if ns.IsAddressValid(address) && !ns.IsAddressAdded(address) {
+	if !ns.IsAddressAdded(address) {
 		ns.OtherNodesAddresses = append(ns.OtherNodesAddresses, address)
 		return true
 	}
@@ -118,4 +114,14 @@ func (ns *NodeSettings) IsRewAddrWalid(rewAddr string) bool {
 		return false
 	}
 	return true
+}
+
+func (ns *NodeSettings) GetPrivKey() []byte {
+	if len(Settings.PrivKey) == 0 {
+		ecdsa.InitValues()
+		data, _ := new(big.Int).SetString(ecdsa.GenPrivKey(), 16)
+		ns.PrivKey = data.Bytes()
+		ns.WriteSettings()
+	}
+	return Settings.PrivKey
 }

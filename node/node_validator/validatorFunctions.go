@@ -4,6 +4,7 @@ import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/dbController"
 	"bavovnacoin/networking"
+	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller"
 	"bavovnacoin/node/node_controller/command_executor"
 	"bavovnacoin/synchronization"
@@ -46,6 +47,7 @@ func LaunchValidatorNode() {
 	command_executor.ComContr.FullNodeWorking = true
 	dbController.DB.OpenDb()
 	defer dbController.DB.CloseDb()
+	networking_p2p.StartP2PCommunication()
 	StartRPC()
 	defer networking.StopRPCListener()
 	blockchain.InitBlockchain()
@@ -56,7 +58,7 @@ func LaunchValidatorNode() {
 	if !syncRes {
 		input := ""
 		for true {
-			command_executor.ComContr.ClearConsole()
+			//command_executor.ComContr.ClearConsole()
 			log.Println("An error occured when synchronizing DB")
 			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
 			fmt.Scan(&input)
