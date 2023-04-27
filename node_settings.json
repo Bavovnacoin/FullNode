@@ -3,7 +3,7 @@
     "MiningThreads": 0,
     "NodeType": 0,
     "OtherNodesAddresses": [
-        "localhost:8081"
+        "/ip4/127.0.0.1/tcp/58819/16Uiu2HAm21mPABJoJWtXyer7uvgP4iqGobMjGZrzHxQFsMGapJjk"
     ],
     "MyAddress": "/ip4/127.0.0.1/tcp/58818",
     "PrivKey": "Lfo/tpkTV4ZFs53ETep/oz/Sk02SXoSBo0t1vOGWAj8=",

@@ -2,22 +2,36 @@ package networking_p2p
 
 import (
 	"bavovnacoin/node/node_controller/node_settings"
+	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/multiformats/go-multiaddr"
 )
 
 var Peer host.Host
+var OtherPeersIds []peer.ID
 
 const PROTOCOL_ID = protocol.ID("/bvc/1.0.0")
 
 func StreamHandler(s network.Stream) {
 	log.Println("Got a new stream!")
+
+	data, err := ioutil.ReadAll(s)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Recieved a message: %s\n", string(data))
 }
 
 // My address (localhost) /ip4/127.0.0.1/tcp/58818
@@ -25,7 +39,8 @@ func StartP2PCommunication() {
 	pkBytes := node_settings.Settings.GetPrivKey()
 	privKey, _ := crypto.UnmarshalSecp256k1PrivateKey(pkBytes)
 
-	Peer, err := libp2p.New(
+	var err error
+	Peer, err = libp2p.New(
 		libp2p.Identity(privKey),
 		libp2p.ListenAddrStrings(node_settings.Settings.MyAddress),
 	)
@@ -36,4 +51,57 @@ func StartP2PCommunication() {
 	} else {
 		fmt.Println("Unable to start a peer.", err)
 	}
+
+	addSettingsAddresses()
+}
+
+func addOtherAddress(address string) bool {
+	arr := strings.Split(address, "/")
+
+	maddr, err := multiaddr.NewMultiaddr(strings.Join(arr[:len(arr)-1], "/"))
+	if err != nil {
+		return false
+	}
+
+	id, res := peer.Decode(arr[len(arr)-1])
+	if res != nil {
+		return false
+	}
+
+	Peer.Peerstore().AddAddrs(id, []multiaddr.Multiaddr{maddr}, peerstore.PermanentAddrTTL)
+	OtherPeersIds = append(OtherPeersIds, id)
+	return true
+}
+
+func addSettingsAddresses() {
+	for i := 0; i < len(node_settings.Settings.OtherNodesAddresses); i++ {
+		addOtherAddress(node_settings.Settings.OtherNodesAddresses[i])
+	}
+}
+
+func SendData(data []byte) bool {
+	// Ensures that everything is allright
+	for i, id := range OtherPeersIds {
+		if err := Peer.Connect(context.Background(), Peer.Peerstore().PeerInfo(id)); err != nil {
+			log.Printf("Could not connect to peer %d\n", i)
+			return false
+		} else {
+			println("Connected")
+
+			stream, err := Peer.NewStream(context.Background(), id, PROTOCOL_ID)
+			if err != nil {
+				return false
+			}
+
+			if _, err := stream.Write(data); err != nil {
+				return false
+			}
+
+			if err := stream.Close(); err != nil {
+				return false
+			}
+		}
+
+	}
+	return true
 }
