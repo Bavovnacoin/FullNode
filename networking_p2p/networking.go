@@ -24,18 +24,19 @@ var OtherPeersIds []peer.ID
 const PROTOCOL_ID = protocol.ID("/bvc/1.0.0")
 
 func StreamHandler(s network.Stream) {
-	log.Println("Got a new stream!")
-
 	data, err := ioutil.ReadAll(s)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Recieved a message: %s\n", string(data))
+	peerID := s.Conn().RemotePeer()
+
+	TryHandleSynchronization(data, peerID)
 }
 
 // My address (localhost) /ip4/127.0.0.1/tcp/58818
 func StartP2PCommunication() {
+	peerIdInd = 0
 	pkBytes := node_settings.Settings.GetPrivKey()
 	privKey, _ := crypto.UnmarshalSecp256k1PrivateKey(pkBytes)
 
@@ -79,29 +80,28 @@ func addSettingsAddresses() {
 	}
 }
 
-func SendData(data []byte) bool {
-	// Ensures that everything is allright
-	for i, id := range OtherPeersIds {
-		if err := Peer.Connect(context.Background(), Peer.Peerstore().PeerInfo(id)); err != nil {
-			log.Printf("Could not connect to peer %d\n", i)
-			return false
-		} else {
-			println("Connected")
-
-			stream, err := Peer.NewStream(context.Background(), id, PROTOCOL_ID)
-			if err != nil {
-				return false
-			}
-
-			if _, err := stream.Write(data); err != nil {
-				return false
-			}
-
-			if err := stream.Close(); err != nil {
-				return false
-			}
-		}
-
+func SendDataToAll(data []byte) bool {
+	for _, id := range OtherPeersIds {
+		SendDataOnPeerId(data, id)
 	}
 	return true
+}
+
+func SendDataOnPeerId(data []byte, id peer.ID) bool {
+	if err := Peer.Connect(context.Background(), Peer.Peerstore().PeerInfo(id)); err == nil {
+		stream, err := Peer.NewStream(context.Background(), id, PROTOCOL_ID)
+		if err != nil {
+			return false
+		}
+
+		if _, err := stream.Write(data); err != nil {
+			return false
+		}
+
+		if err := stream.Close(); err != nil {
+			return false
+		}
+		return true
+	}
+	return false
 }

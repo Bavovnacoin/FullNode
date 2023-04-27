@@ -93,9 +93,9 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 	var lastBlockHashes []string
 	var prevBlocks []BlockChainId
 
-	if int(BcLength) != 0 {
+	if height != 0 { //int(BcLength)
 		var isBlockFound bool
-		prevBlocks, isBlockFound = GetBlocksOnHeight(uint64(height) - 1)
+		prevBlocks, isBlockFound = GetBlocksOnHeight((uint64(height) - 1) % 18446744073709551615)
 
 		if !isBlockFound || len(prevBlocks) == 0 {
 			println("Prev block is not found")

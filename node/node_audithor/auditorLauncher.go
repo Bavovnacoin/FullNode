@@ -4,9 +4,9 @@ import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/dbController"
 	"bavovnacoin/networking"
+	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/synchronization"
 	"bavovnacoin/txo"
 	"fmt"
 	"log"
@@ -47,13 +47,16 @@ func LaunchAudithor() {
 	dbController.DbPath = "data/AudNode"
 	dbController.DB.OpenDb()
 	defer dbController.DB.CloseDb()
-	StartRPC()
+	//StartRPC()
 	defer networking.StopRPCListener()
 	blockchain.InitBlockchain()
 	txo.RestoreCoinDatabase()
 
 	log.Println("Db synchronization...")
-	syncRes := synchronization.StartSync(true, blockchain.BcLength)
+	syncRes := networking_p2p.StartSync()
+	for !networking_p2p.IsSyncEnded {
+		time.Sleep(20 * time.Millisecond)
+	}
 	if !syncRes {
 		input := ""
 		for true {

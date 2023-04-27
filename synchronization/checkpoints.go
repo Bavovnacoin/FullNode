@@ -27,7 +27,7 @@ func InitCheckpoints() {
 	//Checkpoints = append(Checkpoints, setCheckpoint(1, "00004b3e6648b1ccaa64f45634d0c2d15c7e7c02"))
 }
 
-func checkForBlockCorrespondence(height uint64, block blockchain.Block) bool {
+func CheckForBlockCorrespondence(height uint64, block blockchain.Block) bool {
 	if blockchain.VerifyBlock(block, int(height), true, true) {
 		if checkpInd < uint64(len(Checkpoints)) && height == Checkpoints[checkpInd].height {
 			var blockHash byteArr.ByteArr

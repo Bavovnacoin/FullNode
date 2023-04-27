@@ -7,10 +7,10 @@ import (
 	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/synchronization"
 	"bavovnacoin/txo"
 	"fmt"
 	"log"
+	"time"
 )
 
 func NodeProcess() {
@@ -54,11 +54,14 @@ func LaunchValidatorNode() {
 	txo.RestoreCoinDatabase()
 
 	log.Println("Db synchronization...")
-	syncRes := synchronization.StartSync(true, blockchain.BcLength)
+	syncRes := networking_p2p.StartSync()
+	for !networking_p2p.IsSyncEnded {
+		time.Sleep(20 * time.Millisecond)
+	}
+
 	if !syncRes {
 		input := ""
 		for true {
-			//command_executor.ComContr.ClearConsole()
 			log.Println("An error occured when synchronizing DB")
 			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
 			fmt.Scan(&input)
@@ -71,6 +74,6 @@ func LaunchValidatorNode() {
 	} else {
 		log.Println("Db synchronization done")
 	}
-
-	BlockGen(true)
+	panic("exit")
+	//BlockGen(true)
 }
