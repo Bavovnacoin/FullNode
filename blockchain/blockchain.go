@@ -61,7 +61,6 @@ func AddBlockToBlockchain(block Block, chainId uint64, allowManageTxo bool) bool
 	}
 
 	WriteBlock(BcLength, chainId, block)
-
 	IsMempAdded = false
 	return true
 }

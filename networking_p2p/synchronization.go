@@ -86,16 +86,13 @@ func SyncAddBlocks(blocks []BlocksOnHeight) bool {
 		}
 	}
 
-	if len(blocks)-addCount != 0 {
-		log.Printf("Checked %d blocks (downloaded %.2f%% of the blockchain). Current bc height: %d\n", len(blocks)-addCount,
-			(float64(blockchain.BcLength)/float64(blockchain.BcLength))*100, blockchain.BcLength)
-	} else {
-		log.Printf("Added %d blocks (downloaded %.2f%% of the blockchain). Current bc height: %d\n", addCount,
-			(float64(blockchain.BcLength)/float64(blockchain.BcLength))*100, blockchain.BcLength)
-	}
+	log.Printf("Checked %d blocks. Current bc height: %d\n", len(blocks), blockchain.BcLength)
 	return true
 }
 
 func StartSync() bool {
-	return RequestBlocks(0, OtherPeersIds[0])
+	if len(OtherPeersIds) > 0 {
+		return RequestBlocks(0, OtherPeersIds[0])
+	}
+	return false
 }

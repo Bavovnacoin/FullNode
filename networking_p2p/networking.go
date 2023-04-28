@@ -32,6 +32,8 @@ func StreamHandler(s network.Stream) {
 	peerID := s.Conn().RemotePeer()
 
 	TryHandleSynchronization(data, peerID)
+	TryAddCameBlock(data, peerID)
+	TryHandleTime(data, peerID)
 }
 
 // My address (localhost) /ip4/127.0.0.1/tcp/58818
@@ -54,7 +56,6 @@ func StartP2PCommunication() {
 	}
 
 	addSettingsAddresses()
-	//SendOutNewBlock()
 }
 
 func addOtherAddress(address string) bool {
@@ -81,11 +82,16 @@ func addSettingsAddresses() {
 	}
 }
 
-func SendDataToAll(data []byte) bool {
-	for _, id := range OtherPeersIds {
-		SendDataOnPeerId(data, id)
+func SendDataToAllConnectedPeers(data []byte) bool {
+	activePeersCounter := 0
+	peerIds := Peer.Peerstore().Peers()
+	for i := 0; i < len(peerIds); i++ {
+		if SendDataOnPeerId(data, peerIds[i]) {
+			activePeersCounter++
+		}
 	}
-	return true
+
+	return activePeersCounter > 0
 }
 
 func SendDataOnPeerId(data []byte, id peer.ID) bool {

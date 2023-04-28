@@ -4,7 +4,7 @@ import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
-	"bavovnacoin/networking"
+	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
 	"bavovnacoin/node/node_controller/node_settings"
 	"fmt"
@@ -78,7 +78,8 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 		blockchain.IncrBcHeight(0)
 		isBlockAdded = true
 		println()
-		networking.ProposeBlockToSettingsNodes(blockchain.CreatedBlock, "")
+		go networking_p2p.ProposeNewBlock(blockchain.CreatedBlock, blockchain.BcLength)
+		//networking.ProposeBlockToSettingsNodes(blockchain.CreatedBlock, "")
 	} else {
 		if allowPrint {
 			log.Println("Created block is not valid.")

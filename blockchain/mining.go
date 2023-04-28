@@ -43,6 +43,7 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 			}
 
 			data.block.Nonce = nonce
+			data.block.Time = time.Now().UTC().Unix()
 			hashNounce, _ := new(big.Int).SetString(hashing.SHA1(BlockHeaderToString(data.block)), 16)
 			if target.Cmp(hashNounce) == 1 {
 				data.isFound = true
@@ -92,7 +93,6 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool
 	for ; i < thrcount; i++ {
 		data := <-resChan
 		if data.isFound {
-			block.Time = time.Now().UTC().Unix()
 			block.Nonce = data.nonce
 			block.Time = data.block.Time
 		} else {
@@ -103,6 +103,7 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool
 	if allowPrint {
 		log.Println("Mining done. Prev hash:", block.HashPrevBlock)
 	}
+
 	IsMiningDone = true
 	return block, miningRes
 }

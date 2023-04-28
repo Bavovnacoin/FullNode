@@ -30,11 +30,11 @@ func initPastBlocksTime() {
 func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 	initPastBlocksTime()
 	if blockTime < pastElevenBlocksSortedTime[len(pastElevenBlocksSortedTime)/2] ||
-		blockTime > otherNodesTime[len(otherNodesTime)/2]+2 {
-		return false
+		(len(otherNodesTime) > 0 && blockTime > otherNodesTime[len(otherNodesTime)/2]+2) {
+		return true
 	}
 
-	return true
+	return false
 }
 
 func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool {
@@ -56,7 +56,7 @@ func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool 
 
 	var isAdded bool
 	var blocks []BlockChainId
-	if mainchBlock.Time >= block.Time && block.HashPrevBlock == hashing.SHA1(BlockHeaderToString(mainchBlock)) { // Fork from a mainchain
+	if mainchBlock.Time >= mainchBlock.Time+1 && block.HashPrevBlock == hashing.SHA1(BlockHeaderToString(mainchBlock)) { // Fork from a mainchain
 		blocks, _ = GetBlocksOnHeight(height)
 		chainId = uint64(len(blocks))
 		isAdded = WriteBlock(height, chainId, block)

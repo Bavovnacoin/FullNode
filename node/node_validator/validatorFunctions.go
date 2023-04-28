@@ -75,6 +75,6 @@ func LaunchValidatorNode() {
 	} else {
 		log.Println("Db synchronization done")
 	}
-	panic("exit")
-	//BlockGen(true)
+
+	BlockGen(true)
 }
