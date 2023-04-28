@@ -54,6 +54,7 @@ func StartP2PCommunication() {
 	}
 
 	addSettingsAddresses()
+	//SendOutNewBlock()
 }
 
 func addOtherAddress(address string) bool {

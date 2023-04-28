@@ -55,7 +55,6 @@ func (txo *TXO) PrintTxo(i int) {
 		i, txo.OutTxHash.ToHexString(), txo.TxOutInd, txo.OutAddress.ToHexString(), txo.BlockHeight, txo.Value)
 }
 
-// TODO: print unspent and spent outputs
 func PrintCoinDatabase() {
 	log.Println("Utxo list:")
 	for i := 0; i < len(CoinDatabase); i++ {

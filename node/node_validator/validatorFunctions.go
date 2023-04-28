@@ -55,7 +55,8 @@ func LaunchValidatorNode() {
 
 	log.Println("Db synchronization...")
 	syncRes := networking_p2p.StartSync()
-	for !networking_p2p.IsSyncEnded {
+
+	for !networking_p2p.IsSyncEnded && syncRes {
 		time.Sleep(20 * time.Millisecond)
 	}
 
