@@ -4,6 +4,7 @@ import (
 	"bavovnacoin/node/node_controller/command_executor"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var settings_menu bool
@@ -78,7 +79,7 @@ func nodeTypeSetValid(nodeType string, settings *NodeSettings) bool {
 	return false
 }
 
-func addressesVariants(addresses []string) string {
+func addressesVariants(addresses [][]string) string {
 	if len(addresses) == 0 {
 		return "There's no addresses\n"
 	}
@@ -86,7 +87,7 @@ func addressesVariants(addresses []string) string {
 	res := ""
 	i := 0
 	for ; i < len(addresses); i++ {
-		res += fmt.Sprintf("%d. %s\n", i+1, addresses[i])
+		res += fmt.Sprintf("%d. %s %s\n", i+1, addresses[i][0], addresses[i][1])
 	}
 
 	return res
@@ -110,7 +111,8 @@ func addressesSetValid(input string, settings *NodeSettings) bool {
 			}
 		}
 	} else {
-		isAdded := settings.AddAddress(input)
+		addresses := strings.Split(input, "_")
+		isAdded := settings.AddAddress(addresses)
 		if isAdded {
 			settings.WriteSettings()
 			return true

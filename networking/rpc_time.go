@@ -1,7 +1,6 @@
 package networking
 
 import (
-	"bavovnacoin/node/node_controller/node_settings"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -24,24 +23,4 @@ func (c *Connection) GetNodeTime() int64 {
 	}
 
 	return int64(binary.LittleEndian.Uint64(repl.Data))
-}
-
-func GetSettingsNodesTime() []int64 {
-	var nodesTimeArray []int64
-	var conn Connection
-	var currAddrInd int = -1
-	var allowConnect bool = true
-
-	for allowConnect {
-		allowConnect, currAddrInd = conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, currAddrInd, "")
-		if !allowConnect {
-			break
-		}
-		nodeTime := conn.GetNodeTime()
-
-		if nodeTime != -1 {
-			nodesTimeArray = append(nodesTimeArray, nodeTime)
-		}
-	}
-	return nodesTimeArray
 }

@@ -37,7 +37,7 @@ func SaveReorgData() {
 
 func RecieveBlocks() ([]blockchain.Block, int) {
 	var conn networking.Connection
-	isConn, _ := conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, -1, "")
+	isConn, _ := conn.EstablishAddresses(node_settings.Settings.OtherNodesAddresses[0], -1, "")
 	if !isConn {
 		return nil, 1
 	}

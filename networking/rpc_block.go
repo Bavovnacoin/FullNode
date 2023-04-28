@@ -60,19 +60,6 @@ func (c *Connection) RequestBlocks(startFromHeight uint64) ([]BlocksOnHeight, ui
 	return blockReq.Blocks, blockReq.BcHeight, true
 }
 
-func (l *Listener) AddProposedBlock(blockProposalByteArr []byte, reply *Reply) error {
-	var blockProp BlockProposal
-	byteArr.FromByteArr(blockProposalByteArr, &blockProp)
-
-	if blockchain.TryCameBlockToAdd(blockProp.Block, blockProp.Height, GetSettingsNodesTime()) {
-		*reply = Reply{[]byte{1}}
-		ProposeBlockToSettingsNodes(blockProp.Block, blockProp.Address)
-	} else {
-		*reply = Reply{[]byte{0}}
-	}
-	return nil
-}
-
 func (l *Listener) GetBlockProposal(blockHashPropByteArr []byte, reply *Reply) error {
 	var blockHashProposal BlockHashProposal
 	byteArr.FromByteArr(blockHashPropByteArr, &blockHashProposal)
@@ -86,7 +73,6 @@ func (l *Listener) GetBlockProposal(blockHashPropByteArr []byte, reply *Reply) e
 	return nil
 }
 
-// TODO: make in a single function (probability of using second funxtion directly)
 func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.Block, blockHeight uint64) bool {
 	var repl Reply
 	var blockHashProposal BlockHashProposal
@@ -118,24 +104,4 @@ func (c *Connection) ProposeBlockToOtherNode(blockHash []byte, block blockchain.
 	}
 
 	return true // No problems
-}
-
-func ProposeBlockToSettingsNodes(block blockchain.Block, avoidAddress string) bool {
-	var blockHash byteArr.ByteArr
-	blockHashString := hashing.SHA1(blockchain.BlockHeaderToString(block))
-	blockHash.SetFromHexString(blockHashString, 20)
-
-	var connection Connection
-	var isNodesAccessible bool
-
-	for i := 0; i < len(node_settings.Settings.OtherNodesAddresses); i++ {
-		isNodesAccessible, i = connection.EstablishAddresses(node_settings.Settings.OtherNodesAddresses, i-1, avoidAddress)
-
-		if !isNodesAccessible {
-			return false
-		}
-
-		connection.ProposeBlockToOtherNode(blockHash.ByteArr, block, blockchain.BcLength-1)
-	}
-	return true
 }

@@ -34,6 +34,7 @@ func StreamHandler(s network.Stream) {
 	TryHandleSynchronization(data, peerID)
 	TryAddCameBlock(data, peerID)
 	TryHandleTime(data, peerID)
+	TryHandleTx(data, peerID)
 }
 
 // My address (localhost) /ip4/127.0.0.1/tcp/58818
@@ -78,7 +79,7 @@ func addOtherAddress(address string) bool {
 
 func addSettingsAddresses() {
 	for i := 0; i < len(node_settings.Settings.OtherNodesAddresses); i++ {
-		addOtherAddress(node_settings.Settings.OtherNodesAddresses[i])
+		addOtherAddress(node_settings.Settings.OtherNodesAddresses[i][0])
 	}
 }
 

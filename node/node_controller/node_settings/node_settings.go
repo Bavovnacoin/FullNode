@@ -14,10 +14,10 @@ var Settings NodeSettings
 var settingsFileName string = "node_settings.json"
 
 type NodeSettings struct {
-	TxMinFee            uint64   // Lowest fee of tx to be verified
-	MiningThreads       uint     // Threads for mining count
-	NodeType            uint     // For now there's two types: full node, audithor
-	OtherNodesAddresses []string // Addresses of other nodes to communicate
+	TxMinFee            uint64     // Lowest fee of tx to be verified
+	MiningThreads       uint       // Threads for mining count
+	NodeType            uint       // For now there's two types: full node, audithor
+	OtherNodesAddresses [][]string // Addresses of other nodes to communicate
 	MyAddress           string
 	PrivKey             []byte
 	RewardAddress       string
@@ -35,7 +35,7 @@ func (ns *NodeSettings) GetSettings() {
 	defer jsonFile.Close()
 
 	if err != nil {
-		*ns = NodeSettings{TxMinFee: 3, MiningThreads: 0, NodeType: 0, OtherNodesAddresses: []string{"188.163.8.146:25565"}}
+		*ns = NodeSettings{TxMinFee: 3, MiningThreads: 0, NodeType: 0}
 		ns.WriteSettings()
 	} else {
 		byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -83,15 +83,15 @@ func (ns *NodeSettings) ThreadsForMiningToString() string {
 
 func (ns *NodeSettings) IsAddressAdded(address string) bool {
 	for i := 0; i < len(ns.OtherNodesAddresses); i++ {
-		if ns.OtherNodesAddresses[i] == address {
+		if ns.OtherNodesAddresses[i][0] == address {
 			return true
 		}
 	}
 	return false
 }
 
-func (ns *NodeSettings) AddAddress(address string) bool {
-	if !ns.IsAddressAdded(address) {
+func (ns *NodeSettings) AddAddress(address []string) bool {
+	if !ns.IsAddressAdded(address[0]) {
 		ns.OtherNodesAddresses = append(ns.OtherNodesAddresses, address)
 		return true
 	}
