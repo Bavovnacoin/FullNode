@@ -16,7 +16,7 @@ type Reply struct {
 }
 
 func StartRPCListener() (bool, error) {
-	addy, err := net.ResolveTCPAddr("tcp", node_settings.Settings.MyAddress)
+	addy, err := net.ResolveTCPAddr("tcp", node_settings.Settings.RPCip)
 	if err != nil {
 		log.Println(err)
 		return false, err

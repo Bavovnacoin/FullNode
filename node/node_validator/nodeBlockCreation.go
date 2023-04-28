@@ -79,7 +79,6 @@ func AddBlockLog(allowPrint bool, isBlockValid bool) bool {
 		isBlockAdded = true
 		println()
 		go networking_p2p.ProposeNewBlock(blockchain.CreatedBlock, blockchain.BcLength)
-		//networking.ProposeBlockToSettingsNodes(blockchain.CreatedBlock, "")
 	} else {
 		if allowPrint {
 			log.Println("Created block is not valid.")

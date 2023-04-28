@@ -21,6 +21,7 @@ type NodeSettings struct {
 	MyAddress           string
 	PrivKey             []byte
 	RewardAddress       string
+	RPCip               string
 
 	NodeTypesNames []string `json:"-"`
 }
@@ -124,4 +125,8 @@ func (ns *NodeSettings) GetPrivKey() []byte {
 		ns.WriteSettings()
 	}
 	return Settings.PrivKey
+}
+
+func (ns *NodeSettings) GetRpcAddr() string {
+	return Settings.RPCip
 }

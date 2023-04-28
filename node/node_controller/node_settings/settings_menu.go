@@ -128,6 +128,15 @@ func myAddrSetValid(address string, settings *NodeSettings) bool {
 	return false
 }
 
+func rpcAddrSetValid(address string, settings *NodeSettings) bool {
+	if address != settings.RPCip {
+		settings.RPCip = address
+		settings.WriteSettings()
+		return true
+	}
+	return false
+}
+
 func rewAddrSetValid(rewAddr string, settings *NodeSettings) bool {
 	if rewAddr != settings.RewardAddress && settings.IsRewAddrWalid(rewAddr) {
 		settings.RewardAddress = rewAddr
@@ -157,6 +166,9 @@ func ChooseMenuVariant(variant string, settings *NodeSettings) {
 		fieldEnterForm(fmt.Sprintf("Current reward address is %s. Enter a new one or type \"back\" to back to the settings menu.\n", settings.GetRewAddress()),
 			settings, rewAddrSetValid)
 	} else if variant == "7" {
+		fieldEnterForm(fmt.Sprintf("Current rpc address is %s. Enter a new one or type \"back\" to back to the settings menu.\n", settings.GetRpcAddr()),
+			settings, rpcAddrSetValid)
+	} else if variant == "8" {
 		settings_menu = false
 	}
 }
@@ -174,7 +186,8 @@ func LaunchMenu(settings *NodeSettings) {
 		fmt.Printf("4. Other node addresses (Ammount: %d).\n", len(settings.OtherNodesAddresses))
 		fmt.Printf("5. Change my address (Current: %s).\n", settings.MyAddress)
 		fmt.Printf("6. Change reward address (Current: %s).\n", settings.GetRewAddress())
-		fmt.Printf("7. Back\n")
+		fmt.Printf("7. Change RPC address (Current: %s).\n", settings.GetRpcAddr())
+		fmt.Printf("8. Back\n")
 
 		fmt.Scan(&variant)
 		ChooseMenuVariant(variant, settings)

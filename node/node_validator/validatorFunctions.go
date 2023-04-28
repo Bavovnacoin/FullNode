@@ -48,7 +48,7 @@ func LaunchValidatorNode() {
 	dbController.DB.OpenDb()
 	defer dbController.DB.CloseDb()
 	networking_p2p.StartP2PCommunication()
-	//StartRPC()
+	StartRPC()
 	defer networking.StopRPCListener()
 	blockchain.InitBlockchain()
 	txo.RestoreCoinDatabase()
