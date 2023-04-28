@@ -31,10 +31,10 @@ func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 	initPastBlocksTime()
 	if blockTime < pastElevenBlocksSortedTime[len(pastElevenBlocksSortedTime)/2] ||
 		(len(otherNodesTime) > 0 && blockTime > otherNodesTime[len(otherNodesTime)/2]+2) {
-		return true
+		return false
 	}
 
-	return false
+	return true
 }
 
 func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool {
