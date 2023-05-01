@@ -5,7 +5,9 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
+	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_controller/node_settings"
 	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing/account"
 	"bavovnacoin/transaction"
@@ -112,11 +114,18 @@ func (rv *ReorganizationVerifTest) printResult() {
 		println(str)
 	}
 
+	// TODO: check TXO
+
+	for i := 0; i < int(blockchain.BcLength); i++ {
+		println(i)
+	}
 }
 
 func (rv *ReorganizationVerifTest) Launch() {
 	rv.mcBlockAmmount = 2
 	rv.acBlockAmmount = 3
+	node_settings.Settings.GetSettings()
+	networking_p2p.StartP2PCommunication()
 
 	dbController.DbPath = "testing/testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {

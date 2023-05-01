@@ -1,15 +1,15 @@
 {
-    "TxMinFee": 0,
+    "TxMinFee": 3,
     "MiningThreads": 0,
     "NodeType": 0,
     "OtherNodesAddresses": [
         [
-            "/ip4/127.0.0.1/tcp/58819/16Uiu2HAmQQU6fdiPyHjgDABA7pPqvhuJTPVkrSPpEHQqqKXMHvti",
-            "localhost:25566"
+            "/ip4/127.0.0.1/tcp/58818/16Uiu2HAmCNBw4CzgFJavAb5f46MQ5gzFppo2vzcBmHY1ojz4kG6W",
+            "localhost:25565"
         ]
     ],
-    "MyAddress": "/ip4/127.0.0.1/tcp/58818",
+    "MyAddress": "/ip4/127.0.0.1/tcp/58819",
     "PrivKey": "Lfo/tpkTV4ZFs53ETep/oz/Sk02SXoSBo0t1vOGWAj8=",
-    "RewardAddress": "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375",
+    "RewardAddress": "1111111111111111111111111111111111111111",
     "RPCip": "localhost:25565"
 }

@@ -56,7 +56,8 @@ func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool 
 
 	var isAdded bool
 	var blocks []BlockChainId
-	if mainchBlock.Time >= mainchBlock.Time+1 && block.HashPrevBlock == hashing.SHA1(BlockHeaderToString(mainchBlock)) { // Fork from a mainchain
+
+	if mainchBlock.Time >= block.Time && block.HashPrevBlock == hashing.SHA1(BlockHeaderToString(mainchBlock)) {
 		blocks, _ = GetBlocksOnHeight(height)
 		chainId = uint64(len(blocks))
 		isAdded = WriteBlock(height, chainId, block)
@@ -65,7 +66,6 @@ func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool 
 		println(1)
 	} else { // Decide to what chain attach a new block
 		blocks, chaindIds, _ := getAllLastBlocks()
-
 		for i := 0; i < len(blocks); i++ {
 			blockHash := hashing.SHA1(BlockHeaderToString(blocks[i]))
 
