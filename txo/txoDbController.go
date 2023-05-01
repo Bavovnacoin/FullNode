@@ -76,6 +76,22 @@ func GetTxo(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) (TXO, boo
 	return txo, false
 }
 
+func GetTxoList(prefix string) ([]TXO, bool) {
+	var txoArr []TXO
+	var isConv bool
+	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte(prefix)), nil)
+	for iter.Next() {
+		var currTxo TXO
+		isConv = byteArr.FromByteArr(iter.Value(), &currTxo)
+		if !isConv {
+			return txoArr, false
+		}
+		txoArr = append(txoArr, currTxo)
+	}
+	iter.Release()
+	return txoArr, true
+}
+
 func RemoveTxo(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) bool {
 	return dbController.DB.Db.Delete([]byte("txo"+
 		hashing.SHA1(outTxHash.ToHexString()+fmt.Sprint(outInd)+fmt.Sprint(BlockHeight))), nil) == nil
