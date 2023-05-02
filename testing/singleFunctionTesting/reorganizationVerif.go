@@ -29,7 +29,7 @@ type ReorganizationVerifTest struct {
 	random *rand.Rand
 }
 
-func (rv *ReorganizationVerifTest) CreateTx() transaction.Transaction {
+func (rv *ReorganizationVerifTest) CreateTx() (transaction.Transaction, bool) {
 	fee := rv.random.Intn(5) + 1
 	isGenLocktime := rv.random.Intn(5)
 	var locktime uint
@@ -44,9 +44,22 @@ func (rv *ReorganizationVerifTest) CreateTx() transaction.Transaction {
 	var outValue []uint64
 	outValue = append(outValue, 1000)
 
-	tx, _ := transaction.CreateTransaction(fmt.Sprint(0), outAddr, outValue, fee, locktime)
+	tx, isValid := transaction.CreateTransaction(fmt.Sprint(0), outAddr, outValue, fee, locktime)
+
 	rv.currAccKpInd++
-	return tx
+	return tx, isValid == ""
+}
+
+func (rv *ReorganizationVerifTest) txForming() {
+	for command_executor.ComContr.FullNodeWorking {
+		rv.prevHeight = blockchain.BcLength
+		tx, isValid := rv.CreateTx()
+		if !isValid {
+			continue
+		}
+		blockchain.AddTxToMempool(tx, true)
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func (rv *ReorganizationVerifTest) nodeWorkListener(blocksCount uint64) {
@@ -55,17 +68,13 @@ func (rv *ReorganizationVerifTest) nodeWorkListener(blocksCount uint64) {
 			command_executor.ComContr.FullNodeWorking = false
 			return
 		}
-
-		if rv.prevHeight != blockchain.BcLength {
-			rv.prevHeight = blockchain.BcLength
-			blockchain.AddTxToMempool(rv.CreateTx(), false)
-		}
 	}
 }
 
 func (rv *ReorganizationVerifTest) genBlocks() {
 	command_executor.ComContr.FullNodeWorking = true
 	go rv.nodeWorkListener(rv.mcBlockAmmount)
+	go rv.txForming()
 	node_validator.BlockGen(false)
 }
 
@@ -74,7 +83,8 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 	var prevHash string = hashing.SHA1(blockchain.BlockHeaderToString(bl))
 
 	for i := uint64(0); i < rv.acBlockAmmount; i++ {
-		blockchain.AddTxToMempool(rv.CreateTx(), false)
+		tx, _ := rv.CreateTx()
+		blockchain.AddTxToMempool(tx, false)
 		node_validator.CreateBlockLog(blockchain.GetBits(true), prevHash, bl, true)
 		blockchain.AllowCreateBlock = false
 
@@ -101,6 +111,9 @@ func getOutputsFromMainchain() ([]txo.TXO, []txo.TXO, bool) {
 		}
 
 		for j := 0; j < len(block.Transactions); j++ {
+			var txByteArr byteArr.ByteArr
+			txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[j])), 20)
+
 			// Check inputs
 			inputs := block.Transactions[j].Inputs
 			for k := 0; k < len(inputs); k++ {
@@ -111,6 +124,11 @@ func getOutputsFromMainchain() ([]txo.TXO, []txo.TXO, bool) {
 						mainchUtxo = append(mainchUtxo[:h], mainchUtxo[h+1:]...)
 						break
 					}
+
+					if h+1 == len(mainchUtxo) {
+						println("Sry, not found", h+1, i)
+						println(inputs[k].TxHash.ToHexString(), inputs[k].OutInd)
+					}
 				}
 
 			}
@@ -118,7 +136,8 @@ func getOutputsFromMainchain() ([]txo.TXO, []txo.TXO, bool) {
 			// Check outputs
 			outputs := block.Transactions[j].Outputs
 			for k := 0; k < len(outputs); k++ {
-				mainchUtxo = append(mainchUtxo, txo.TXO{Value: outputs[k].Value, OutAddress: outputs[k].Address, BlockHeight: i})
+				mainchUtxo = append(mainchUtxo, txo.TXO{Value: outputs[k].Value, OutAddress: outputs[k].Address,
+					BlockHeight: i, OutTxHash: txByteArr, TxOutInd: uint64(k)})
 			}
 		}
 	}
@@ -148,7 +167,7 @@ func (rv *ReorganizationVerifTest) printResult() {
 			str += fmt.Sprintf("%s %s", fmt.Sprint(blocks[0].Block.Version), fmt.Sprint(blocks[1].Block.Version))
 		}
 
-		// println(str)
+		println(str)
 	}
 
 	// Check TXO and UTXO
@@ -159,25 +178,17 @@ func (rv *ReorganizationVerifTest) printResult() {
 
 	storedTxo, _ := txo.GetTxoList("txo")
 	storedUtxo, _ := txo.GetTxoList("utxo")
-	for i := 0; i < len(mUtxo); i++ {
-		mUtxo[i].PrintTxo(-1)
-	}
-	println()
-	for i := 0; i < len(storedUtxo); i++ {
-		storedUtxo[i].PrintTxo(-1)
-	}
 
-	println(len(mUtxo), len(storedUtxo), len(txo.CoinDatabase))
 	if len(mTxo) != len(storedTxo) {
 		println("Test failed. Wrong txo ammount.")
 		return
 	} else if len(mUtxo) != len(storedUtxo) {
 		println("Test failed. Wrong utxo ammount.")
-		//return
+		return
 	}
 
 	for i := 0; i < len(storedTxo); i++ {
-		_, res := txo.GetTxo(storedTxo[i].OutTxHash, int(storedTxo[i].TxOutInd), storedTxo[i].BlockHeight)
+		_, res := txo.GetTxos(storedTxo[i].OutTxHash, int(storedTxo[i].TxOutInd), storedTxo[i].BlockHeight)
 		if !res {
 			println("Incorrect txo")
 			return
@@ -190,9 +201,6 @@ func (rv *ReorganizationVerifTest) printResult() {
 			println("Incorrect utxo")
 			return
 		}
-		// for j := 0; j < len(utxos); j++ {
-		// 	utxos[j].PrintTxo(i)
-		// }
 	}
 	println("Test passed!")
 }
@@ -220,8 +228,7 @@ func (rv *ReorganizationVerifTest) Launch() {
 
 	blockchain.STARTBITS = 0xffff13
 	rv.genBlocks() // Generating blocks in mainchain
-
-	// rv.genAltchBlocks()
-	time.Sleep(time.Millisecond * 800)
+	time.Sleep(time.Millisecond * 200)
+	rv.genAltchBlocks()
 	rv.printResult()
 }

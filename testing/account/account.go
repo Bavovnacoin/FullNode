@@ -69,7 +69,10 @@ func GetAccUtxo() []txo.TXO {
 
 func GetBalHashOutInd(txHash byteArr.ByteArr, outInd int) uint64 {
 	utxos, _ := txo.GetUtxos(txHash, outInd)
-	return utxos[0].Value
+	if len(utxos) > 0 {
+		return utxos[0].Value
+	}
+	return 0
 	// for j := 0; j < len(txo.CoinDatabase); j++ {
 	// 	if txHash.IsEqual(txo.CoinDatabase[j].OutTxHash) && txo.CoinDatabase[j].TxOutInd == uint64(outInd) {
 	// 		return txo.CoinDatabase[j].Value

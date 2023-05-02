@@ -18,16 +18,6 @@ func SetUtxo(utxo TXO) bool {
 	return dbController.DB.SetValue(key, byteVal)
 }
 
-// func GetUtxo(outTxHash byteArr.ByteArr, outInd int, height uint64) (TXO, bool) {
-// 	utxoByteArr, isValid := dbController.DB.GetValue("utxo" + outTxHash.ToHexString() + fmt.Sprint(outInd) + fmt.Sprint(height))
-// 	var utxo TXO
-// 	if isValid {
-// 		byteArr.FromByteArr(utxoByteArr, &utxo)
-// 		return utxo, true
-// 	}
-// 	return utxo, false
-// }
-
 func GetUtxos(outTxHash byteArr.ByteArr, outInd int) ([]TXO, bool) {
 	var utxoRes []TXO
 	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("utxo"+outTxHash.ToHexString()+fmt.Sprint(outInd))), nil)
@@ -94,6 +84,27 @@ func GetTxo(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) (TXO, boo
 		return txo, true
 	}
 	return txo, false
+}
+
+func GetTxos(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) ([]TXO, bool) {
+	var txoRes []TXO
+	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("txo"+outTxHash.ToHexString()+fmt.Sprint(outInd)+fmt.Sprint(BlockHeight))), nil)
+	for iter.Next() {
+		var utxo TXO
+		isConv := byteArr.FromByteArr(iter.Value(), &utxo)
+		if !isConv {
+			return txoRes, false
+		}
+		txoRes = append(txoRes, utxo)
+	}
+
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		return txoRes, false
+	}
+
+	return txoRes, true
 }
 
 func GetTxoList(prefix string) ([]TXO, bool) {

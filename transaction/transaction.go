@@ -63,7 +63,6 @@ func genTxScriptSignatures(keyPair []ecdsa.KeyPair, passKey string, tx Transacti
 	for i := 0; i < len(keyPair); i++ {
 		prk := cryption.AES_decrypt(keyPair[i].PrivKey, passKey)
 		sign := ecdsa.Sign(message, prk)
-
 		tx.Inputs[i].ScriptSig.SetFromHexString(keyPair[i].PublKey+sign, 111)
 	}
 
@@ -198,6 +197,7 @@ func CreateTransaction(passKey string, outAdr []byteArr.ByteArr, outVals []uint6
 		tx.Outputs = append(tx.Outputs, Output{Value: uint64(outTxValue - (genValue + uint64(txSize)*uint64(feePerByte)))})
 		tx.Outputs[len(tx.Outputs)-1].Address.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[kpLen-1].PublKey), 20)
 	}
+
 	tx = genTxScriptSignatures(kpForSign, passKey, tx)
 	return tx, ""
 }
@@ -251,13 +251,18 @@ func PrintTransaction(tx Transaction) {
 func (tx *Transaction) IsDoubleSpendingAttack() bool {
 	var inpValue uint64
 	var outValue uint64
+	var curVal uint64
 	for i := 0; i < len(tx.Inputs); i++ {
 		utxos, res := txo.GetUtxos(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 		if !res {
 			return true
 		}
 
-		curVal := utxos[0].Value
+		if len(utxos) > 0 {
+			curVal = utxos[0].Value
+		} else {
+			curVal = 0
+		}
 		inpValue += curVal
 	}
 
@@ -294,9 +299,10 @@ func VerifyTransaction(tx Transaction) bool {
 			}
 
 			utxos, res := txo.GetUtxos(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
-			if !res {
+			if !res || len(utxos) == 0 {
 				return false
 			}
+
 			curVal := utxos[0].Value
 			//curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 			inpValue += curVal
