@@ -3,7 +3,6 @@ package txo
 import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
-	"bavovnacoin/hashing"
 	"fmt"
 	"log"
 
@@ -15,22 +14,43 @@ func SetUtxo(utxo TXO) bool {
 	if !isConv {
 		return false
 	}
-	key := "utxo" + hashing.SHA1(utxo.OutTxHash.ToHexString()+fmt.Sprint(utxo.TxOutInd))
+	key := "utxo" + utxo.OutTxHash.ToHexString() + fmt.Sprint(utxo.TxOutInd) + fmt.Sprint(utxo.BlockHeight)
 	return dbController.DB.SetValue(key, byteVal)
 }
 
-func GetUtxo(outTxHash byteArr.ByteArr, outInd int) (TXO, bool) {
-	utxoByteArr, isValid := dbController.DB.GetValue("utxo" + hashing.SHA1(outTxHash.ToHexString()+fmt.Sprint(outInd)))
-	var utxo TXO
-	if isValid {
-		byteArr.FromByteArr(utxoByteArr, &utxo)
-		return utxo, true
+// func GetUtxo(outTxHash byteArr.ByteArr, outInd int, height uint64) (TXO, bool) {
+// 	utxoByteArr, isValid := dbController.DB.GetValue("utxo" + outTxHash.ToHexString() + fmt.Sprint(outInd) + fmt.Sprint(height))
+// 	var utxo TXO
+// 	if isValid {
+// 		byteArr.FromByteArr(utxoByteArr, &utxo)
+// 		return utxo, true
+// 	}
+// 	return utxo, false
+// }
+
+func GetUtxos(outTxHash byteArr.ByteArr, outInd int) ([]TXO, bool) {
+	var utxoRes []TXO
+	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("utxo"+outTxHash.ToHexString()+fmt.Sprint(outInd))), nil)
+	for iter.Next() {
+		var utxo TXO
+		isConv := byteArr.FromByteArr(iter.Value(), &utxo)
+		if !isConv {
+			return utxoRes, false
+		}
+		utxoRes = append(utxoRes, utxo)
 	}
-	return utxo, false
+
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		return utxoRes, false
+	}
+
+	return utxoRes, true
 }
 
 func RemUtxo(OutTxHash byteArr.ByteArr, OutTxInd, blockHeight uint64) bool {
-	key := "utxo" + hashing.SHA1(OutTxHash.ToHexString()+fmt.Sprint(OutTxInd)+fmt.Sprint(blockHeight))
+	key := "utxo" + OutTxHash.ToHexString() + fmt.Sprint(OutTxInd) + fmt.Sprint(blockHeight)
 	res := dbController.DB.RemoveValue(key)
 	return res
 }
@@ -62,12 +82,12 @@ func SetTxo(txo TXO) bool {
 	if !isConv {
 		return false
 	}
-	key := "txo" + hashing.SHA1(txo.OutTxHash.ToHexString()+fmt.Sprint(txo.TxOutInd)+fmt.Sprint(txo.BlockHeight))
+	key := "txo" + txo.OutTxHash.ToHexString() + fmt.Sprint(txo.TxOutInd) + fmt.Sprint(txo.BlockHeight)
 	return dbController.DB.SetValue(key, byteVal)
 }
 
 func GetTxo(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) (TXO, bool) {
-	utxoByteArr, isValid := dbController.DB.GetValue("txo" + hashing.SHA1(outTxHash.ToHexString()+fmt.Sprint(outInd)+fmt.Sprint(BlockHeight)))
+	utxoByteArr, isValid := dbController.DB.GetValue("txo" + outTxHash.ToHexString() + fmt.Sprint(outInd) + fmt.Sprint(BlockHeight))
 	var txo TXO
 	if isValid {
 		byteArr.FromByteArr(utxoByteArr, &txo)
@@ -94,7 +114,7 @@ func GetTxoList(prefix string) ([]TXO, bool) {
 
 func RemoveTxo(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) bool {
 	return dbController.DB.Db.Delete([]byte("txo"+
-		hashing.SHA1(outTxHash.ToHexString()+fmt.Sprint(outInd)+fmt.Sprint(BlockHeight))), nil) == nil
+		outTxHash.ToHexString()+fmt.Sprint(outInd)+fmt.Sprint(BlockHeight)), nil) == nil
 }
 
 func IsOutAddrExist(addr byteArr.ByteArr) bool {

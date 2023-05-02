@@ -252,12 +252,12 @@ func (tx *Transaction) IsDoubleSpendingAttack() bool {
 	var inpValue uint64
 	var outValue uint64
 	for i := 0; i < len(tx.Inputs); i++ {
-		utxo, res := txo.GetUtxo(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
+		utxos, res := txo.GetUtxos(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 		if !res {
 			return true
 		}
 
-		curVal := utxo.Value
+		curVal := utxos[0].Value
 		inpValue += curVal
 	}
 
@@ -293,11 +293,11 @@ func VerifyTransaction(tx Transaction) bool {
 				return false
 			}
 
-			utxo, res := txo.GetUtxo(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
+			utxos, res := txo.GetUtxos(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 			if !res {
 				return false
 			}
-			curVal := utxo.Value
+			curVal := utxos[0].Value
 			//curVal := account.GetBalHashOutInd(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 			inpValue += curVal
 		}

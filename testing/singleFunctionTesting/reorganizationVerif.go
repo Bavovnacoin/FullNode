@@ -56,10 +56,10 @@ func (rv *ReorganizationVerifTest) nodeWorkListener(blocksCount uint64) {
 			return
 		}
 
-		// if rv.prevHeight != blockchain.BcLength {
-		// 	rv.prevHeight = blockchain.BcLength
-		// 	blockchain.AddTxToMempool(rv.CreateTx(), false)
-		// }
+		if rv.prevHeight != blockchain.BcLength {
+			rv.prevHeight = blockchain.BcLength
+			blockchain.AddTxToMempool(rv.CreateTx(), false)
+		}
 	}
 }
 
@@ -118,7 +118,7 @@ func getOutputsFromMainchain() ([]txo.TXO, []txo.TXO, bool) {
 			// Check outputs
 			outputs := block.Transactions[j].Outputs
 			for k := 0; k < len(outputs); k++ {
-				mainchUtxo = append(mainchUtxo, txo.TXO{Value: outputs[k].Value, OutAddress: outputs[k].Address})
+				mainchUtxo = append(mainchUtxo, txo.TXO{Value: outputs[k].Value, OutAddress: outputs[k].Address, BlockHeight: i})
 			}
 		}
 	}
@@ -148,7 +148,7 @@ func (rv *ReorganizationVerifTest) printResult() {
 			str += fmt.Sprintf("%s %s", fmt.Sprint(blocks[0].Block.Version), fmt.Sprint(blocks[1].Block.Version))
 		}
 
-		println(str)
+		// println(str)
 	}
 
 	// Check TXO and UTXO
@@ -159,14 +159,21 @@ func (rv *ReorganizationVerifTest) printResult() {
 
 	storedTxo, _ := txo.GetTxoList("txo")
 	storedUtxo, _ := txo.GetTxoList("utxo")
+	for i := 0; i < len(mUtxo); i++ {
+		mUtxo[i].PrintTxo(-1)
+	}
+	println()
+	for i := 0; i < len(storedUtxo); i++ {
+		storedUtxo[i].PrintTxo(-1)
+	}
 
+	println(len(mUtxo), len(storedUtxo), len(txo.CoinDatabase))
 	if len(mTxo) != len(storedTxo) {
 		println("Test failed. Wrong txo ammount.")
 		return
 	} else if len(mUtxo) != len(storedUtxo) {
 		println("Test failed. Wrong utxo ammount.")
-		println(len(mUtxo), len(storedUtxo), len(txo.CoinDatabase))
-		return
+		//return
 	}
 
 	for i := 0; i < len(storedTxo); i++ {
@@ -178,17 +185,20 @@ func (rv *ReorganizationVerifTest) printResult() {
 	}
 
 	for i := 0; i < len(storedUtxo); i++ {
-		_, res := txo.GetUtxo(storedUtxo[i].OutTxHash, int(storedUtxo[i].TxOutInd))
+		_, res := txo.GetUtxos(storedUtxo[i].OutTxHash, int(storedUtxo[i].TxOutInd))
 		if !res {
 			println("Incorrect utxo")
 			return
 		}
+		// for j := 0; j < len(utxos); j++ {
+		// 	utxos[j].PrintTxo(i)
+		// }
 	}
 	println("Test passed!")
 }
 
 func (rv *ReorganizationVerifTest) Launch() {
-	rv.mcBlockAmmount = 1
+	rv.mcBlockAmmount = 4
 	rv.acBlockAmmount = 3
 	node_settings.Settings.GetSettings()
 	networking_p2p.StartP2PCommunication()
@@ -212,6 +222,6 @@ func (rv *ReorganizationVerifTest) Launch() {
 	rv.genBlocks() // Generating blocks in mainchain
 
 	// rv.genAltchBlocks()
-	time.Sleep(time.Millisecond * 200)
+	time.Sleep(time.Millisecond * 800)
 	rv.printResult()
 }

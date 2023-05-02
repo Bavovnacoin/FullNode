@@ -24,7 +24,7 @@ func Spend(outTxHash byteArr.ByteArr, outind uint64) {
 			CoinDatabase[i].TxOutInd == outind {
 			txoToSpend = CoinDatabase[i]
 			CoinDatabase = append(CoinDatabase[:i], CoinDatabase[i+1:]...)
-			RemUtxo(outTxHash, outind, txoToSpend.TxOutInd) //TODO: block height here!
+			RemUtxo(outTxHash, outind, txoToSpend.BlockHeight)
 
 			break
 		}

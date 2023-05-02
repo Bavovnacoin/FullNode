@@ -56,12 +56,12 @@ func VerifyTransactionTime(tx transaction.Transaction) (bool, [4]time.Duration) 
 			timeFunConsumed[2] += time.Since(timeStart)
 
 			timeStart = time.Now() // UTXO from db getting time check
-			utxo, res := txo.GetUtxo(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
+			utxos, res := txo.GetUtxos(tx.Inputs[i].TxHash, tx.Inputs[i].OutInd)
 			timeFunConsumed[3] += time.Since(timeStart)
 			if !res {
 				return false, timeFunConsumed
 			}
-			curVal := utxo.Value
+			curVal := utxos[0].Value
 			inpValue += curVal
 		}
 		timeFunConsumed[0] /= time.Duration(len(tx.Inputs))
