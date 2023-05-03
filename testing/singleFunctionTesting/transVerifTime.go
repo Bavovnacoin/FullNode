@@ -1,3 +1,7 @@
+/*
+	Outputs time that is needed for transaction verification
+*/
+
 package singleFunctionTesting
 
 import (

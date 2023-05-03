@@ -1,3 +1,8 @@
+/*
+	Loads a network to check time that is needed for
+	variety of node`s functions
+*/
+
 package loadtesting
 
 import (

@@ -1,3 +1,7 @@
+/*
+	Checks outputs and blockchain structure after reorganization
+*/
+
 package singleFunctionTesting
 
 import (

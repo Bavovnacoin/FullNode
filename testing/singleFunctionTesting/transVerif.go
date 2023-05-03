@@ -1,3 +1,7 @@
+/*
+	Checks a node ability to detect incorrect transactions
+*/
+
 package singleFunctionTesting
 
 import (
