@@ -8,7 +8,7 @@ import (
 	"math/big"
 )
 
-var TransitionFactor = big.NewFloat(1.5)
+var TransitionFactor = big.NewFloat(1.3)
 
 func returnBlockTxo(block Block, height uint64) {
 	for i := 0; i < len(block.Transactions); i++ {
@@ -50,7 +50,7 @@ func addAltchBlockTxo(txs []transaction.Transaction) {
 		for j := 0; j < len(txOutList); j++ {
 			var txByteArr byteArr.ByteArr
 			txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(txs[i])), 20)
-			txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, uint64(int(BcLength)))
+			txo.AddUtxo(txByteArr, uint64(j), txOutList[j].Value, txOutList[j].Address, BcLength-1)
 		}
 	}
 }
@@ -87,6 +87,7 @@ func reorganize(chainId uint64, altchHeight uint64) bool {
 		if isAltGotten {
 			addAltchBlockTxo(altChBlock.Transactions)
 			RemBlock(forkHeight-1, chainId)
+			println(len(txo.CoinDatabase))
 		}
 
 		if isMainGotten {
@@ -95,6 +96,7 @@ func reorganize(chainId uint64, altchHeight uint64) bool {
 		if isAltGotten {
 			WriteBlock(forkHeight-1, 0, altChBlock)
 			LastBlock = altChBlock
+			BcLength++
 		}
 	}
 

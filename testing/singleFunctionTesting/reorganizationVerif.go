@@ -39,7 +39,7 @@ func (rv *ReorganizationVerifTest) CreateTx() (transaction.Transaction, bool) {
 
 	var outAddr []byteArr.ByteArr
 	outAddr = append(outAddr, byteArr.ByteArr{})
-	outAddr[0].SetFromHexString(hashing.SHA1("An address"), 20) // account.Wallet[0].KeyPairList[rv.currAccKpInd].PublKey
+	outAddr[0].SetFromHexString(hashing.SHA1("An address"), 20)
 
 	var outValue []uint64
 	outValue = append(outValue, 1000)
@@ -58,7 +58,7 @@ func (rv *ReorganizationVerifTest) txForming() {
 			continue
 		}
 		blockchain.AddTxToMempool(tx, true)
-		time.Sleep(10 * time.Millisecond)
+		//time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -83,8 +83,7 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 	var prevHash string = hashing.SHA1(blockchain.BlockHeaderToString(bl))
 
 	for i := uint64(0); i < rv.acBlockAmmount; i++ {
-		tx, _ := rv.CreateTx()
-		blockchain.AddTxToMempool(tx, false)
+		node_settings.Settings.RewardAddress = hashing.SHA1("abc")
 		node_validator.CreateBlockLog(blockchain.GetBits(true), prevHash, bl, true)
 		blockchain.AllowCreateBlock = false
 
@@ -183,7 +182,11 @@ func (rv *ReorganizationVerifTest) printResult() {
 		println("Test failed. Wrong txo ammount.")
 		return
 	} else if len(mUtxo) != len(storedUtxo) {
+		println(len(mUtxo), len(storedUtxo), len(txo.CoinDatabase))
 		println("Test failed. Wrong utxo ammount.")
+		for i := 0; i < len(storedUtxo); i++ {
+			storedUtxo[i].PrintTxo(-1)
+		}
 		return
 	}
 
@@ -203,10 +206,11 @@ func (rv *ReorganizationVerifTest) printResult() {
 		}
 	}
 	println("Test passed!")
+
 }
 
 func (rv *ReorganizationVerifTest) Launch() {
-	rv.mcBlockAmmount = 4
+	rv.mcBlockAmmount = 5
 	rv.acBlockAmmount = 3
 	node_settings.Settings.GetSettings()
 	networking_p2p.StartP2PCommunication()
@@ -226,9 +230,14 @@ func (rv *ReorganizationVerifTest) Launch() {
 	account.CurrAccount = account.Wallet[0]
 	node_settings.Settings.RewardAddress = hashing.SHA1(account.CurrAccount.KeyPairList[0].PublKey)
 
-	blockchain.STARTBITS = 0xffff13
+	//blockchain.STARTBITS = 0xffff13
 	rv.genBlocks() // Generating blocks in mainchain
 	time.Sleep(time.Millisecond * 200)
+	storedUtxo, _ := txo.GetTxoList("utxo")
+	for i := 0; i < len(storedUtxo); i++ {
+		storedUtxo[i].PrintTxo(-1)
+	}
+
 	rv.genAltchBlocks()
 	rv.printResult()
 }
