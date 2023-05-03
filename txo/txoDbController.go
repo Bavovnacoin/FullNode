@@ -86,9 +86,9 @@ func GetTxo(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) (TXO, boo
 	return txo, false
 }
 
-func GetTxos(outTxHash byteArr.ByteArr, outInd int, BlockHeight uint64) ([]TXO, bool) {
+func GetTxos(outTxHash byteArr.ByteArr, outInd int) ([]TXO, bool) {
 	var txoRes []TXO
-	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("txo"+outTxHash.ToHexString()+fmt.Sprint(outInd)+fmt.Sprint(BlockHeight))), nil)
+	iter := dbController.DB.Db.NewIterator(util.BytesPrefix([]byte("txo"+outTxHash.ToHexString()+fmt.Sprint(outInd))), nil)
 	for iter.Next() {
 		var utxo TXO
 		isConv := byteArr.FromByteArr(iter.Value(), &utxo)

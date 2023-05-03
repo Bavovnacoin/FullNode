@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -24,6 +25,7 @@ type ReorganizationVerifTest struct {
 	acBlockAmmount uint64
 	prevHeight     uint64
 	currAccKpInd   int
+	txCounter      int //TODO: remove
 
 	source rand.Source
 	random *rand.Rand
@@ -58,6 +60,7 @@ func (rv *ReorganizationVerifTest) txForming() {
 			continue
 		}
 		blockchain.AddTxToMempool(tx, true)
+		rv.txCounter++
 	}
 }
 
@@ -109,7 +112,7 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 		var otherNodesTime []int64
 		otherNodesTime = append(otherNodesTime, time.Now().UTC().Unix())
 		if i == 0 {
-			blockchain.CreatedBlock.Time = bl.Time - 1
+			blockchain.CreatedBlock.Time = bl.Time
 		}
 		blockchain.CreatedBlock.Version = 1
 		blockchain.TryCameBlockToAdd(blockchain.CreatedBlock, blockchain.BcLength-1+uint64(i), otherNodesTime)
@@ -138,7 +141,8 @@ func getOutputsFromMainchain() ([]txo.TXO, []txo.TXO, bool) {
 				for h := 0; h < len(mainchUtxo); h++ {
 					if inputs[k].TxHash.IsEqual(mainchUtxo[h].OutTxHash) &&
 						inputs[k].OutInd == int(mainchUtxo[h].TxOutInd) {
-						mainchTxo = append(mainchTxo, txo.TXO{OutTxHash: mainchUtxo[h].OutTxHash, TxOutInd: mainchUtxo[h].TxOutInd})
+						mainchTxo = append(mainchTxo, mainchUtxo[h])
+						println("added txo")
 						mainchUtxo = append(mainchUtxo[:h], mainchUtxo[h+1:]...)
 						break
 					}
@@ -158,29 +162,60 @@ func getOutputsFromMainchain() ([]txo.TXO, []txo.TXO, bool) {
 	return mainchTxo, mainchUtxo, true
 }
 
+func (rv *ReorganizationVerifTest) isBlocksChanged(levels [][]string) bool {
+	if uint64(len(levels)) < rv.mcBlockAmmount+rv.acBlockAmmount {
+		return false
+	}
+
+	for i := 0; i < len(levels); i++ {
+		if len(levels[i]) == 1 {
+			if i < int(rv.mcBlockAmmount) && levels[i][0] != "0" ||
+				i > int(rv.mcBlockAmmount) && levels[i][0] != "1" {
+				return false
+			}
+		} else {
+			if levels[i][0] != "1" && levels[i][1] != "0" {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 func (rv *ReorganizationVerifTest) printResult() {
 	println("Results:")
 	println("Blockchain scheme:")
+	var levels [][]string
 	for height := 0; true; height++ {
 		blocks, res := blockchain.GetBlocksOnHeight(uint64(height))
 		if !res || len(blocks) == 0 {
 			break
 		}
 
-		var str string
+		var level []string
 		if len(blocks) == 1 {
 			if blocks[0].ChainId == 0 {
-				str += fmt.Sprint(blocks[0].Block.Version)
-				str += "  "
+				level = append(level, fmt.Sprint(blocks[0].Block.Version))
+				level = append(level, " ")
 			} else {
-				str += "  "
-				str += fmt.Sprint(blocks[0].Block.Version)
+				level = append(level, " ")
+				level = append(level, fmt.Sprint(blocks[0].Block.Version))
 			}
 		} else {
-			str += fmt.Sprintf("%s %s", fmt.Sprint(blocks[0].Block.Version), fmt.Sprint(blocks[1].Block.Version))
+			level = append(level, fmt.Sprint(blocks[0].Block.Version))
+			level = append(level, fmt.Sprint(blocks[1].Block.Version))
 		}
+		levels = append(levels, level)
+		println(strings.Join(level, " "))
+	}
 
-		println(str)
+	println("")
+	if !rv.isBlocksChanged(levels) {
+		println("The scheme is correct")
+	} else {
+		println("Test failed: the scheme is incorrect")
+		return
 	}
 
 	// Check TXO and UTXO
@@ -193,6 +228,7 @@ func (rv *ReorganizationVerifTest) printResult() {
 	storedUtxo, _ := txo.GetTxoList("utxo")
 
 	if len(mTxo) != len(storedTxo) {
+		println(len(mTxo), len(storedTxo))
 		println("Test failed. Wrong txo ammount.")
 		return
 	} else if len(mUtxo) != len(storedUtxo) {
@@ -201,9 +237,9 @@ func (rv *ReorganizationVerifTest) printResult() {
 	}
 
 	for i := 0; i < len(storedTxo); i++ {
-		_, res := txo.GetTxos(storedTxo[i].OutTxHash, int(storedTxo[i].TxOutInd), storedTxo[i].BlockHeight)
+		_, res := txo.GetTxos(storedTxo[i].OutTxHash, int(storedTxo[i].TxOutInd))
 		if !res {
-			println("Incorrect txo")
+			println("Test failed: incorrect txo value")
 			return
 		}
 	}
@@ -211,10 +247,12 @@ func (rv *ReorganizationVerifTest) printResult() {
 	for i := 0; i < len(storedUtxo); i++ {
 		_, res := txo.GetUtxos(storedUtxo[i].OutTxHash, int(storedUtxo[i].TxOutInd))
 		if !res {
-			println("Incorrect utxo")
+			println("Test failed: incorrect utxo value")
 			return
 		}
 	}
+
+	println("TXO and UTXO values are correct")
 	println("Test passed!")
 
 }
@@ -245,4 +283,5 @@ func (rv *ReorganizationVerifTest) Launch() {
 
 	rv.genAltchBlocks()
 	rv.printResult()
+	println("tx ammount", rv.txCounter)
 }

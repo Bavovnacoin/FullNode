@@ -30,8 +30,9 @@ func returnBlockTxo(block Block, height uint64) {
 		inpList := block.Transactions[i].Inputs
 		for j := 0; j < len(inpList); j++ {
 			txoToAdd, _ := txo.GetTxo(inpList[j].TxHash, inpList[j].OutInd, height)
-			txo.RemoveTxo(inpList[j].TxHash, inpList[j].OutInd, height)
+			txos, _ := txo.GetTxos(inpList[j].TxHash, inpList[j].OutInd)
 
+			txo.RemoveTxo(txos[0].OutTxHash, int(txos[0].TxOutInd), txos[0].BlockHeight)
 			txo.AddUtxo(txoToAdd.OutTxHash, txoToAdd.TxOutInd, txoToAdd.Value, txoToAdd.OutAddress, txoToAdd.BlockHeight)
 			txo.CoinDatabase = append(txo.CoinDatabase, txoToAdd)
 		}

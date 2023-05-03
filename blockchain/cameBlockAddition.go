@@ -63,7 +63,6 @@ func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool 
 		isAdded = WriteBlock(height, chainId, block)
 		SetBlockForkHeight(height+1, chainId)
 		SetBcHeight(height+1, chainId)
-		println(1)
 	} else { // Decide to what chain attach a new block
 		blocks, chaindIds, _ := getAllLastBlocks()
 		for i := 0; i < len(blocks); i++ {
