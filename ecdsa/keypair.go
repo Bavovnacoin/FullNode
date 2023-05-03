@@ -125,7 +125,6 @@ func add(p1, p2 Point) Point {
 
 func multiply(pk *big.Int, p Point) Point {
 	currP := p
-	st := time.Now()
 	pkBin := fmt.Sprintf("%b", pk)
 
 	for i := 1; i < len(pkBin); i++ {
@@ -134,7 +133,6 @@ func multiply(pk *big.Int, p Point) Point {
 			currP = add(currP, p)
 		}
 	}
-	println(time.Since(st) / time.Millisecond)
 	return currP
 }
 

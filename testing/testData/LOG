@@ -1,6 +1,6 @@
 =============== May 3, 2023 (EEST) ===============
-16:36:11.000146 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-16:36:11.580641 db@open opening
-16:36:11.585514 version@stat F·[] S·0B[] Sc·[]
-16:36:11.619932 db@janitor F·2 G·0
-16:36:11.620442 db@open done T·39.3442ms
+17:51:02.932219 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+17:51:03.095562 db@open opening
+17:51:03.097677 version@stat F·[] S·0B[] Sc·[]
+17:51:03.129153 db@janitor F·2 G·0
+17:51:03.129153 db@open done T·33.5908ms

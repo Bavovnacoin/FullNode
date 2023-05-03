@@ -58,7 +58,6 @@ func (rv *ReorganizationVerifTest) txForming() {
 			continue
 		}
 		blockchain.AddTxToMempool(tx, true)
-		//time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -78,6 +77,26 @@ func (rv *ReorganizationVerifTest) genBlocks() {
 	node_validator.BlockGen(false)
 }
 
+func CreateBlock(bits uint64, prevHash string, lastBlock blockchain.Block, allowPrint bool) {
+	var rewardAdr byteArr.ByteArr
+	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
+	newBlock := blockchain.CreateBlock(rewardAdr, prevHash, allowPrint)
+	newBlock.Bits = bits
+	newBlock.Chainwork = blockchain.GetChainwork(newBlock, lastBlock)
+	var miningRes bool
+
+	newBlock, miningRes = blockchain.MineBlock(newBlock, 1, allowPrint)
+
+	if !miningRes {
+		blockchain.AllowCreateBlock = true
+		return
+	}
+
+	blockchain.IsMiningDone = true
+	blockchain.RemoveTxsFromMempool(newBlock.Transactions[1:])
+	blockchain.CreatedBlock = newBlock
+}
+
 func (rv *ReorganizationVerifTest) genAltchBlocks() {
 	bl, _ := blockchain.GetBlock(blockchain.BcLength-2, 0)
 	var prevHash string = hashing.SHA1(blockchain.BlockHeaderToString(bl))
@@ -90,7 +109,7 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 		var otherNodesTime []int64
 		otherNodesTime = append(otherNodesTime, time.Now().UTC().Unix())
 		if i == 0 {
-			blockchain.CreatedBlock.Time = bl.Time
+			blockchain.CreatedBlock.Time = bl.Time - 1
 		}
 		blockchain.CreatedBlock.Version = 1
 		blockchain.TryCameBlockToAdd(blockchain.CreatedBlock, blockchain.BcLength-1+uint64(i), otherNodesTime)
@@ -122,11 +141,6 @@ func getOutputsFromMainchain() ([]txo.TXO, []txo.TXO, bool) {
 						mainchTxo = append(mainchTxo, txo.TXO{OutTxHash: mainchUtxo[h].OutTxHash, TxOutInd: mainchUtxo[h].TxOutInd})
 						mainchUtxo = append(mainchUtxo[:h], mainchUtxo[h+1:]...)
 						break
-					}
-
-					if h+1 == len(mainchUtxo) {
-						println("Sry, not found", h+1, i)
-						println(inputs[k].TxHash.ToHexString(), inputs[k].OutInd)
 					}
 				}
 
@@ -182,11 +196,7 @@ func (rv *ReorganizationVerifTest) printResult() {
 		println("Test failed. Wrong txo ammount.")
 		return
 	} else if len(mUtxo) != len(storedUtxo) {
-		println(len(mUtxo), len(storedUtxo), len(txo.CoinDatabase))
 		println("Test failed. Wrong utxo ammount.")
-		for i := 0; i < len(storedUtxo); i++ {
-			storedUtxo[i].PrintTxo(-1)
-		}
 		return
 	}
 
@@ -226,17 +236,12 @@ func (rv *ReorganizationVerifTest) Launch() {
 	rv.source = rand.NewSource(time.Now().Unix())
 	rv.random = rand.New(rv.source)
 
-	rv.genBlockTestAccounts(1) //int(rv.mcBlockAmmount) + int(rv.acBlockAmmount)
+	rv.genBlockTestAccounts(1)
 	account.CurrAccount = account.Wallet[0]
 	node_settings.Settings.RewardAddress = hashing.SHA1(account.CurrAccount.KeyPairList[0].PublKey)
 
-	//blockchain.STARTBITS = 0xffff13
 	rv.genBlocks() // Generating blocks in mainchain
 	time.Sleep(time.Millisecond * 200)
-	storedUtxo, _ := txo.GetTxoList("utxo")
-	for i := 0; i < len(storedUtxo); i++ {
-		storedUtxo[i].PrintTxo(-1)
-	}
 
 	rv.genAltchBlocks()
 	rv.printResult()

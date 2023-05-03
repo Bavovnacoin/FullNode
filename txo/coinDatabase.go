@@ -45,7 +45,7 @@ func AddUtxo(outTxHash byteArr.ByteArr, txOutInd uint64, Value uint64,
 	outAddress byteArr.ByteArr, blockHeight uint64) {
 	utxo := TXO{OutTxHash: outTxHash, TxOutInd: txOutInd, Value: Value, OutAddress: outAddress,
 		BlockHeight: blockHeight}
-	utxo.PrintTxo(-2)
+
 	SetUtxo(utxo)
 	CoinDatabase = append(CoinDatabase, utxo)
 }

@@ -87,7 +87,6 @@ func reorganize(chainId uint64, altchHeight uint64) bool {
 		if isAltGotten {
 			addAltchBlockTxo(altChBlock.Transactions)
 			RemBlock(forkHeight-1, chainId)
-			println(len(txo.CoinDatabase))
 		}
 
 		if isMainGotten {
