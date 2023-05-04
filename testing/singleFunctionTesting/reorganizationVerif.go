@@ -28,43 +28,19 @@ type ReorganizationVerifTest struct {
 	mcBlockAmmount uint64
 	acBlockAmmount uint64
 	prevHeight     uint64
-	currAccKpInd   int
-	txCounter      int //TODO: remove
 
 	source rand.Source
 	random *rand.Rand
 }
 
-func (rv *ReorganizationVerifTest) CreateTx() (transaction.Transaction, bool) {
-	fee := rv.random.Intn(5) + 1
-	isGenLocktime := rv.random.Intn(5)
-	var locktime uint
-	if isGenLocktime == 2 {
-		locktime = uint(int(blockchain.BcLength+1) + rv.random.Intn(2) + 1)
-	}
-
-	var outAddr []byteArr.ByteArr
-	outAddr = append(outAddr, byteArr.ByteArr{})
-	outAddr[0].SetFromHexString(hashing.SHA1("An address"), 20)
-
-	var outValue []uint64
-	outValue = append(outValue, 1000)
-
-	tx, isValid := transaction.CreateTransaction(fmt.Sprint(0), outAddr, outValue, fee, locktime)
-
-	rv.currAccKpInd++
-	return tx, isValid == ""
-}
-
 func (rv *ReorganizationVerifTest) txForming() {
 	for command_executor.ComContr.FullNodeWorking {
 		rv.prevHeight = blockchain.BcLength
-		tx, isValid := rv.CreateTx()
+		tx, isValid := rv.CreateTestTx("abc", rv.random)
 		if !isValid {
 			continue
 		}
 		blockchain.AddTxToMempool(tx, true)
-		rv.txCounter++
 	}
 }
 
@@ -287,5 +263,4 @@ func (rv *ReorganizationVerifTest) Launch() {
 
 	rv.genAltchBlocks()
 	rv.printResult()
-	println("tx ammount", rv.txCounter)
 }
