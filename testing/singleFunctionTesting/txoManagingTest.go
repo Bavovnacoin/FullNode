@@ -1,3 +1,7 @@
+/*
+	Checks txo and utxo values when confirming txs
+*/
+
 package singleFunctionTesting
 
 import (
