@@ -14,8 +14,6 @@ import (
 	"bavovnacoin/node/node_controller/node_settings"
 	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing/account"
-	"bavovnacoin/transaction"
-	"bavovnacoin/txo"
 	"fmt"
 	"math/rand"
 	"os"
@@ -27,36 +25,15 @@ type ReorganizationVerifTest struct {
 	SingleFunctionTesting
 	mcBlockAmmount uint64
 	acBlockAmmount uint64
-	prevHeight     uint64
 
 	source rand.Source
 	random *rand.Rand
 }
 
-func (rv *ReorganizationVerifTest) txForming() {
-	for command_executor.ComContr.FullNodeWorking {
-		rv.prevHeight = blockchain.BcLength
-		tx, isValid := rv.CreateTestTx("abc", rv.random)
-		if !isValid {
-			continue
-		}
-		blockchain.AddTxToMempool(tx, true)
-	}
-}
-
-func (rv *ReorganizationVerifTest) nodeWorkListener(blocksCount uint64) {
-	for true {
-		if blockchain.BcLength >= blocksCount {
-			command_executor.ComContr.FullNodeWorking = false
-			return
-		}
-	}
-}
-
 func (rv *ReorganizationVerifTest) genBlocks() {
 	command_executor.ComContr.FullNodeWorking = true
 	go rv.nodeWorkListener(rv.mcBlockAmmount)
-	go rv.txForming()
+	go rv.txForming("abc", rv.random)
 	node_validator.BlockGen(false)
 }
 
@@ -99,47 +76,6 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 		prevHash = hashing.SHA1(blockchain.BlockHeaderToString(blockchain.CreatedBlock))
 		bl = blockchain.CreatedBlock
 	}
-}
-
-func getOutputsFromMainchain() ([]txo.TXO, []txo.TXO, bool) {
-	var mainchTxo []txo.TXO
-	var mainchUtxo []txo.TXO
-	for i := uint64(0); i < blockchain.BcLength; i++ {
-		block, res := blockchain.GetBlock(i, 0)
-		if !res {
-			print("Test failed. Error when checking mainchain")
-			return mainchTxo, mainchUtxo, false
-		}
-
-		for j := 0; j < len(block.Transactions); j++ {
-			var txByteArr byteArr.ByteArr
-			txByteArr.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(block.Transactions[j])), 20)
-
-			// Check inputs
-			inputs := block.Transactions[j].Inputs
-			for k := 0; k < len(inputs); k++ {
-				for h := 0; h < len(mainchUtxo); h++ {
-					if inputs[k].TxHash.IsEqual(mainchUtxo[h].OutTxHash) &&
-						inputs[k].OutInd == int(mainchUtxo[h].TxOutInd) {
-						mainchTxo = append(mainchTxo, mainchUtxo[h])
-						println("added txo")
-						mainchUtxo = append(mainchUtxo[:h], mainchUtxo[h+1:]...)
-						break
-					}
-				}
-
-			}
-
-			// Check outputs
-			outputs := block.Transactions[j].Outputs
-			for k := 0; k < len(outputs); k++ {
-				mainchUtxo = append(mainchUtxo, txo.TXO{Value: outputs[k].Value, OutAddress: outputs[k].Address,
-					BlockHeight: i, OutTxHash: txByteArr, TxOutInd: uint64(k)})
-			}
-		}
-	}
-
-	return mainchTxo, mainchUtxo, true
 }
 
 func (rv *ReorganizationVerifTest) isBlocksChanged(levels [][]string) bool {
@@ -198,43 +134,8 @@ func (rv *ReorganizationVerifTest) printResult() {
 		return
 	}
 
-	// Check TXO and UTXO
-	mTxo, mUtxo, res := getOutputsFromMainchain()
-	if !res {
-		return
-	}
-
-	storedTxo, _ := txo.GetTxoList("txo")
-	storedUtxo, _ := txo.GetTxoList("utxo")
-
-	if len(mTxo) != len(storedTxo) {
-		println(len(mTxo), len(storedTxo))
-		println("Test failed. Wrong txo ammount.")
-		return
-	} else if len(mUtxo) != len(storedUtxo) {
-		println("Test failed. Wrong utxo ammount.")
-		return
-	}
-
-	for i := 0; i < len(storedTxo); i++ {
-		_, res := txo.GetTxos(storedTxo[i].OutTxHash, int(storedTxo[i].TxOutInd))
-		if !res {
-			println("Test failed: incorrect txo value")
-			return
-		}
-	}
-
-	for i := 0; i < len(storedUtxo); i++ {
-		_, res := txo.GetUtxos(storedUtxo[i].OutTxHash, int(storedUtxo[i].TxOutInd))
-		if !res {
-			println("Test failed: incorrect utxo value")
-			return
-		}
-	}
-
-	println("TXO and UTXO values are correct")
-	println("Test passed!")
-
+	result := rv.checkMcTxo()
+	result.PrintTestResult()
 }
 
 func (rv *ReorganizationVerifTest) Launch() {
