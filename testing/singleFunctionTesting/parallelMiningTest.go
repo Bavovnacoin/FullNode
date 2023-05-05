@@ -31,11 +31,11 @@ func (pmt *ParallelMiningTest) mineBlocks() {
 		block, miningRes = blockchain.MineThreads(block, uint64(pmt.ThreadsCount), false)
 
 		blockHash, _ := new(big.Int).SetString(hashing.SHA1(blockchain.BlockHeaderToString(block)), 16)
-		if !miningRes || blockchain.BitsToTarget(block.Bits).Cmp(blockHash) != 1 {
-			fmt.Printf("[%d]. Incorrect mining. Test string: %s. Bits value: %x\n", i+1, blockchain.BlockHeaderToString(block), block.Bits)
-		} else {
+		if miningRes && blockchain.BitsToTarget(block.Bits).Cmp(blockHash) == 1 {
 			fmt.Printf("[%d]. Passed. Nonce value: %d\n", i+1, block.Nonce)
 			passedTestAmmount++
+		} else {
+			fmt.Printf("[%d]. Incorrect mining. Test string: %s. Bits value: %x\n", i+1, blockchain.BlockHeaderToString(block), block.Bits)
 		}
 	}
 
