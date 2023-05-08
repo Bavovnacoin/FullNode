@@ -3,13 +3,16 @@ package singleFunctionTesting
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
+	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_controller/node_settings"
 	"bavovnacoin/testing/account"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
 	"fmt"
 	"math/rand"
+	"os"
 )
 
 type SingleFunctionTesting struct{}
@@ -184,4 +187,35 @@ func (sft *SingleFunctionTesting) checkMcTxo() TxoTestCheckRes {
 		}
 	}
 	return testRes
+}
+
+func (sft *SingleFunctionTesting) CreateBlock(bits uint64, prevHash string, lastBlock blockchain.Block, allowPrint bool) (blockchain.Block, bool) {
+	var rewardAdr byteArr.ByteArr
+	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
+	newBlock := blockchain.CreateBlock(rewardAdr, prevHash, allowPrint)
+	newBlock.Bits = bits
+	newBlock.Chainwork = blockchain.GetChainwork(newBlock, lastBlock)
+	var miningRes bool
+
+	newBlock, miningRes = blockchain.MineBlock(newBlock, 1, allowPrint)
+
+	if !miningRes {
+		blockchain.AllowCreateBlock = true
+		return newBlock, false
+	}
+
+	blockchain.IsMiningDone = true
+	blockchain.RemoveTxsFromMempool(newBlock.Transactions[1:])
+	blockchain.CreatedBlock = newBlock
+	return newBlock, true
+}
+
+// TODO: add allowLogging bool
+func InitTestDb() {
+	dbController.DbPath = "testing/testData"
+	if _, err := os.Stat(dbController.DbPath); err == nil {
+		os.RemoveAll(dbController.DbPath)
+		println("Removed test db from a previous test.")
+	}
+	dbController.DB.OpenDb()
 }

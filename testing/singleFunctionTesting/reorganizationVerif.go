@@ -6,8 +6,6 @@ package singleFunctionTesting
 
 import (
 	"bavovnacoin/blockchain"
-	"bavovnacoin/byteArr"
-	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
@@ -16,7 +14,6 @@ import (
 	"bavovnacoin/testing/account"
 	"fmt"
 	"math/rand"
-	"os"
 	"strings"
 	"time"
 )
@@ -35,26 +32,6 @@ func (rv *ReorganizationVerifTest) genBlocks() {
 	go rv.nodeWorkListener(rv.mcBlockAmmount)
 	go rv.txForming("abc", rv.random)
 	node_validator.BlockGen(false)
-}
-
-func CreateBlock(bits uint64, prevHash string, lastBlock blockchain.Block, allowPrint bool) {
-	var rewardAdr byteArr.ByteArr
-	rewardAdr.SetFromHexString(node_settings.Settings.RewardAddress, 20)
-	newBlock := blockchain.CreateBlock(rewardAdr, prevHash, allowPrint)
-	newBlock.Bits = bits
-	newBlock.Chainwork = blockchain.GetChainwork(newBlock, lastBlock)
-	var miningRes bool
-
-	newBlock, miningRes = blockchain.MineBlock(newBlock, 1, allowPrint)
-
-	if !miningRes {
-		blockchain.AllowCreateBlock = true
-		return
-	}
-
-	blockchain.IsMiningDone = true
-	blockchain.RemoveTxsFromMempool(newBlock.Transactions[1:])
-	blockchain.CreatedBlock = newBlock
 }
 
 func (rv *ReorganizationVerifTest) genAltchBlocks() {
@@ -144,12 +121,7 @@ func (rv *ReorganizationVerifTest) Launch() {
 	node_settings.Settings.GetSettings()
 	networking_p2p.StartP2PCommunication()
 
-	dbController.DbPath = "testing/testData"
-	if _, err := os.Stat(dbController.DbPath); err == nil {
-		os.RemoveAll(dbController.DbPath)
-		println("Removed test db from a previous test.")
-	}
-	dbController.DB.OpenDb()
+	InitTestDb()
 
 	blockchain.STARTBITS = 0xffff14
 	rv.source = rand.NewSource(time.Now().Unix())
