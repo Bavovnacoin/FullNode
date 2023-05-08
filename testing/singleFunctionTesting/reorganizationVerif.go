@@ -49,7 +49,7 @@ func (rv *ReorganizationVerifTest) genAltchBlocks() {
 			blockchain.CreatedBlock.Time = bl.Time
 		}
 		blockchain.CreatedBlock.Version = 1
-		blockchain.TryCameBlockToAdd(blockchain.CreatedBlock, blockchain.BcLength-1+uint64(i), otherNodesTime)
+		blockchain.TryCameBlockToAdd(blockchain.CreatedBlock, blockchain.BcLength-1+uint64(i), otherNodesTime, true)
 		prevHash = hashing.SHA1(blockchain.BlockHeaderToString(blockchain.CreatedBlock))
 		bl = blockchain.CreatedBlock
 	}

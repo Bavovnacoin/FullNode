@@ -58,7 +58,7 @@ func TryAddCameBlock(data []byte, peerId peer.ID) bool {
 		GetNodesTime()
 		time.Sleep(50 * time.Millisecond)
 
-		if blockchain.TryCameBlockToAdd(newBlock.Block, newBlock.Height, nodesTime) {
+		if blockchain.TryCameBlockToAdd(newBlock.Block, newBlock.Height, nodesTime, true) {
 			ProposeNewBlock(newBlock.Block, newBlock.Height)
 		}
 	}

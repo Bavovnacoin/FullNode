@@ -27,7 +27,7 @@ func (st SynchronizationTest) genAltchain(chainId uint64) {
 			hashing.SHA1(blockchain.BlockHeaderToString(prevBlock)), prevBlock, false)
 		newBlock.Version = 199
 
-		blockchain.TryCameBlockToAdd(newBlock, startHeight+uint64(i)+1, []int64{})
+		blockchain.TryCameBlockToAdd(newBlock, startHeight+uint64(i)+1, []int64{}, false)
 		prevBlock = newBlock
 		println()
 	}

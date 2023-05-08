@@ -37,13 +37,15 @@ func checkCameBlockTime(blockTime int64, otherNodesTime []int64) bool {
 	return true
 }
 
-func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool {
+func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64, allowLogging bool) bool {
 	PauseBlockAddition = true
 	blockVer := !VerifyBlock(block, int(height), true, true)
 
 	if blockVer || !checkCameBlockTime(block.Time, otherNodesTime) {
 		PauseBlockAddition = false
-		println("Came block is NOOTTT added!")
+		if allowLogging {
+			println("Came block is NOOTTT added!")
+		}
 		return false
 	}
 
@@ -84,16 +86,18 @@ func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64) bool 
 		}
 	}
 
-	if TryReorganize() {
+	if TryReorganize() && allowLogging {
 		log.Println("Reorganization happened")
 	}
 
 	if isAdded {
-		if chainId == 0 {
-			log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength))
+		if allowLogging {
+			if chainId == 0 {
+				log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(BcLength))
+			}
+			println("Came block is added!")
+			println()
 		}
-		println("Came block is added!")
-		println()
 		return true
 	}
 	return false
