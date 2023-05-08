@@ -121,7 +121,7 @@ func (rv *ReorganizationVerifTest) Launch() {
 	node_settings.Settings.GetSettings()
 	networking_p2p.StartP2PCommunication()
 
-	InitTestDb()
+	InitTestDb(true)
 
 	blockchain.STARTBITS = 0xffff14
 	rv.source = rand.NewSource(time.Now().Unix())

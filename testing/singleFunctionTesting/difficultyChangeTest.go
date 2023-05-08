@@ -54,7 +54,7 @@ func (dcht *DifficultyChangeTest) Launch() {
 	dcht.StartBits = 0x00ffff13
 	blockchain.STARTBITS = dcht.StartBits
 
-	InitTestDb()
+	InitTestDb(true)
 
 	println("Generating bc faster than expected")
 	littleTimeRes := dcht.genBlocks(false)
@@ -62,7 +62,7 @@ func (dcht *DifficultyChangeTest) Launch() {
 	blockchain.BcLength = 0
 	println()
 
-	InitTestDb()
+	InitTestDb(false)
 	println("Generating bc slower than expected")
 	longTimeRes := dcht.genBlocks(true)
 

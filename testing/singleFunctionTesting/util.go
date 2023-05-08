@@ -210,12 +210,14 @@ func (sft *SingleFunctionTesting) CreateBlock(bits uint64, prevHash string, last
 	return newBlock, true
 }
 
-// TODO: add allowLogging bool
-func InitTestDb() {
+func InitTestDb(allowLogging bool) {
 	dbController.DbPath = "testing/testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {
 		os.RemoveAll(dbController.DbPath)
-		println("Removed test db from a previous test.")
+
+		if allowLogging {
+			println("Removed test db from a previous test.")
+		}
 	}
 	dbController.DB.OpenDb()
 }
