@@ -118,7 +118,6 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 			hashFound = true
 			break
 		}
-		println(block.HashPrevBlock, lastBlockHashes[i])
 	}
 	if !hashFound {
 		println("Hash problem")

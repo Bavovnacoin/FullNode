@@ -29,7 +29,7 @@ func (st SynchronizationTest) genAltchain(chainId uint64) {
 
 		blockchain.TryCameBlockToAdd(newBlock, startHeight+uint64(i)+1, []int64{}, false)
 		prevBlock = newBlock
-		println()
+		//println()
 	}
 }
 
