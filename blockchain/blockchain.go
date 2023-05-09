@@ -112,7 +112,9 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 
 	// Check block hash values
 	var hashFound bool
+	println("---------", height)
 	for i := 0; i < len(lastBlockHashes); i++ {
+		println(lastBlockHashes[i])
 		if block.HashPrevBlock == lastBlockHashes[i] {
 
 			hashFound = true
