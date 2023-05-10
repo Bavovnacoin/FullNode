@@ -8,17 +8,17 @@ import (
 )
 
 type CheckPoint struct {
-	height    uint64
-	blockHash byteArr.ByteArr
+	Height    uint64
+	BlockHash byteArr.ByteArr
 }
 
 var Checkpoints []CheckPoint
 var checkpInd uint64
 
-func setCheckpoint(height uint64, hashValue string) CheckPoint {
+func SetCheckpoint(height uint64, hashValue string) CheckPoint {
 	var cp CheckPoint
-	cp.height = height
-	cp.blockHash.SetFromHexString(hashValue, 20)
+	cp.Height = height
+	cp.BlockHash.SetFromHexString(hashValue, 20)
 	return cp
 }
 
@@ -29,10 +29,10 @@ func InitCheckpoints() {
 
 func CheckForBlockCorrespondence(height uint64, block blockchain.Block) bool {
 	if blockchain.VerifyBlock(block, int(height), true, true) {
-		if checkpInd < uint64(len(Checkpoints)) && height == Checkpoints[checkpInd].height {
+		if checkpInd < uint64(len(Checkpoints)) && height == Checkpoints[checkpInd].Height {
 			var blockHash byteArr.ByteArr
 			blockHash.SetFromHexString(hashing.SHA1(blockchain.BlockHeaderToString(block)), 20)
-			if blockHash.IsEqual(Checkpoints[checkpInd].blockHash) {
+			if blockHash.IsEqual(Checkpoints[checkpInd].BlockHash) {
 				checkpInd++
 				return true
 			} else {

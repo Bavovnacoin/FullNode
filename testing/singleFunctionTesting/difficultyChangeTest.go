@@ -26,7 +26,7 @@ func (dcht *DifficultyChangeTest) genBlocks(isLong bool) bool {
 			newBlock.Time = blockchain.LastBlock.Time + int64(blockchain.BLOCK_CREATION_SEC) + 2
 		}
 
-		blockchain.AddBlockToBlockchain(blockchain.CreatedBlock, 0, true)
+		blockchain.AddBlockToBlockchain(blockchain.CreatedBlock, blockchain.BcLength, 0, true)
 		blockchain.IncrBcHeight(0)
 		blockchain.LastBlock = newBlock
 	}

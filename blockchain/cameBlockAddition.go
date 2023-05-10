@@ -73,7 +73,8 @@ func TryCameBlockToAdd(block Block, height uint64, otherNodesTime []int64, allow
 			if blockHash == block.HashPrevBlock {
 				chainId = chaindIds[i]
 				if chainId == 0 {
-					isAdded = AddBlockToBlockchain(block, chainId, true)
+					h, _ := GetBcHeight(chainId)
+					isAdded = AddBlockToBlockchain(block, h, chainId, true)
 					LastBlock = block
 					IncrBcHeight(chainId)
 					break

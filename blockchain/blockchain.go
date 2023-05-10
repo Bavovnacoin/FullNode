@@ -34,7 +34,7 @@ func GetChainwork(block Block, lastBlock Block) *big.Int {
 }
 
 // Warning: it is considered that the block is valid
-func AddBlockToBlockchain(block Block, chainId uint64, allowManageTxo bool) bool {
+func AddBlockToBlockchain(block Block, height uint64, chainId uint64, allowManageTxo bool) bool {
 	for PauseBlockAddition {
 		time.Sleep(10 * time.Millisecond)
 		if BreakBlockAddition {
@@ -60,7 +60,7 @@ func AddBlockToBlockchain(block Block, chainId uint64, allowManageTxo bool) bool
 		}
 	}
 
-	WriteBlock(BcLength, chainId, block)
+	WriteBlock(height, chainId, block)
 	IsMempAdded = false
 	return true
 }
@@ -112,9 +112,7 @@ func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bo
 
 	// Check block hash values
 	var hashFound bool
-	println("---------", height)
 	for i := 0; i < len(lastBlockHashes); i++ {
-		println(lastBlockHashes[i])
 		if block.HashPrevBlock == lastBlockHashes[i] {
 
 			hashFound = true
@@ -202,7 +200,7 @@ func FormGenesisBlock() Block {
 	//genesisBlock.Bits = STARTBITS
 
 	if VerifyBlock(genesisBlock, int(BcLength), true, false) {
-		AddBlockToBlockchain(genesisBlock, 0, true)
+		AddBlockToBlockchain(genesisBlock, BcLength, 0, true)
 		LastBlock = genesisBlock
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(BcLength)+1) + "\n")
 	} else {

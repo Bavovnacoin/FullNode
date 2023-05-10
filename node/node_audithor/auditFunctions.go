@@ -63,7 +63,7 @@ func ReorgTests(blocks []blockchain.Block) {
 	}
 
 	for i := 0; i < len(blocks); i++ {
-		blockchain.AddBlockToBlockchain(blocks[i], 0, true)
+		blockchain.AddBlockToBlockchain(blocks[i], blockchain.BcLength, 0, true)
 		blockchain.IncrBcHeight(0)
 		log.Println("Block is added to blockchain. Current height: " + fmt.Sprint(int(blockchain.BcLength)) + "\n")
 	}

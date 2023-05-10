@@ -36,7 +36,7 @@ func TryHandleSynchronization(data []byte, peerId peer.ID) bool {
 			return false
 		}
 
-		isCurrSyncSuccess := SyncAddBlocks(request.Blocks)
+		isCurrSyncSuccess := SyncAddBlocks(request.Blocks, false)
 		if !isCurrSyncSuccess {
 			if peerIdInd+1 < len(OtherPeersIds) {
 				peerIdInd++

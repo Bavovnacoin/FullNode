@@ -9,6 +9,7 @@ import (
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/networking_p2p"
+	"bavovnacoin/synchronization"
 	"os"
 )
 
@@ -29,6 +30,7 @@ func (st SynchronizationTest) genAltchain(chainId uint64) {
 		newBlock, _ = st.CreateBlock(blockchain.GetBits(false),
 			hashing.SHA1(blockchain.BlockHeaderToString(prevBlock)), prevBlock, false)
 		newBlock.Version = uint(chainId)
+
 		blockchain.TryCameBlockToAdd(newBlock, startHeight+uint64(i)+1, []int64{}, false)
 		prevBlock = newBlock
 	}
@@ -44,9 +46,13 @@ func (st SynchronizationTest) genMainchain() {
 			newBlock.HashPrevBlock = "0000000000000000000000000000000000000000"
 		}
 
-		blockchain.AddBlockToBlockchain(newBlock, 0, true)
+		blockchain.AddBlockToBlockchain(newBlock, blockchain.BcLength, 0, true)
 		blockchain.IncrBcHeight(0)
 		blockchain.LastBlock = newBlock
+
+		if i%5 == 0 {
+			synchronization.Checkpoints = append(synchronization.Checkpoints, synchronization.SetCheckpoint(uint64(i), hashing.SHA1(blockchain.BlockHeaderToString(newBlock))))
+		}
 	}
 }
 
@@ -57,7 +63,7 @@ func (st SynchronizationTest) genChains() {
 	}
 }
 
-func (st SynchronizationTest) startSync() {
+func (st SynchronizationTest) startSync() (bool, [][]networking_p2p.BlocksOnHeight) {
 	var blocksToAdd [][]networking_p2p.BlocksOnHeight
 	var blockReq networking_p2p.BlockRequest
 	blockReq.IsMoreBlocks = true
@@ -71,20 +77,44 @@ func (st SynchronizationTest) startSync() {
 		}
 
 		blocksToAdd = append(blocksToAdd, blockReq.Blocks)
-		// for j := 0; j < len(blockReq.Blocks); j++ {
-		// 	for k := 0; k < len(blockReq.Blocks[j].Blocks); k++ {
-		// 		println(blockReq.Blocks[j].Blocks[k].ChainId, hashing.SHA1(blockchain.BlockHeaderToString(blockReq.Blocks[j].Blocks[k].Block)))
-		// 	}
-		// }
 	}
 
 	dbController.DB.CloseDb()
+
 	os.RemoveAll(dbController.DbPath)
 	blockchain.BcLength = 0
 	InitTestDb(false)
 
+	var syncRes bool
 	for i := 0; i < len(blocksToAdd); i++ {
-		println(networking_p2p.SyncAddBlocks(blocksToAdd[i]))
+		syncRes = networking_p2p.SyncAddBlocks(blocksToAdd[i], true)
+		if !syncRes {
+			break
+		}
+	}
+	return syncRes, blocksToAdd
+}
+
+func (st SynchronizationTest) printRes(syncRes bool, genChain [][]networking_p2p.BlocksOnHeight) {
+	var checkRes bool = true
+
+	for i := uint64(0); i < uint64(len(genChain)); i++ {
+		for j := 0; j < len(genChain[i]); j++ {
+			blocks, _ := blockchain.GetBlocksOnHeight(genChain[i][j].Height)
+			for k := 0; k < len(blocks); k++ {
+				if hashing.SHA1(blockchain.BlockHeaderToString(genChain[i][j].Blocks[k].Block)) !=
+					hashing.SHA1(blockchain.BlockHeaderToString(blocks[k].Block)) {
+					checkRes = false
+					break
+				}
+			}
+		}
+	}
+
+	if checkRes == syncRes && syncRes == true {
+		println("Test passed!")
+	} else {
+		println("Test is not passed!")
 	}
 }
 
@@ -96,6 +126,7 @@ func (st SynchronizationTest) Launch() {
 
 	InitTestDb(true)
 	st.genChains()
+	syncRes, genChain := st.startSync()
 
-	st.startSync()
+	st.printRes(syncRes, genChain)
 }

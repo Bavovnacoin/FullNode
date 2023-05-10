@@ -60,7 +60,7 @@ func GetBlocksOnHeight(startFromBlock uint64) BlockRequest {
 	return request
 }
 
-func SyncAddBlocks(blocks []BlocksOnHeight) bool {
+func SyncAddBlocks(blocks []BlocksOnHeight, allowLogging bool) bool {
 	checkpCorresp := false
 	addCount := 0
 	i := 0
@@ -71,22 +71,25 @@ func SyncAddBlocks(blocks []BlocksOnHeight) bool {
 				bcBlock, isBlockGotten := blockchain.GetBlock(blocks[i].Height, bl.ChainId)
 				if !isBlockGotten ||
 					hashing.SHA1(blockchain.BlockHeaderToString(bcBlock)) != hashing.SHA1(blockchain.BlockHeaderToString(bl.Block)) {
-					blockchain.AddBlockToBlockchain(bl.Block, bl.ChainId, bl.ChainId == 0)
+					blockchain.AddBlockToBlockchain(bl.Block, blocks[i].Height, bl.ChainId, bl.ChainId == 0)
 					blockchain.IncrBcHeight(bl.ChainId)
-
 					if bl.ChainId == 0 {
 						blockchain.LastBlock = bl.Block
 						addCount++
 					}
 				}
 			} else {
-				log.Println("Address sent an incorrect block")
+				if allowLogging {
+					log.Println("Address sent an incorrect block")
+				}
 				return false
 			}
 		}
 	}
 
-	log.Printf("Checked %d blocks. Current bc height: %d\n", len(blocks), blockchain.BcLength)
+	if allowLogging {
+		log.Printf("Checked %d levels. Current bc height: %d\n", len(blocks), blockchain.BcLength)
+	}
 	return true
 }
 
