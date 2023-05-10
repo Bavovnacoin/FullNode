@@ -37,7 +37,7 @@ func (tmt *TxoManagingTest) Launch() {
 	tmt.mcBlockAmmount = 10
 
 	node_settings.Settings.GetSettings()
-	networking_p2p.StartP2PCommunication()
+	networking_p2p.Peer.StartP2PCommunication()
 
 	dbController.DbPath = "testing/testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {

@@ -1,12 +1,15 @@
 package main
 
-import "bavovnacoin/testing/singleFunctionTesting"
+import (
+	"bavovnacoin/testing/singleFunctionTesting"
+)
 
 func main() {
 	// a, _ := new(big.Int).SetString("00ffff0000000000000000000000000000000000", 16)
 	// fmt.Printf("%x\n", blockchain.TargetToBits(a))
-	var st singleFunctionTesting.SynchronizationTest
-	st.Launch()
+
+	var ct singleFunctionTesting.CommunicationTest
+	ct.Launch()
 
 	// node.Launch()
 	//synchronization.GetCheckpHashes(1)

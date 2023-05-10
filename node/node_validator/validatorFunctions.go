@@ -22,7 +22,7 @@ func NodeProcess() {
 func BlockGen(allowCommandHandler bool) {
 	if blockchain.BcLength == 0 {
 		genBlock := blockchain.FormGenesisBlock()
-		networking_p2p.ProposeNewBlock(genBlock, 0)
+		networking_p2p.Peer.ProposeNewBlock(genBlock, 0)
 	}
 
 	if allowCommandHandler {
@@ -47,14 +47,14 @@ func LaunchValidatorNode() {
 	command_executor.ComContr.FullNodeWorking = true
 	dbController.DB.OpenDb()
 	defer dbController.DB.CloseDb()
-	networking_p2p.StartP2PCommunication()
+	networking_p2p.Peer.StartP2PCommunication()
 	StartRPC()
 	defer networking.StopRPCListener()
 	blockchain.InitBlockchain()
 	txo.RestoreCoinDatabase()
 
 	log.Println("Db synchronization...")
-	syncRes := networking_p2p.StartSync()
+	syncRes := networking_p2p.Peer.StartSync()
 
 	for !networking_p2p.IsSyncEnded && syncRes {
 		time.Sleep(20 * time.Millisecond)

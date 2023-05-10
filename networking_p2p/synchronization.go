@@ -26,7 +26,7 @@ const retrStep uint64 = 5
 var IsSyncEnded bool = false
 var IsSyncSuccess bool = false
 
-func RequestBlocks(startFromHeight uint64, peerId peer.ID) bool {
+func (pd *PeerData) RequestBlocks(startFromHeight uint64, peerId peer.ID) bool {
 	startByteArr, isConv := byteArr.ToByteArr(startFromHeight)
 	if !isConv {
 		return false
@@ -34,7 +34,7 @@ func RequestBlocks(startFromHeight uint64, peerId peer.ID) bool {
 
 	data := []byte{1}
 	data = append(data, startByteArr...)
-	isSended := SendDataOnPeerId(data, peerId)
+	isSended := pd.SendDataOnPeerId(data, peerId)
 	return isSended
 }
 
@@ -93,9 +93,9 @@ func SyncAddBlocks(blocks []BlocksOnHeight, allowLogging bool) bool {
 	return true
 }
 
-func StartSync() bool {
-	if len(OtherPeersIds) > 0 {
-		return RequestBlocks(0, OtherPeersIds[0])
+func (pd *PeerData) StartSync() bool {
+	if len(pd.OtherPeersIds) > 0 {
+		return pd.RequestBlocks(0, pd.OtherPeersIds[0])
 	}
 	return false
 }

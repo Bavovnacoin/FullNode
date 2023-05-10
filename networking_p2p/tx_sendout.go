@@ -10,7 +10,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func TryHandleTx(data []byte, peerId peer.ID) bool {
+func (pd *PeerData) TryHandleTx(data []byte, peerId peer.ID) bool {
 	if data[0] == 8 {
 		var tx transaction.Transaction
 		isConv := byteArr.FromByteArr(data[1:], &tx)
@@ -24,14 +24,14 @@ func TryHandleTx(data []byte, peerId peer.ID) bool {
 		if !blockchain.IsTxInMempool(txHash) &&
 			transaction.CheckTxMinFee(tx, node_settings.Settings.TxMinFee) &&
 			blockchain.AddTxToMempool(tx, true) {
-			ProposeNewTx(tx)
+			pd.ProposeNewTx(tx)
 			return true
 		}
 	}
 	return false
 }
 
-func ProposeNewTx(tx transaction.Transaction) bool {
+func (pd *PeerData) ProposeNewTx(tx transaction.Transaction) bool {
 	txByte, _ := byteArr.ToByteArr(tx)
-	return SendDataToAllConnectedPeers(append([]byte{8}, txByte...))
+	return pd.SendDataToAllConnectedPeers(append([]byte{8}, txByte...))
 }

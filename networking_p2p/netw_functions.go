@@ -9,11 +9,11 @@ import (
 
 var peerIdInd int
 
-func incrPeerId() int {
-	return (peerIdInd + 1) % len(OtherPeersIds)
+func (pd *PeerData) incrPeerId() int {
+	return (peerIdInd + 1) % len(pd.OtherPeersIds)
 }
 
-func TryHandleSynchronization(data []byte, peerId peer.ID) bool {
+func (pd *PeerData) TryHandleSynchronization(data []byte, peerId peer.ID) bool {
 	if data[0] == 1 { // Request handler
 		var height uint64
 		isConv := byteArr.FromByteArr(data[1:], &height)
@@ -28,7 +28,7 @@ func TryHandleSynchronization(data []byte, peerId peer.ID) bool {
 			return false
 		}
 		data = append([]byte{2}, reqData...)
-		SendDataOnPeerId(data, peerId)
+		pd.SendDataOnPeerId(data, peerId)
 	} else if data[0] == 2 { // Responce handler
 		var request BlockRequest
 		isConv := byteArr.FromByteArr(data[1:], &request)
@@ -38,7 +38,7 @@ func TryHandleSynchronization(data []byte, peerId peer.ID) bool {
 
 		isCurrSyncSuccess := SyncAddBlocks(request.Blocks, false)
 		if !isCurrSyncSuccess {
-			if peerIdInd+1 < len(OtherPeersIds) {
+			if peerIdInd+1 < len(pd.OtherPeersIds) {
 				peerIdInd++
 			} else {
 				IsSyncEnded = true
@@ -47,7 +47,7 @@ func TryHandleSynchronization(data []byte, peerId peer.ID) bool {
 		}
 
 		if request.IsMoreBlocks {
-			RequestBlocks(blockchain.BcLength, OtherPeersIds[peerIdInd])
+			pd.RequestBlocks(blockchain.BcLength, pd.OtherPeersIds[peerIdInd])
 		} else {
 			IsSyncEnded = true
 			IsSyncSuccess = true

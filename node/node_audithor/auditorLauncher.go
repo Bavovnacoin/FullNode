@@ -53,7 +53,7 @@ func LaunchAudithor() {
 	txo.RestoreCoinDatabase()
 
 	log.Println("Db synchronization...")
-	syncRes := networking_p2p.StartSync()
+	syncRes := networking_p2p.Peer.StartSync()
 	for !networking_p2p.IsSyncEnded {
 		time.Sleep(20 * time.Millisecond)
 	}

@@ -19,14 +19,14 @@ type BlockProposal struct {
 	Height uint64
 }
 
-func TryAddCameBlock(data []byte, peerId peer.ID) bool {
+func (pd *PeerData) TryAddCameBlock(data []byte, peerId peer.ID) bool {
 	if data[0] == 3 { // Check hash for block existance
 		var bhproposal BlockHashProposal
 		byteArr.FromByteArr(data[1:], &bhproposal)
 
 		height, _ := byteArr.ToByteArr(bhproposal.Height - 1)
 		if !blockchain.IsBlockExists(bhproposal.BlockHash, bhproposal.Height) {
-			return SendDataOnPeerId(append([]byte{4}, height...), peerId)
+			return pd.SendDataOnPeerId(append([]byte{4}, height...), peerId)
 		}
 		return false
 
@@ -44,7 +44,7 @@ func TryAddCameBlock(data []byte, peerId peer.ID) bool {
 		blockToSend.Block = block
 		bytesToSend, _ := byteArr.ToByteArr(blockToSend)
 
-		isSended := SendDataOnPeerId(append([]byte{5}, bytesToSend...), peerId)
+		isSended := pd.SendDataOnPeerId(append([]byte{5}, bytesToSend...), peerId)
 		return isSended
 
 	} else if data[0] == 5 {
@@ -55,17 +55,17 @@ func TryAddCameBlock(data []byte, peerId peer.ID) bool {
 		}
 
 		nodesTime = []int64{}
-		GetNodesTime()
+		pd.GetNodesTime()
 		time.Sleep(50 * time.Millisecond)
 
 		if blockchain.TryCameBlockToAdd(newBlock.Block, newBlock.Height, nodesTime, true) {
-			ProposeNewBlock(newBlock.Block, newBlock.Height)
+			pd.ProposeNewBlock(newBlock.Block, newBlock.Height)
 		}
 	}
 	return true
 }
 
-func ProposeNewBlock(block blockchain.Block, height uint64) bool {
+func (pd *PeerData) ProposeNewBlock(block blockchain.Block, height uint64) bool {
 	var blockHash byteArr.ByteArr
 	blockHashString := hashing.SHA1(blockchain.BlockHeaderToString(block))
 	blockHash.SetFromHexString(blockHashString, 20)
@@ -79,5 +79,5 @@ func ProposeNewBlock(block blockchain.Block, height uint64) bool {
 		return false
 	}
 
-	return SendDataToAllConnectedPeers(append([]byte{3}, hashProp...))
+	return pd.SendDataToAllConnectedPeers(append([]byte{3}, hashProp...))
 }

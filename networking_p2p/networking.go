@@ -18,12 +18,17 @@ import (
 	"github.com/multiformats/go-multiaddr"
 )
 
-var Peer host.Host
-var OtherPeersIds []peer.ID
+var Peer PeerData
 
-const PROTOCOL_ID = protocol.ID("/bvc/1.0.0")
+type PeerData struct {
+	Peer          host.Host
+	OtherPeersIds []peer.ID
+}
 
-func StreamHandler(s network.Stream) {
+const PROT_NAME = "/bvc/1.0.0"
+const PROTOCOL_ID = protocol.ID(PROT_NAME)
+
+func (pd *PeerData) StreamHandler(s network.Stream) {
 	data, err := ioutil.ReadAll(s)
 	if err != nil {
 		log.Fatal(err)
@@ -31,35 +36,35 @@ func StreamHandler(s network.Stream) {
 
 	peerID := s.Conn().RemotePeer()
 
-	TryHandleSynchronization(data, peerID)
-	TryAddCameBlock(data, peerID)
-	TryHandleTime(data, peerID)
-	TryHandleTx(data, peerID)
+	pd.TryHandleSynchronization(data, peerID)
+	pd.TryAddCameBlock(data, peerID)
+	pd.TryHandleTime(data, peerID)
+	pd.TryHandleTx(data, peerID)
 }
 
 // My address (localhost) /ip4/127.0.0.1/tcp/58818
-func StartP2PCommunication() {
+func (pd *PeerData) StartP2PCommunication() {
 	peerIdInd = 0
 	pkBytes := node_settings.Settings.GetPrivKey()
 	privKey, _ := crypto.UnmarshalSecp256k1PrivateKey(pkBytes)
 
 	var err error
-	Peer, err = libp2p.New(
+	pd.Peer, err = libp2p.New(
 		libp2p.Identity(privKey),
 		libp2p.ListenAddrStrings(node_settings.Settings.MyAddress),
 	)
 
 	if err == nil {
-		Peer.SetStreamHandler(PROTOCOL_ID, StreamHandler)
-		fmt.Printf("Started peer on address %s/%s\n", Peer.Addrs()[0], Peer.ID().Pretty())
+		pd.Peer.SetStreamHandler(PROTOCOL_ID, pd.StreamHandler)
+		fmt.Printf("Started peer on address %s/%s\n", pd.Peer.Addrs()[0], pd.Peer.ID().Pretty())
 	} else {
 		fmt.Println("Unable to start a peer.", err)
 	}
 
-	addSettingsAddresses()
+	pd.addSettingsAddresses()
 }
 
-func addOtherAddress(address string) bool {
+func (pd *PeerData) addOtherAddress(address string) bool {
 	arr := strings.Split(address, "/")
 
 	maddr, err := multiaddr.NewMultiaddr(strings.Join(arr[:len(arr)-1], "/"))
@@ -72,22 +77,22 @@ func addOtherAddress(address string) bool {
 		return false
 	}
 
-	Peer.Peerstore().AddAddrs(id, []multiaddr.Multiaddr{maddr}, peerstore.PermanentAddrTTL)
-	OtherPeersIds = append(OtherPeersIds, id)
+	pd.Peer.Peerstore().AddAddrs(id, []multiaddr.Multiaddr{maddr}, peerstore.PermanentAddrTTL)
+	pd.OtherPeersIds = append(pd.OtherPeersIds, id)
 	return true
 }
 
-func addSettingsAddresses() {
+func (pd *PeerData) addSettingsAddresses() {
 	for i := 0; i < len(node_settings.Settings.OtherNodesAddresses); i++ {
-		addOtherAddress(node_settings.Settings.OtherNodesAddresses[i][0])
+		pd.addOtherAddress(node_settings.Settings.OtherNodesAddresses[i][0])
 	}
 }
 
-func SendDataToAllConnectedPeers(data []byte) bool {
+func (pd *PeerData) SendDataToAllConnectedPeers(data []byte) bool {
 	activePeersCounter := 0
-	peerIds := Peer.Peerstore().Peers()
+	peerIds := pd.Peer.Peerstore().Peers()
 	for i := 0; i < len(peerIds); i++ {
-		if SendDataOnPeerId(data, peerIds[i]) {
+		if pd.SendDataOnPeerId(data, peerIds[i]) {
 			activePeersCounter++
 		}
 	}
@@ -95,9 +100,9 @@ func SendDataToAllConnectedPeers(data []byte) bool {
 	return activePeersCounter > 0
 }
 
-func SendDataOnPeerId(data []byte, id peer.ID) bool {
-	if err := Peer.Connect(context.Background(), Peer.Peerstore().PeerInfo(id)); err == nil {
-		stream, err := Peer.NewStream(context.Background(), id, PROTOCOL_ID)
+func (pd *PeerData) SendDataOnPeerId(data []byte, id peer.ID) bool {
+	if err := pd.Peer.Connect(context.Background(), pd.Peer.Peerstore().PeerInfo(id)); err == nil {
+		stream, err := pd.Peer.NewStream(context.Background(), id, PROTOCOL_ID)
 		if err != nil {
 			return false
 		}

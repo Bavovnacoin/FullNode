@@ -119,7 +119,7 @@ func (rv *ReorganizationVerifTest) Launch() {
 	rv.mcBlockAmmount = 5
 	rv.acBlockAmmount = 3
 	node_settings.Settings.GetSettings()
-	networking_p2p.StartP2PCommunication()
+	networking_p2p.Peer.StartP2PCommunication()
 
 	InitTestDb(true)
 
