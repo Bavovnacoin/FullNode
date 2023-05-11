@@ -3,6 +3,7 @@ package testing
 import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/cryption"
+	"bavovnacoin/dbController"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
 	"bavovnacoin/testing/account"
@@ -10,6 +11,7 @@ import (
 	"bavovnacoin/txo"
 	"fmt"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -126,4 +128,16 @@ func GenRandTxs(txAmmount, incorrectTxAmmount int, random *rand.Rand) ([]transac
 	}
 
 	return randTxs, txIncorrMessages
+}
+
+func InitTestDb(allowLogging bool) {
+	dbController.DbPath = "testing/testData"
+	if _, err := os.Stat(dbController.DbPath); err == nil {
+		os.RemoveAll(dbController.DbPath)
+
+		if allowLogging {
+			println("Removed test db from a previous test.")
+		}
+	}
+	dbController.DB.OpenDb()
 }

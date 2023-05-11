@@ -1,15 +1,15 @@
 package main
 
 import (
-	"bavovnacoin/testing/singleFunctionTesting"
+	loadtesting "bavovnacoin/testing/loadTesting"
 )
 
 func main() {
 	// a, _ := new(big.Int).SetString("00ffff0000000000000000000000000000000000", 16)
 	// fmt.Printf("%x\n", blockchain.TargetToBits(a))
 
-	var ct singleFunctionTesting.CommunicationTest
-	ct.Launch()
+	var mlt loadtesting.MempoolLoadTest
+	mlt.Launch()
 
 	// node.Launch()
 	//synchronization.GetCheckpHashes(1)

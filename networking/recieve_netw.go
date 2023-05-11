@@ -7,7 +7,7 @@ import (
 	"net/rpc"
 )
 
-var inbound *net.TCPListener
+var Inbound *net.TCPListener
 
 type Listener int
 
@@ -15,28 +15,28 @@ type Reply struct {
 	Data []byte
 }
 
-func StartRPCListener() (bool, error) {
+func StartRPCListener() (*net.TCPListener, bool, error) {
 	addy, err := net.ResolveTCPAddr("tcp", node_settings.Settings.RPCip)
 	if err != nil {
 		log.Println(err)
-		return false, err
+		return nil, false, err
 	}
 
-	inbound, err = net.ListenTCP("tcp", addy)
+	inbound, err := net.ListenTCP("tcp", addy)
 	if err != nil {
 		log.Println(err)
-		return false, err
+		return inbound, false, err
 	}
 
 	listener := new(Listener)
 	rpc.Register(listener)
 	go rpc.Accept(inbound)
 
-	return true, err
+	return inbound, true, err
 }
 
 func StopRPCListener() bool {
-	err := inbound.Close()
+	err := Inbound.Close()
 	if err == nil {
 		return true
 	}

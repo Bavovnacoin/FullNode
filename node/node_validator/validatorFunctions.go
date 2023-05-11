@@ -34,7 +34,10 @@ func BlockGen(allowCommandHandler bool) {
 }
 
 func StartRPC() {
-	isRpcStarted, err := networking.StartRPCListener()
+	var isRpcStarted bool
+	var err error
+	networking.Inbound, isRpcStarted, err = networking.StartRPCListener()
+
 	if !isRpcStarted {
 		fmt.Println("Can't start RPC listener")
 		fmt.Println(err)
