@@ -3,15 +3,19 @@
 	some data like blocks, txs, requesting time.
 */
 
+// TODO: fix it
+
 package singleFunctionTesting
 
 import (
+	"bavovnacoin/blockchain"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/networking_p2p"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -73,6 +77,13 @@ func (ct *CommunicationTest) startPeer() (host.Host, string) {
 	return Peer, addr
 }
 
+func (ct *CommunicationTest) TestCommWithBlock() {
+	bl, _ := ct.CreateBlock(0xffff14, "0000000000000000000000000000000000000000", blockchain.LastBlock, false)
+	//data, _ := byteArr.ToByteArr(bl)
+	ct.peer1.ProposeNewBlock(bl, 0)
+	time.Sleep(time.Second * 3)
+}
+
 func (ct *CommunicationTest) Launch() {
 	var addr1 string
 	var addr2 string
@@ -80,7 +91,9 @@ func (ct *CommunicationTest) Launch() {
 	ct.peer1.Peer, addr1 = ct.startPeer()
 	ct.peer2.Peer, addr2 = ct.startPeer()
 
+	fmt.Println(ct.peer1.Peer.Peerstore())
+
 	ct.peer2.Peer, ct.peer2.OtherPeersIds, _ = ct.addOtherAddress(addr1, ct.peer2.OtherPeersIds, ct.peer2.Peer)
 	ct.peer1.Peer, ct.peer1.OtherPeersIds, _ = ct.addOtherAddress(addr2, ct.peer1.OtherPeersIds, ct.peer1.Peer)
-
+	ct.TestCommWithBlock()
 }

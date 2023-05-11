@@ -91,6 +91,7 @@ func (pd *PeerData) addSettingsAddresses() {
 func (pd *PeerData) SendDataToAllConnectedPeers(data []byte) bool {
 	activePeersCounter := 0
 	peerIds := pd.Peer.Peerstore().Peers()
+
 	for i := 0; i < len(peerIds); i++ {
 		if pd.SendDataOnPeerId(data, peerIds[i]) {
 			activePeersCounter++
