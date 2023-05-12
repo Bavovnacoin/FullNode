@@ -1,6 +1,8 @@
 package node_settings
 
 import (
+	"bavovnacoin/byteArr"
+	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
 	"encoding/json"
 	"fmt"
@@ -20,6 +22,8 @@ type NodeSettings struct {
 	OtherNodesAddresses [][]string // Addresses of other nodes to communicate
 	MyAddress           string
 	PrivKey             []byte
+	PrivKeyDecrypted    []byte `json:"-"`
+	HashPass            byteArr.ByteArr
 	RewardAddress       string
 	RPCip               string
 
@@ -30,17 +34,23 @@ func (ns *NodeSettings) InitSettingsValues() {
 	ns.NodeTypesNames = []string{"Validator node", "Audithor node"}
 }
 
-func (ns *NodeSettings) GetSettings() {
+func (ns *NodeSettings) GetSettings() bool {
 	jsonFile, err := os.Open(settingsFileName)
 	defer jsonFile.Close()
 
 	if err != nil {
 		*ns = NodeSettings{TxMinFee: 3, MiningThreads: 0, NodeType: 0}
 		ns.WriteSettings()
+		return false
 	} else {
 		byteValue, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal(byteValue, &ns)
 	}
+	return true
+}
+
+func (ns *NodeSettings) DecryptPrivKey(password string) {
+	ns.PrivKeyDecrypted = []byte(cryption.AES_decrypt(string(ns.PrivKey), password))
 }
 
 func (ns *NodeSettings) WriteSettings() {
@@ -117,14 +127,14 @@ func (ns *NodeSettings) IsRewAddrWalid(rewAddr string) bool {
 	return true
 }
 
+func (ns *NodeSettings) SetPrivKey(password string) {
+	ecdsa.InitValues()
+	ns.PrivKey = []byte(cryption.AES_encrypt(ecdsa.GenPrivKey(), password))
+	ns.WriteSettings()
+}
+
 func (ns *NodeSettings) GetPrivKey() []byte {
-	if len(Settings.PrivKey) == 0 {
-		ecdsa.InitValues()
-		data, _ := new(big.Int).SetString(ecdsa.GenPrivKey(), 16)
-		ns.PrivKey = data.Bytes()
-		ns.WriteSettings()
-	}
-	return Settings.PrivKey
+	return Settings.PrivKeyDecrypted
 }
 
 func (ns *NodeSettings) GetRpcAddr() string {

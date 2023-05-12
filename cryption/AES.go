@@ -54,8 +54,9 @@ func pad(mes string, to int) string {
 
 func mesToBits(mes string) string {
 	str := ""
-	for _, c := range mes {
-		str += complete(fmt.Sprintf("%b", c), 8)
+	for i := 0; i < len(mes); i++ {
+		//println(string(mes[i]), mes[i], complete(fmt.Sprintf("%b", mes[i]), 8))
+		str += complete(fmt.Sprintf("%b", mes[i]), 8)
 	}
 	return str
 }
