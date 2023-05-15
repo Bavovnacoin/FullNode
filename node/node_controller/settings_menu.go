@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var settings_menu bool
@@ -243,9 +244,42 @@ func networkScouting(input string, settings *node_settings.NodeSettings) bool {
 	}
 
 	if input == "y" {
-		// TODO: scouting the network
-		panic(networking_p2p.Peer.Peer == nil)
-		return true
+		if node_settings.Settings.MyAddress != "" {
+			networking_p2p.Peer.StartP2PCommunication()
+			defer networking_p2p.Peer.Peer.Close()
+
+			networking_p2p.IsAddressesRequested = true
+			initReq := networking_p2p.Peer.RequestForNodeAddresses(0)
+
+			if initReq {
+				for networking_p2p.IsAddressesRequested {
+					time.Sleep(50 * time.Millisecond)
+				}
+
+				fmt.Printf("Downloaded %d addresses\n", networking_p2p.AddrDownloadCounter)
+				networking_p2p.AddrDownloadCounter = 0
+				println("Type anything to continue")
+
+				var inp string
+				fmt.Scan(&inp)
+
+				return true
+			} else {
+				println("Error when requesting addresses. Please, try again later")
+				println("Type anything to continue")
+
+				var inp string
+				fmt.Scan(&inp)
+				return true
+			}
+		} else {
+			println("You need to enter your address in the settings menu")
+			println("Type anything to continue")
+
+			var inp string
+			fmt.Scan(&inp)
+		}
+
 	}
 
 	return false

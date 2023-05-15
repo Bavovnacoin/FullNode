@@ -68,6 +68,7 @@ func Authenticate() bool {
 		hashPass.SetFromHexString(hashing.SHA1(password), 20)
 
 		if node_settings.Settings.HashPass.IsEqual(hashPass) {
+			node_settings.Settings.DecryptPrivKey(password)
 			return true
 		} else if password == "exit" {
 			return false

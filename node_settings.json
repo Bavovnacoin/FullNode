@@ -4,14 +4,15 @@
     "NodeType": 0,
     "OtherNodesAddresses": [
         [
-            "/ip4/127.0.0.1/tcp/58818/16Uiu2HAmCNBw4CzgFJavAb5f46MQ5gzFppo2vzcBmHY1ojz4kG6W"
+            "/ip4/127.0.0.1/tcp/58818/16Uiu2HAmS5G75BtXJeXtdFoR9XymJmA6WJKx7SCcSRwJrsCPKZkj",
+            "localhost:25566"
         ]
     ],
-    "MyAddress": "",
+    "MyAddress": "/ip4/127.0.0.1/tcp/58819",
     "PrivKey": "MjVlYzY4NjlkZjEwNWIxN2Q2NTViMzM1YTlhNDc5MmI3NDM4NjU5NmY0ZmYxOWM0MmU0ODFmZmZjODE5NGZjOGVhNGM5MmZmM2Y3MTVmNmNlNzY4NmNhZGEyODY0YjhkZTI1Njg5NWU4ZGI4YTk3OTg5ZDJiMTViNDQ4M2YwMDM=",
     "HashPass": {
         "ByteArr": "k0M9+1S6otyB5B4gH0y5H9JAUfc="
     },
-    "RewardAddress": "",
-    "RPCip": ""
+    "RewardAddress": "2222222222222222222222222222222222222222",
+    "RPCip": "localhost:25565"
 }

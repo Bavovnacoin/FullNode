@@ -39,18 +39,19 @@ func (pd *PeerData) StreamHandler(s network.Stream) {
 	pd.TryHandleSynchronization(data, peerID)
 	pd.TryAddCameBlock(data, peerID)
 	pd.TryHandleTime(data, peerID)
-	pd.TryHandleTx(data, peerID, node_settings.Settings.TxMinFee)
+	pd.TryHandleTx(data, peerID)
+	pd.TryHandleAddressRequest(data, peerID)
 }
 
 // My address (localhost) /ip4/127.0.0.1/tcp/58818
-func (pd *PeerData) StartP2PCommunication(settingsPrivKey []byte, myAddress string, otherAddresses [][]string) {
+func (pd *PeerData) StartP2PCommunication() {
 	peerIdInd = 0
-	privKey, _ := crypto.UnmarshalSecp256k1PrivateKey(settingsPrivKey)
+	privKey, _ := crypto.UnmarshalSecp256k1PrivateKey(node_settings.Settings.GetPrivKey())
 
 	var err error
 	pd.Peer, err = libp2p.New(
 		libp2p.Identity(privKey),
-		libp2p.ListenAddrStrings(myAddress),
+		libp2p.ListenAddrStrings(node_settings.Settings.MyAddress),
 	)
 
 	if err == nil {
@@ -60,7 +61,7 @@ func (pd *PeerData) StartP2PCommunication(settingsPrivKey []byte, myAddress stri
 		fmt.Println("Unable to start a peer.", err)
 	}
 
-	pd.addSettingsAddresses(otherAddresses)
+	pd.addSettingsAddresses()
 }
 
 func (pd *PeerData) addOtherAddress(address string) bool {
@@ -81,9 +82,9 @@ func (pd *PeerData) addOtherAddress(address string) bool {
 	return true
 }
 
-func (pd *PeerData) addSettingsAddresses(otherAddresses [][]string) {
-	for i := 0; i < len(otherAddresses); i++ {
-		pd.addOtherAddress(otherAddresses[i][0])
+func (pd *PeerData) addSettingsAddresses() {
+	for i := 0; i < len(node_settings.Settings.OtherNodesAddresses); i++ {
+		pd.addOtherAddress(node_settings.Settings.OtherNodesAddresses[i][0])
 	}
 }
 

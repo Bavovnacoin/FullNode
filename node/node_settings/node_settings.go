@@ -4,6 +4,7 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -134,7 +135,8 @@ func (ns *NodeSettings) SetPrivKey(password string) {
 }
 
 func (ns *NodeSettings) GetPrivKey() []byte {
-	return Settings.PrivKeyDecrypted
+	decoded, _ := hex.DecodeString(string(Settings.PrivKeyDecrypted))
+	return decoded
 }
 
 func (ns *NodeSettings) GetRpcAddr() string {
