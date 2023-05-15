@@ -3,7 +3,7 @@ package blockchain
 import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_settings"
 	"fmt"
 	"log"
 	"math/big"

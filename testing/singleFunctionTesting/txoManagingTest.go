@@ -10,7 +10,7 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_settings"
 	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing/account"
 	"math/rand"
@@ -37,7 +37,7 @@ func (tmt *TxoManagingTest) Launch() {
 	tmt.mcBlockAmmount = 10
 
 	node_settings.Settings.GetSettings()
-	networking_p2p.Peer.StartP2PCommunication()
+	networking_p2p.Peer.StartP2PCommunication(node_settings.Settings.GetPrivKey(), node_settings.Settings.MyAddress, node_settings.Settings.OtherNodesAddresses)
 
 	dbController.DbPath = "testing/testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {

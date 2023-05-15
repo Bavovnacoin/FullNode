@@ -3,7 +3,7 @@ package blockchain
 import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
-	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_settings"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"
 	"fmt"

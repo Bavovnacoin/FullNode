@@ -6,7 +6,7 @@ import (
 	"bavovnacoin/hashing"
 	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_settings"
 	"fmt"
 	"log"
 	"time"

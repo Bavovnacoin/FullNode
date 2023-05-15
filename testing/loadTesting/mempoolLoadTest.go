@@ -8,7 +8,7 @@ package loadtesting
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/networking"
-	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_settings"
 	"bavovnacoin/testing"
 	"bavovnacoin/testing/account"
 	"fmt"

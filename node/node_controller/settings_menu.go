@@ -1,11 +1,13 @@
-package node_settings
+package node_controller
 
 import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/cryption"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/hashing"
+	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_settings"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -14,7 +16,7 @@ import (
 
 var settings_menu bool
 
-func FieldEnterForm(headerMes string, settings *NodeSettings, execFunc func(inp string, settings *NodeSettings) bool) bool {
+func FieldEnterForm(headerMes string, settings *node_settings.NodeSettings, execFunc func(inp string, settings *node_settings.NodeSettings) bool) bool {
 	var errStr string
 	var input string
 	for true {
@@ -40,7 +42,7 @@ func FieldEnterForm(headerMes string, settings *NodeSettings, execFunc func(inp 
 	return false
 }
 
-func feePerByteValid(feeStr string, settings *NodeSettings) bool {
+func feePerByteValid(feeStr string, settings *node_settings.NodeSettings) bool {
 	fee, err := strconv.ParseUint(feeStr, 10, 64)
 	if err == nil && fee >= 0 {
 		settings.TxMinFee = fee
@@ -50,7 +52,7 @@ func feePerByteValid(feeStr string, settings *NodeSettings) bool {
 	return false
 }
 
-func threadsSetValid(threadsStr string, settings *NodeSettings) bool {
+func threadsSetValid(threadsStr string, settings *node_settings.NodeSettings) bool {
 	threads, err := strconv.ParseUint(threadsStr, 10, 32)
 	if err == nil && settings.SetMiningThreads(uint(threads)) {
 		settings.WriteSettings()
@@ -71,7 +73,7 @@ func nodeNamesVariants(names []string, currNodeTypeID uint) string {
 	return res
 }
 
-func nodeTypeSetValid(nodeType string, settings *NodeSettings) bool {
+func nodeTypeSetValid(nodeType string, settings *node_settings.NodeSettings) bool {
 	tp, err := strconv.ParseUint(nodeType, 10, 32)
 	if err == nil && tp >= 0 && tp < uint64(len(settings.NodeTypesNames)) {
 		if tp <= uint64(settings.NodeType) {
@@ -99,7 +101,7 @@ func addressesVariants(addresses [][]string) string {
 	return res
 }
 
-func addressesSetValid(input string, settings *NodeSettings) bool {
+func addressesSetValid(input string, settings *node_settings.NodeSettings) bool {
 	variant, err := strconv.Atoi(input)
 	if err == nil && variant >= 0 && variant-1 < len(settings.OtherNodesAddresses) {
 		var remVar string
@@ -127,7 +129,7 @@ func addressesSetValid(input string, settings *NodeSettings) bool {
 	return false
 }
 
-func myAddrSetValid(address string, settings *NodeSettings) bool {
+func myAddrSetValid(address string, settings *node_settings.NodeSettings) bool {
 	if address != settings.MyAddress {
 		settings.MyAddress = address
 		settings.WriteSettings()
@@ -136,7 +138,7 @@ func myAddrSetValid(address string, settings *NodeSettings) bool {
 	return false
 }
 
-func rpcAddrSetValid(address string, settings *NodeSettings) bool {
+func rpcAddrSetValid(address string, settings *node_settings.NodeSettings) bool {
 	if address != settings.RPCip {
 		settings.RPCip = address
 		settings.WriteSettings()
@@ -145,7 +147,7 @@ func rpcAddrSetValid(address string, settings *NodeSettings) bool {
 	return false
 }
 
-func rewAddrSetValid(rewAddr string, settings *NodeSettings) bool {
+func rewAddrSetValid(rewAddr string, settings *node_settings.NodeSettings) bool {
 	if rewAddr != settings.RewardAddress && settings.IsRewAddrWalid(rewAddr) {
 		settings.RewardAddress = rewAddr
 		settings.WriteSettings()
@@ -168,7 +170,7 @@ func IsPassValid(pass string) bool {
 	return true
 }
 
-func changePassword(input string, settings *NodeSettings) bool {
+func changePassword(input string, settings *node_settings.NodeSettings) bool {
 	var hash byteArr.ByteArr
 	hash.SetFromHexString(hashing.SHA1(input), 20)
 
@@ -201,7 +203,7 @@ func changePassword(input string, settings *NodeSettings) bool {
 			}
 		}
 
-		Settings.SetPrivKey(password)
+		node_settings.Settings.SetPrivKey(password)
 		settings.HashPass.SetFromHexString(hashing.SHA1(password), 20)
 		settings.WriteSettings()
 
@@ -222,20 +224,41 @@ func changePassword(input string, settings *NodeSettings) bool {
 		}
 
 		ecdsa.InitValues()
-		prKey := cryption.AES_decrypt(string(Settings.PrivKey), input)
-		Settings.PrivKey = []byte(cryption.AES_encrypt(prKey, password))
+		prKey := cryption.AES_decrypt(string(node_settings.Settings.PrivKey), input)
+		node_settings.Settings.PrivKey = []byte(cryption.AES_encrypt(prKey, password))
 
 		var newPassHash byteArr.ByteArr
 		newPassHash.SetFromHexString(hashing.SHA1(password), 20)
-		Settings.HashPass = newPassHash
-		Settings.WriteSettings()
+		node_settings.Settings.HashPass = newPassHash
+		node_settings.Settings.WriteSettings()
 		return true
 	}
 
 	return false
 }
 
-func ChooseMenuVariant(variant string, settings *NodeSettings) {
+func networkScouting(input string, settings *node_settings.NodeSettings) bool {
+	if len(node_settings.Settings.OtherNodesAddresses) < 0 {
+		return false
+	}
+
+	if input == "y" {
+		// TODO: scouting the network
+		panic(networking_p2p.Peer.Peer == nil)
+		return true
+	}
+
+	return false
+}
+
+func netwScoutingTitle() string {
+	if len(node_settings.Settings.OtherNodesAddresses) > 0 {
+		return "Confirm the scouting by typing [y] or type \"back\" to back to the settings menu.\n"
+	}
+	return "You need at least one address for network scouting. Type \"back\" to back to the settings menu.\n"
+}
+
+func ChooseMenuVariant(variant string, settings *node_settings.NodeSettings) {
 	if variant == "1" {
 		FieldEnterForm(fmt.Sprintf("Current fee is %d. Type another fee or \"back\" to back to the settings menu.\n",
 			settings.TxMinFee), settings, feePerByteValid)
@@ -249,15 +272,17 @@ func ChooseMenuVariant(variant string, settings *NodeSettings) {
 		FieldEnterForm("Current addresses are seen below. Choose a variant to delete or type a new address to add a new address. Type \"back\" to back to the settings menu.\n"+
 			addressesVariants(settings.OtherNodesAddresses), settings, addressesSetValid)
 	} else if variant == "5" {
+		FieldEnterForm(netwScoutingTitle(), settings, networkScouting)
+	} else if variant == "6" {
 		FieldEnterForm(fmt.Sprintf("Current address is %s. Enter a new one or type \"back\" to back to the settings menu.\n", settings.MyAddress),
 			settings, myAddrSetValid)
-	} else if variant == "6" {
+	} else if variant == "7" {
 		FieldEnterForm(fmt.Sprintf("Current reward address is %s. Enter a new one or type \"back\" to back to the settings menu.\n", settings.GetRewAddress()),
 			settings, rewAddrSetValid)
-	} else if variant == "7" {
+	} else if variant == "8" {
 		FieldEnterForm(fmt.Sprintf("Current rpc address is %s. Enter a new one or type \"back\" to back to the settings menu.\n", settings.GetRpcAddr()),
 			settings, rpcAddrSetValid)
-	} else if variant == "8" {
+	} else if variant == "9" {
 		FieldEnterForm(fmt.Sprintf("Please, enter your old password or type \"NEW\" for a new password. WARNING: setting up a new password will cause node`s address change\n"),
 			settings, changePassword)
 	} else if variant == "0" {
@@ -265,7 +290,7 @@ func ChooseMenuVariant(variant string, settings *NodeSettings) {
 	}
 }
 
-func LaunchMenu(settings *NodeSettings) {
+func LaunchSettingsMenu(settings *node_settings.NodeSettings) {
 	settings_menu = true
 	var variant string
 
@@ -276,10 +301,11 @@ func LaunchMenu(settings *NodeSettings) {
 		fmt.Printf("2. Threads for mining (%s).\n", settings.ThreadsForMiningToString())
 		fmt.Printf("3. Node type (%s).\n", settings.NodeTypesNames[settings.NodeType])
 		fmt.Printf("4. Other node addresses (Ammount: %d).\n", len(settings.OtherNodesAddresses))
-		fmt.Printf("5. Change my address (Current: %s).\n", settings.MyAddress)
-		fmt.Printf("6. Change reward address (Current: %s).\n", settings.GetRewAddress())
-		fmt.Printf("7. Change RPC address (Current: %s).\n", settings.GetRpcAddr())
-		fmt.Printf("8. Change the password.\n")
+		fmt.Printf("5. Scouting the network (Ammount: %d).\n", len(settings.OtherNodesAddresses))
+		fmt.Printf("6. Change my address (Current: %s).\n", settings.GetMyAddr())
+		fmt.Printf("7. Change reward address (Current: %s).\n", settings.GetRewAddress())
+		fmt.Printf("8. Change RPC address (Current: %s).\n", settings.GetRpcAddr())
+		fmt.Printf("9. Change the password.\n")
 
 		fmt.Printf("0. Back\n")
 

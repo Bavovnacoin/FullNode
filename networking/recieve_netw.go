@@ -1,7 +1,7 @@
 package networking
 
 import (
-	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_settings"
 	"log"
 	"net"
 	"net/rpc"

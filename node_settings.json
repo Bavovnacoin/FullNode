@@ -2,7 +2,11 @@
     "TxMinFee": 3,
     "MiningThreads": 0,
     "NodeType": 0,
-    "OtherNodesAddresses": null,
+    "OtherNodesAddresses": [
+        [
+            "/ip4/127.0.0.1/tcp/58818/16Uiu2HAmCNBw4CzgFJavAb5f46MQ5gzFppo2vzcBmHY1ojz4kG6W"
+        ]
+    ],
     "MyAddress": "",
     "PrivKey": "MjVlYzY4NjlkZjEwNWIxN2Q2NTViMzM1YTlhNDc5MmI3NDM4NjU5NmY0ZmYxOWM0MmU0ODFmZmZjODE5NGZjOGVhNGM5MmZmM2Y3MTVmNmNlNzY4NmNhZGEyODY0YjhkZTI1Njg5NWU4ZGI4YTk3OTg5ZDJiMTViNDQ4M2YwMDM=",
     "HashPass": {

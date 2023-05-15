@@ -4,13 +4,12 @@ import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
-	"bavovnacoin/node/node_controller/node_settings"
 	"bavovnacoin/transaction"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-func (pd *PeerData) TryHandleTx(data []byte, peerId peer.ID) bool {
+func (pd *PeerData) TryHandleTx(data []byte, peerId peer.ID, txMinFee uint64) bool {
 	if data[0] == 8 {
 		var tx transaction.Transaction
 		isConv := byteArr.FromByteArr(data[1:], &tx)
@@ -22,7 +21,7 @@ func (pd *PeerData) TryHandleTx(data []byte, peerId peer.ID) bool {
 		txHash.SetFromHexString(hashing.SHA1(transaction.GetCatTxFields(tx)), 20)
 
 		if !blockchain.IsTxInMempool(txHash) &&
-			transaction.CheckTxMinFee(tx, node_settings.Settings.TxMinFee) &&
+			transaction.CheckTxMinFee(tx, txMinFee) &&
 			blockchain.AddTxToMempool(tx, true) {
 			pd.ProposeNewTx(tx)
 			return true

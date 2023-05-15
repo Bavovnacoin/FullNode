@@ -6,7 +6,7 @@ import (
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_settings"
 	"bavovnacoin/testing/account"
 	"bavovnacoin/transaction"
 	"bavovnacoin/txo"

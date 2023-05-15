@@ -4,8 +4,9 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/hashing"
 	"bavovnacoin/node/node_audithor"
+	"bavovnacoin/node/node_controller"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/node/node_controller/node_settings"
+	"bavovnacoin/node/node_settings"
 	"bavovnacoin/node/node_validator"
 	"fmt"
 	"runtime"
@@ -24,7 +25,7 @@ func funcChoser(variant string, isNodeLaunchAllowed bool) {
 		}
 
 	} else if variant == "2" && isNodeLaunchAllowed || variant == "1" && !isNodeLaunchAllowed {
-		node_settings.LaunchMenu(&node_settings.Settings)
+		node_controller.LaunchSettingsMenu(&node_settings.Settings)
 	} else if variant == "3" && isNodeLaunchAllowed || variant == "2" && !isNodeLaunchAllowed {
 		NodeLaunched = false
 	}
@@ -77,7 +78,7 @@ func Authenticate() bool {
 }
 
 func passwordSetValid(password string, settings *node_settings.NodeSettings) bool {
-	if !node_settings.IsPassValid(password) {
+	if !node_controller.IsPassValid(password) {
 		return false
 	}
 
@@ -95,8 +96,8 @@ func Launch() {
 
 	isPassSet := false
 	if isNewFile {
-		isPassSet = node_settings.FieldEnterForm(fmt.Sprintf("Please, enter a password.\nThe password length must be in range from 8 to 20 symbols. "+
-			"It should contain upper and lower case letters, numbers and special signs (%s).\n", node_settings.PassSpecSign),
+		isPassSet = node_controller.FieldEnterForm(fmt.Sprintf("Please, enter a password.\nThe password length must be in range from 8 to 20 symbols. "+
+			"It should contain upper and lower case letters, numbers and special signs (%s).\n", node_controller.PassSpecSign),
 			&node_settings.Settings, passwordSetValid)
 	}
 

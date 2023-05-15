@@ -7,6 +7,7 @@ import (
 	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller"
 	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_settings"
 	"bavovnacoin/txo"
 	"fmt"
 	"log"
@@ -50,7 +51,7 @@ func LaunchValidatorNode() {
 	command_executor.ComContr.FullNodeWorking = true
 	dbController.DB.OpenDb()
 	defer dbController.DB.CloseDb()
-	networking_p2p.Peer.StartP2PCommunication()
+	networking_p2p.Peer.StartP2PCommunication(node_settings.Settings.GetPrivKey(), node_settings.Settings.MyAddress, node_settings.Settings.OtherNodesAddresses)
 	StartRPC()
 	defer networking.StopRPCListener()
 	blockchain.InitBlockchain()

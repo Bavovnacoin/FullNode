@@ -138,5 +138,15 @@ func (ns *NodeSettings) GetPrivKey() []byte {
 }
 
 func (ns *NodeSettings) GetRpcAddr() string {
+	if Settings.RPCip == "" {
+		return "none"
+	}
 	return Settings.RPCip
+}
+
+func (ns *NodeSettings) GetMyAddr() string {
+	if Settings.MyAddress == "" {
+		return "none"
+	}
+	return Settings.MyAddress
 }
