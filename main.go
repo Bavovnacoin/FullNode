@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bavovnacoin/testing/loadtesting/nodeLoadTest"
+	"bavovnacoin/testing/loadTesting/nodeLoadTest"
 	"fmt"
 )
 

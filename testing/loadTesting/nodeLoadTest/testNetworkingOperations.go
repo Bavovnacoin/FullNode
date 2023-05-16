@@ -4,6 +4,7 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/networking"
+	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_settings"
 	"bavovnacoin/transaction"
 	"bytes"
@@ -11,8 +12,17 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math/big"
 	"math/rand"
 	"net/rpc"
+	"strings"
+
+	"github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/peerstore"
+	"github.com/multiformats/go-multiaddr"
 )
 
 type Connection struct {
@@ -31,6 +41,48 @@ func InitTestSettings() {
 	node_settings.Settings.MyAddress = getRandAddress()
 	ecdsa.InitValues()
 	node_settings.Settings.PrivKeyDecrypted, _ = hex.DecodeString(ecdsa.GenPrivKey())
+}
+
+func startTestPeer() (host.Host, string) {
+	ecdsa.InitValues()
+	pk, _ := new(big.Int).SetString(ecdsa.GenPrivKey(), 16)
+	privKey, _ := crypto.UnmarshalSecp256k1PrivateKey(pk.Bytes())
+
+	addr := getRandAddress()
+
+	var err error
+	Peer, err := libp2p.New(
+		libp2p.Identity(privKey),
+		libp2p.ListenAddrStrings(addr),
+	)
+
+	if err == nil {
+		Peer.SetStreamHandler(networking_p2p.PROTOCOL_ID, networking_p2p.Peer.StreamHandler)
+	}
+
+	return Peer, fmt.Sprintf("%s/%s", Peer.Addrs()[0], Peer.ID().Pretty())
+}
+
+func addOtherAddress(address string, pr networking_p2p.PeerData) (networking_p2p.PeerData, bool) {
+	arr := strings.Split(address, "/")
+
+	maddr, err := multiaddr.NewMultiaddr(strings.Join(arr[:len(arr)-1], "/"))
+	if err != nil {
+		return pr, false
+	}
+
+	id, res := peer.Decode(arr[len(arr)-1])
+	if res != nil {
+		return pr, false
+	}
+
+	pr.Peer.Peerstore().AddAddrs(id, []multiaddr.Multiaddr{maddr}, peerstore.PermanentAddrTTL)
+	return pr, true
+}
+
+func getIpFromNodeAddr(nodeAddr string) string {
+	ipArr := strings.Split(nodeAddr, "/")
+	return ipArr[2] + ":" + ipArr[3]
 }
 
 func (c *Connection) Establish() bool {

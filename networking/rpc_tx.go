@@ -15,7 +15,7 @@ func (l *Listener) AddNewTxToMemp(txByteArr []byte, reply *Reply) error {
 	if transaction.CheckTxMinFee(tx, node_settings.Settings.TxMinFee) &&
 		blockchain.AddTxToMempool(tx, true) {
 		*reply = Reply{[]byte{1}}
-		networking_p2p.Peer.ProposeNewTx(tx)
+		networking_p2p.Peer.ProposeNewTx(tx, "")
 	} else {
 		*reply = Reply{[]byte{0}}
 	}

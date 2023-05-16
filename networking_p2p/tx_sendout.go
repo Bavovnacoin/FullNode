@@ -24,14 +24,14 @@ func (pd *PeerData) TryHandleTx(data []byte, peerId peer.ID) bool {
 		if !blockchain.IsTxInMempool(txHash) &&
 			transaction.CheckTxMinFee(tx, node_settings.Settings.TxMinFee) &&
 			blockchain.AddTxToMempool(tx, true) {
-			pd.ProposeNewTx(tx)
+			pd.ProposeNewTx(tx, peerId)
 			return true
 		}
 	}
 	return false
 }
 
-func (pd *PeerData) ProposeNewTx(tx transaction.Transaction) bool {
+func (pd *PeerData) ProposeNewTx(tx transaction.Transaction, avoidPeerId peer.ID) bool {
 	txByte, _ := byteArr.ToByteArr(tx)
-	return pd.SendDataToAllConnectedPeers(append([]byte{8}, txByte...))
+	return pd.SendDataToAllConnectedPeers(append([]byte{8}, txByte...), avoidPeerId)
 }

@@ -95,7 +95,7 @@ func (ct *CommunicationTest) StartOtherPeers() {
 }
 
 func (ct *CommunicationTest) TestCommWithTimeRequest() {
-	ct.mainPeer.RequestNodesTime()
+	ct.mainPeer.RequestNodesTime("")
 }
 
 func (ct *CommunicationTest) PrintResult() {

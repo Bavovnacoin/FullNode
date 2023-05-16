@@ -22,7 +22,7 @@ func NodeProcess() {
 func BlockGen(allowCommandHandler bool) {
 	if blockchain.BcLength == 0 {
 		genBlock := blockchain.FormGenesisBlock()
-		networking_p2p.Peer.ProposeNewBlock(genBlock, 0)
+		networking_p2p.Peer.ProposeNewBlock(genBlock, 0, "")
 	}
 
 	if allowCommandHandler {

@@ -249,7 +249,7 @@ func networkScouting(input string, settings *node_settings.NodeSettings) bool {
 			defer networking_p2p.Peer.Peer.Close()
 
 			networking_p2p.IsAddressesRequested = true
-			initReq := networking_p2p.Peer.RequestForNodeAddresses(0)
+			initReq := networking_p2p.Peer.RequestForNodeAddresses(0, "")
 
 			if initReq {
 				for networking_p2p.IsAddressesRequested {

@@ -3,7 +3,7 @@
 	when there`s an incorrect tx spam
 */
 
-package loadtesting
+package loadTesting
 
 import (
 	"bavovnacoin/blockchain"

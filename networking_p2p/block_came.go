@@ -55,17 +55,17 @@ func (pd *PeerData) TryAddCameBlock(data []byte, peerId peer.ID) bool {
 		}
 
 		NodesTime = []int64{}
-		pd.GetNodesTime()
+		pd.GetNodesTime("")
 		time.Sleep(50 * time.Millisecond)
 
 		if blockchain.TryCameBlockToAdd(newBlock.Block, newBlock.Height, NodesTime, true) {
-			pd.ProposeNewBlock(newBlock.Block, newBlock.Height)
+			pd.ProposeNewBlock(newBlock.Block, newBlock.Height, peerId)
 		}
 	}
 	return true
 }
 
-func (pd *PeerData) ProposeNewBlock(block blockchain.Block, height uint64) bool {
+func (pd *PeerData) ProposeNewBlock(block blockchain.Block, height uint64, avoidPeer peer.ID) bool {
 	var blockHash byteArr.ByteArr
 	blockHashString := hashing.SHA1(blockchain.BlockHeaderToString(block))
 	blockHash.SetFromHexString(blockHashString, 20)
@@ -79,5 +79,5 @@ func (pd *PeerData) ProposeNewBlock(block blockchain.Block, height uint64) bool 
 		return false
 	}
 
-	return pd.SendDataToAllConnectedPeers(append([]byte{3}, hashProp...))
+	return pd.SendDataToAllConnectedPeers(append([]byte{3}, hashProp...), avoidPeer)
 }

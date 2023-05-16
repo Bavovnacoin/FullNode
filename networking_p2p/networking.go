@@ -88,7 +88,7 @@ func (pd *PeerData) addSettingsAddresses() {
 	}
 }
 
-func (pd *PeerData) SendDataToAllConnectedPeers(data []byte) bool {
+func (pd *PeerData) SendDataToAllConnectedPeers(data []byte, avoidPeerId peer.ID) bool {
 	activePeersCounter := 0
 	if pd.Peer == nil {
 		return false
@@ -97,7 +97,7 @@ func (pd *PeerData) SendDataToAllConnectedPeers(data []byte) bool {
 	peerIds := pd.Peer.Peerstore().Peers()
 
 	for i := 0; i < len(peerIds); i++ {
-		if pd.SendDataOnPeerId(data, peerIds[i]) {
+		if !(peerIds[i] == avoidPeerId || peerIds[i] == pd.Peer.ID()) && pd.SendDataOnPeerId(data, peerIds[i]) {
 			activePeersCounter++
 		}
 	}
@@ -121,5 +121,6 @@ func (pd *PeerData) SendDataOnPeerId(data []byte, id peer.ID) bool {
 		}
 		return true
 	}
+
 	return false
 }

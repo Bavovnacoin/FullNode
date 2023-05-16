@@ -56,7 +56,7 @@ func (pd *PeerData) TryHandleAddressRequest(data []byte, peerId peer.ID) bool {
 			node_settings.Settings.WriteSettings()
 
 			if response.IsMore {
-				pd.RequestForNodeAddresses(response.Ind + len(response.Addresses))
+				pd.RequestForNodeAddresses(response.Ind+len(response.Addresses), peerId)
 			} else {
 				IsAddressesRequested = false
 			}
@@ -67,7 +67,7 @@ func (pd *PeerData) TryHandleAddressRequest(data []byte, peerId peer.ID) bool {
 	return false
 }
 
-func (pd *PeerData) RequestForNodeAddresses(startFrom int) bool {
+func (pd *PeerData) RequestForNodeAddresses(startFrom int, avoidPeer peer.ID) bool {
 	startBytes, _ := byteArr.ToByteArr(startFrom)
-	return pd.SendDataToAllConnectedPeers(append([]byte{9}, startBytes...))
+	return pd.SendDataToAllConnectedPeers(append([]byte{9}, startBytes...), avoidPeer)
 }

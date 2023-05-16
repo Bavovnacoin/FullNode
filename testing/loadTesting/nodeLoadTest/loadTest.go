@@ -10,14 +10,15 @@ import (
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
+	"bavovnacoin/networking"
 	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
+	"bavovnacoin/node/node_settings"
 	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing"
 	"bavovnacoin/testing/account"
 	"bavovnacoin/txo"
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -63,17 +64,27 @@ func (lt *LoadTest) GenRandValues() {
 }
 
 func (lt *LoadTest) startTestTxSending() {
-	var conn Connection
+	var conn networking.Connection
+	println(conn.Establish(getIpFromNodeAddr(node_settings.Settings.MyAddress)), "is established")
+	println()
+	var newPeer networking_p2p.PeerData
+	newPeer.Peer, _ = startTestPeer()
+	newPeer, _ = addOtherAddress(fmt.Sprintf("%s/%s", networking_p2p.Peer.Peer.Addrs()[0], networking_p2p.Peer.Peer.ID().Pretty()), newPeer)
 
 	var isAccepted bool
 	var start time.Time
 	for ; lt.txAmmount > 0; lt.txAmmount-- {
 		newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
 
+		// TODO: time of RPC amd libp2p functions
 		start = time.Now()
-		conn.SendTransaction(newTx, &isAccepted)
+		if lt.currAccInd%2 == 0 {
+			conn.SendTransaction(newTx, &isAccepted) // TODO: change to normal RPC function
+		} else {
+			newPeer.ProposeNewTx(newTx, "")
+		}
 		lt.txVerifTime = append(lt.txVerifTime, time.Since(start))
-		println("Tx generated")
+		lt.currAccInd++
 	}
 }
 
@@ -141,7 +152,7 @@ func (lt *LoadTest) Launch(txAmmount int, rpcAmmount int) {
 	dbController.DB.OpenDb()
 
 	networking_p2p.Peer.StartP2PCommunication()
-	node_validator.StartRPC()
+	//node_validator.StartRPC()
 
 	testing.GenTestAccounts(lt.txAmmount)
 	fmt.Printf("Generated %d test accounts\n", len(account.Wallet))
@@ -152,21 +163,24 @@ func (lt *LoadTest) Launch(txAmmount int, rpcAmmount int) {
 	println("Initializing transactions")
 	time.Sleep(1 * time.Second)
 
-	var isAdded bool
-	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 0 {
-		isAdded = lt.testAddBlock()
+	// var isAdded bool
+	// for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 0 {
+	// 	isAdded = lt.testAddBlock()
 
-		if isAdded {Block is added to blockchain. Current height: d. Handled %d test transactions\n",
-				blockchain.BcLength, len(blockchain.LastBlock.Transaction)-1)
-			println(len(blockchain.Mempool))
-			blockchain.BlockForMining = blocchain.Block{}
-		}
+	// 	if isAdded {
+	// 		lt.txHandled += len(blockchain.LastBlock.Transactions) - 1
+	// 		log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n",
+	// 			blockchain.BcLength, len(blockchain.LastBlock.Transactions)-1)
+	// 		println(len(blockchain.Mempool))
+	// 		blockchain.BlockForMining = blockchain.Block{}
+	// 	}
 
-	lttryCallRandRpc()
+	// 	lt.tryCallRandRpc()
+	// }
+
+	dbController.DB.CloseDb()
+	os.RemoveAll(dbController.DbPath)
+
+	lt.printResults()
+
 }
-
-dbontroller.DB.CloseDb()
-os.RemoveAll(dbControllerDbPath)
-
-lt.printResults()
-

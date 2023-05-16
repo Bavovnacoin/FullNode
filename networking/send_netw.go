@@ -6,6 +6,7 @@ import (
 	"bavovnacoin/transaction"
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"net/rpc"
 )
 
@@ -33,6 +34,7 @@ func (c *Connection) Establish(address string) bool {
 	var err error
 	c.client, err = rpc.Dial("tcp", address)
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 	return true

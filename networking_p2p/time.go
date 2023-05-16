@@ -24,13 +24,13 @@ func (pd *PeerData) TryHandleTime(data []byte, peerId peer.ID) bool {
 	return false
 }
 
-func (pd *PeerData) GetNodesTime() bool {
+func (pd *PeerData) GetNodesTime(avoidPeer peer.ID) bool {
 	localTime := time.Now().UTC().Unix()
 	var locTimeBytes []byte = make([]byte, 8)
 	binary.LittleEndian.PutUint64(locTimeBytes, uint64(localTime))
-	return pd.SendDataToAllConnectedPeers(append([]byte{7}, locTimeBytes...))
+	return pd.SendDataToAllConnectedPeers(append([]byte{7}, locTimeBytes...), avoidPeer)
 }
 
-func (pd *PeerData) RequestNodesTime() bool {
-	return pd.SendDataToAllConnectedPeers([]byte{6})
+func (pd *PeerData) RequestNodesTime(avoidPeer peer.ID) bool {
+	return pd.SendDataToAllConnectedPeers([]byte{6}, avoidPeer)
 }
