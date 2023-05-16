@@ -8,7 +8,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-var nodesTime []int64
+var NodesTime []int64
 
 func (pd *PeerData) TryHandleTime(data []byte, peerId peer.ID) bool {
 	if data[0] == 6 {
@@ -18,7 +18,7 @@ func (pd *PeerData) TryHandleTime(data []byte, peerId peer.ID) bool {
 	} else if data[0] == 7 {
 		var nodeTime int64
 		byteArr.FromByteArr(data[1:], &nodeTime)
-		nodesTime = append(nodesTime, nodeTime)
+		NodesTime = append(NodesTime, nodeTime)
 		return true
 	}
 	return false
@@ -29,4 +29,8 @@ func (pd *PeerData) GetNodesTime() bool {
 	var locTimeBytes []byte = make([]byte, 8)
 	binary.LittleEndian.PutUint64(locTimeBytes, uint64(localTime))
 	return pd.SendDataToAllConnectedPeers(append([]byte{7}, locTimeBytes...))
+}
+
+func (pd *PeerData) RequestNodesTime() bool {
+	return pd.SendDataToAllConnectedPeers([]byte{6})
 }

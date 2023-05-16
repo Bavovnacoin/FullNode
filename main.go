@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bavovnacoin/node"
+	"bavovnacoin/testing/singleFunctionTesting"
 	"fmt"
 )
 
@@ -14,8 +14,7 @@ func ByteToString(arr []byte) string {
 }
 
 func main() {
-	// a, _ := new(big.Int).SetString("00ffff0000000000000000000000000000000000", 16)
-	// fmt.Printf("%x\n", blockchain.TargetToBits(a))
-
-	node.Launch()
+	// node.Launch()
+	var ct singleFunctionTesting.CommunicationTest
+	ct.Launch()
 }

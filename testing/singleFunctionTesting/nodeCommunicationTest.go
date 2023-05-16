@@ -1,14 +1,11 @@
 /*
-	Tests how communication between two nodes performed by sending
-	some data like blocks, txs, requesting time.
+	Tests if a communication between two peers works fine
+	by requesting local node time
 */
-
-// TODO: fix it
 
 package singleFunctionTesting
 
 import (
-	"bavovnacoin/blockchain"
 	"bavovnacoin/ecdsa"
 	"bavovnacoin/networking_p2p"
 	"fmt"
@@ -27,9 +24,16 @@ import (
 
 type CommunicationTest struct {
 	SingleFunctionTesting
-	// TODO: value for ammount of peers
+
 	peer1 networking_p2p.PeerData
 	peer2 networking_p2p.PeerData
+
+	mainPeer         networking_p2p.PeerData
+	otherPeers       []networking_p2p.PeerData
+	otherPeerAmmount int
+
+	source rand.Source
+	random *rand.Rand
 }
 
 func (ct *CommunicationTest) getRandAddress() string {
@@ -74,26 +78,51 @@ func (ct *CommunicationTest) startPeer() (host.Host, string) {
 		fmt.Println("Unable to start a peer.", err)
 	}
 
-	return Peer, addr
+	return Peer, fmt.Sprintf("%s/%s", Peer.Addrs()[0], Peer.ID().Pretty())
 }
 
-func (ct *CommunicationTest) TestCommWithBlock() {
-	bl, _ := ct.CreateBlock(0xffff14, "0000000000000000000000000000000000000000", blockchain.LastBlock, false)
-	//data, _ := byteArr.ToByteArr(bl)
-	ct.peer1.ProposeNewBlock(bl, 0)
-	time.Sleep(time.Second * 3)
+func (ct *CommunicationTest) StartOtherPeers() {
+	for i := 0; i < ct.otherPeerAmmount; i++ {
+		peer, addr := ct.startPeer()
+		var peerData networking_p2p.PeerData
+		peerData.Peer = peer
+		ct.otherPeers = append(ct.otherPeers, peerData)
+
+		ct.mainPeer.Peer, ct.mainPeer.OtherPeersIds, _ = ct.addOtherAddress(addr, ct.mainPeer.OtherPeersIds, ct.mainPeer.Peer)
+	}
+
+	networking_p2p.Peer.Peer = ct.otherPeers[0].Peer
+}
+
+func (ct *CommunicationTest) TestCommWithTimeRequest() {
+	ct.mainPeer.RequestNodesTime()
+}
+
+func (ct *CommunicationTest) PrintResult() {
+	println("Results:")
+	fmt.Printf("Got %d/%d responces\n", len(networking_p2p.NodesTime), ct.otherPeerAmmount)
+
+	if len(networking_p2p.NodesTime) == ct.otherPeerAmmount {
+		println("Test is passed")
+	} else {
+		println("Test is not passed")
+	}
 }
 
 func (ct *CommunicationTest) Launch() {
-	var addr1 string
-	var addr2 string
+	ct.source = rand.NewSource(time.Now().Unix())
+	ct.random = rand.New(ct.source)
+	ct.otherPeerAmmount = 1
 
-	ct.peer1.Peer, addr1 = ct.startPeer()
-	ct.peer2.Peer, addr2 = ct.startPeer()
+	println("Starting main peer")
+	ct.mainPeer.Peer, _ = ct.startPeer()
+	networking_p2p.Peer.Peer = ct.mainPeer.Peer
 
-	fmt.Println(ct.peer1.Peer.Peerstore())
+	println("Starting other peers")
+	ct.StartOtherPeers()
 
-	ct.peer2.Peer, ct.peer2.OtherPeersIds, _ = ct.addOtherAddress(addr1, ct.peer2.OtherPeersIds, ct.peer2.Peer)
-	ct.peer1.Peer, ct.peer1.OtherPeersIds, _ = ct.addOtherAddress(addr2, ct.peer1.OtherPeersIds, ct.peer1.Peer)
-	ct.TestCommWithBlock()
+	ct.TestCommWithTimeRequest()
+	time.Sleep(1 * time.Second)
+
+	ct.PrintResult()
 }

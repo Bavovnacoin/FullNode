@@ -54,11 +54,11 @@ func (pd *PeerData) TryAddCameBlock(data []byte, peerId peer.ID) bool {
 			return false
 		}
 
-		nodesTime = []int64{}
+		NodesTime = []int64{}
 		pd.GetNodesTime()
 		time.Sleep(50 * time.Millisecond)
 
-		if blockchain.TryCameBlockToAdd(newBlock.Block, newBlock.Height, nodesTime, true) {
+		if blockchain.TryCameBlockToAdd(newBlock.Block, newBlock.Height, NodesTime, true) {
 			pd.ProposeNewBlock(newBlock.Block, newBlock.Height)
 		}
 	}

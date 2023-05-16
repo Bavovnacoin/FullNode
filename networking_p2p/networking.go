@@ -64,7 +64,7 @@ func (pd *PeerData) StartP2PCommunication() {
 	pd.addSettingsAddresses()
 }
 
-func (pd *PeerData) addOtherAddress(address string) bool {
+func (pd *PeerData) AddOtherAddress(address string) bool {
 	arr := strings.Split(address, "/")
 
 	maddr, err := multiaddr.NewMultiaddr(strings.Join(arr[:len(arr)-1], "/"))
@@ -84,7 +84,7 @@ func (pd *PeerData) addOtherAddress(address string) bool {
 
 func (pd *PeerData) addSettingsAddresses() {
 	for i := 0; i < len(node_settings.Settings.OtherNodesAddresses); i++ {
-		pd.addOtherAddress(node_settings.Settings.OtherNodesAddresses[i][0])
+		pd.AddOtherAddress(node_settings.Settings.OtherNodesAddresses[i][0])
 	}
 }
 
