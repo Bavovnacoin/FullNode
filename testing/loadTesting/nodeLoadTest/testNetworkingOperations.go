@@ -1,14 +1,17 @@
-package loadtesting
+package nodeLoadTest
 
 import (
 	"bavovnacoin/byteArr"
+	"bavovnacoin/ecdsa"
 	"bavovnacoin/networking"
 	"bavovnacoin/node/node_settings"
 	"bavovnacoin/transaction"
 	"bytes"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/rpc"
 )
 
@@ -18,6 +21,16 @@ type Connection struct {
 
 type Reply struct {
 	Data []byte
+}
+
+func getRandAddress() string {
+	return "/ip4/127.0.0.1/tcp/" + fmt.Sprint(rand.Intn(9000)+1000)
+}
+
+func InitTestSettings() {
+	node_settings.Settings.MyAddress = getRandAddress()
+	ecdsa.InitValues()
+	node_settings.Settings.PrivKeyDecrypted, _ = hex.DecodeString(ecdsa.GenPrivKey())
 }
 
 func (c *Connection) Establish() bool {

@@ -3,13 +3,14 @@
 	variety of node`s functions
 */
 
-package loadtesting
+package nodeLoadTest
 
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/byteArr"
 	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
+	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
 	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing"
@@ -72,7 +73,7 @@ func (lt *LoadTest) startTestTxSending() {
 		start = time.Now()
 		conn.SendTransaction(newTx, &isAccepted)
 		lt.txVerifTime = append(lt.txVerifTime, time.Since(start))
-
+		println("Tx generated")
 	}
 }
 
@@ -128,8 +129,9 @@ func (lt *LoadTest) testAddBlock() bool {
 	return false
 }
 
-func (lt *LoadTest) StartLoadTest(txAmmount int, rpcAmmount int) {
+func (lt *LoadTest) Launch(txAmmount int, rpcAmmount int) {
 	lt.initTestData(txAmmount, rpcAmmount)
+	InitTestSettings()
 
 	dbController.DbPath = "testing/testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {
@@ -137,6 +139,8 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, rpcAmmount int) {
 		println("Removed test db from a previous test.")
 	}
 	dbController.DB.OpenDb()
+
+	networking_p2p.Peer.StartP2PCommunication()
 	node_validator.StartRPC()
 
 	testing.GenTestAccounts(lt.txAmmount)
@@ -152,19 +156,17 @@ func (lt *LoadTest) StartLoadTest(txAmmount int, rpcAmmount int) {
 	for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 0 {
 		isAdded = lt.testAddBlock()
 
-		if isAdded {
-			lt.txHandled += len(blockchain.LastBlock.Transactions) - 1
-			log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n",
-				blockchain.BcLength, len(blockchain.LastBlock.Transactions)-1)
+		if isAdded {Block is added to blockchain. Current height: d. Handled %d test transactions\n",
+				blockchain.BcLength, len(blockchain.LastBlock.Transaction)-1)
 			println(len(blockchain.Mempool))
-			blockchain.BlockForMining = blockchain.Block{}
+			blockchain.BlockForMining = blocchain.Block{}
 		}
 
-		lt.tryCallRandRpc()
-	}
-
-	dbController.DB.CloseDb()
-	os.RemoveAll(dbController.DbPath)
-
-	lt.printResults()
+	lttryCallRandRpc()
 }
+
+dbontroller.DB.CloseDb()
+os.RemoveAll(dbControllerDbPath)
+
+lt.printResults()
+

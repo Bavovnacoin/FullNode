@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bavovnacoin/testing/singleFunctionTesting"
+	"bavovnacoin/testing/loadtesting/nodeLoadTest"
 	"fmt"
 )
 
@@ -15,6 +15,6 @@ func ByteToString(arr []byte) string {
 
 func main() {
 	// node.Launch()
-	var ct singleFunctionTesting.CommunicationTest
-	ct.Launch()
+	var lt nodeLoadTest.LoadTest
+	lt.Launch(10, 1)
 }
