@@ -16,5 +16,5 @@ func ByteToString(arr []byte) string {
 func main() {
 	// node.Launch()
 	var lt nodeLoadTest.LoadTest
-	lt.Launch(10, 1)
+	lt.Launch(100, 10)
 }

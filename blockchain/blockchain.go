@@ -212,11 +212,11 @@ func FormGenesisBlock() Block {
 }
 
 func IsBlockExists(blockHash byteArr.ByteArr, height uint64) bool {
-	println("Checking block hash", blockHash.ToHexString(), height)
+	//println("Checking block hash", blockHash.ToHexString(), height)
 
 	blockArr, res := GetBlocksOnHeight(height)
 	if !res {
-		println("Block with such a height is not found")
+		//println("Block with such a height is not found")
 		return false
 	}
 
@@ -224,11 +224,11 @@ func IsBlockExists(blockHash byteArr.ByteArr, height uint64) bool {
 	for i := 0; i < len(blockArr); i++ {
 		bcBlockHash.SetFromHexString(hashing.SHA1(BlockHeaderToString(blockArr[i].Block)), 20)
 		if bcBlockHash.IsEqual(blockHash) {
-			println("Block is found")
+			//println("Block is found")
 			return true
 		}
 	}
 
-	println("Block is not found", bcBlockHash.ToHexString(), blockHash.ToHexString())
+	//println("Block is not found", bcBlockHash.ToHexString(), blockHash.ToHexString())
 	return false
 }

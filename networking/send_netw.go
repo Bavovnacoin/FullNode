@@ -34,7 +34,7 @@ func (c *Connection) Establish(address string) bool {
 	var err error
 	c.client, err = rpc.Dial("tcp", address)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err, address)
 		return false
 	}
 	return true

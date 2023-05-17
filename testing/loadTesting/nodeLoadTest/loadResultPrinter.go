@@ -43,5 +43,6 @@ func (lt *LoadTest) printResults() {
 	//printfunRes(lt.rpcExecTimeisAddrExist, "2. Is address exists: ", uint64(time.Millisecond))
 	println()
 	println("New tx verification mean time results (s):")
-	printfunRes(lt.txVerifTime, "Tx verification: ", uint64(time.Second))
+	printfunRes(lt.txVerifTimeRPC, "Tx verification (sent via RPC): ", uint64(time.Second))
+	printfunRes(lt.txVerifTimeP2P, "Tx verification (sent via peer): ", uint64(time.Second))
 }

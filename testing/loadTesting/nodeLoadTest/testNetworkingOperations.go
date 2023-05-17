@@ -41,6 +41,7 @@ func InitTestSettings() {
 	node_settings.Settings.MyAddress = getRandAddress()
 	ecdsa.InitValues()
 	node_settings.Settings.PrivKeyDecrypted, _ = hex.DecodeString(ecdsa.GenPrivKey())
+	node_settings.Settings.RPCip = "localhost:8080"
 }
 
 func startTestPeer() (host.Host, string) {

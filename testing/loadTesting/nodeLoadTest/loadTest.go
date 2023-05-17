@@ -13,7 +13,6 @@ import (
 	"bavovnacoin/networking"
 	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/node/node_settings"
 	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing"
 	"bavovnacoin/testing/account"
@@ -43,7 +42,8 @@ type LoadTest struct {
 	// Test results
 	rpcExecTimeUtxoByAddr  []time.Duration // Determines how much time a user needs to wait to call an rpc
 	rpcExecTimeisAddrExist []time.Duration // Determines how much time a user needs to wait to call an rpc
-	txVerifTime            []time.Duration // Determines how much time a user needs to wait to add tx to a mempool
+	txVerifTimeP2P         []time.Duration // Determines how much time a user needs to wait to add tx to a mempool
+	txVerifTimeRPC         []time.Duration // Determines how much time a user needs to wait to add tx to a mempool
 
 	source rand.Source
 	random *rand.Rand
@@ -63,28 +63,49 @@ func (lt *LoadTest) GenRandValues() {
 	go testing.GenTestUtxo(lt.txAmmount, lt.random)
 }
 
+func waitForMempoolChange() {
+	prevAmmount := len(blockchain.Mempool)
+	for prevAmmount == len(blockchain.Mempool) {
+		time.Sleep(10 * time.Microsecond)
+	}
+}
+
 func (lt *LoadTest) startTestTxSending() {
 	var conn networking.Connection
-	println(conn.Establish(getIpFromNodeAddr(node_settings.Settings.MyAddress)), "is established")
-	println()
+	conn.Establish("localhost:8080")
+
 	var newPeer networking_p2p.PeerData
 	newPeer.Peer, _ = startTestPeer()
 	newPeer, _ = addOtherAddress(fmt.Sprintf("%s/%s", networking_p2p.Peer.Peer.Addrs()[0], networking_p2p.Peer.Peer.ID().Pretty()), newPeer)
 
 	var isAccepted bool
 	var start time.Time
-	for ; lt.txAmmount > 0; lt.txAmmount-- {
+	txToCreate := lt.txAmmount
+	for ; txToCreate > 0; txToCreate-- {
+		println(txToCreate)
 		newTx := testing.GenValidTx(lt.currAccInd, 2, lt.random)
+		println("created")
 
-		// TODO: time of RPC amd libp2p functions
 		start = time.Now()
 		if lt.currAccInd%2 == 0 {
-			conn.SendTransaction(newTx, &isAccepted) // TODO: change to normal RPC function
+			println("sending 1")
+			conn.SendTransaction(newTx, &isAccepted)
+			if isAccepted {
+				lt.txVerifTimeRPC = append(lt.txVerifTimeRPC, time.Since(start))
+				println("accepted")
+			} else {
+				println(blockchain.AreInputsInMempool(newTx.Inputs))
+				println("not accepted")
+			}
 		} else {
+			println("sending 2")
 			newPeer.ProposeNewTx(newTx, "")
+			//waitForMempoolChange()
+			lt.txVerifTimeP2P = append(lt.txVerifTimeP2P, time.Since(start))
+			println("accepted")
 		}
-		lt.txVerifTime = append(lt.txVerifTime, time.Since(start))
 		lt.currAccInd++
+		println("----")
 	}
 }
 
@@ -106,13 +127,9 @@ func (lt *LoadTest) callRandRpc(rpcInd int) {
 }
 
 func (lt *LoadTest) tryCallRandRpc() {
-	currCallsAmmount := (lt.txHandled - lt.rpcStep*lt.rpcHandledAmmount) / lt.rpcStep
-
-	if lt.rpcHandledAmmount < lt.rpcAmmount && currCallsAmmount != 0 {
-		for i := 0; i < currCallsAmmount; i++ {
-			lt.callRandRpc(lt.rpcHandledAmmount)
-			lt.rpcHandledAmmount++
-		}
+	for ; lt.rpcHandledAmmount < lt.rpcAmmount; lt.rpcHandledAmmount++ {
+		lt.callRandRpc(lt.rpcHandledAmmount)
+		lt.rpcHandledAmmount++
 	}
 
 }
@@ -126,15 +143,15 @@ func (lt *LoadTest) testAddBlock() bool {
 			prevHash = "0000000000000000000000000000000000000000"
 		}
 
-		go node_validator.CreateBlockLog(blockchain.GetBits(false), prevHash, blockchain.LastBlock, false)
+		node_validator.CreateBlockLog(blockchain.GetBits(false), prevHash, blockchain.LastBlock, false)
 		blockchain.AllowCreateBlock = false
 	}
 
 	if blockchain.CreatedBlock.MerkleRoot != "" { // Is block mined check
 		isBlockValid := blockchain.VerifyBlock(blockchain.CreatedBlock, int(blockchain.BcLength), true, false)
-		node_validator.AddBlockLog(false, isBlockValid)
+		isAdded := node_validator.AddBlockLog(false, isBlockValid)
 		blockchain.CreatedBlock.MerkleRoot = ""
-		return true
+		return isAdded
 	}
 	command_executor.PauseCommand()
 	return false
@@ -152,35 +169,41 @@ func (lt *LoadTest) Launch(txAmmount int, rpcAmmount int) {
 	dbController.DB.OpenDb()
 
 	networking_p2p.Peer.StartP2PCommunication()
-	//node_validator.StartRPC()
+	node_validator.StartRPC()
 
 	testing.GenTestAccounts(lt.txAmmount)
 	fmt.Printf("Generated %d test accounts\n", len(account.Wallet))
 	testing.GenTestUtxo(lt.txAmmount, lt.random)
 	fmt.Printf("Generated %d test utxo\n", len(txo.CoinDatabase))
 
-	go lt.startTestTxSending()
-	println("Initializing transactions")
-	time.Sleep(1 * time.Second)
+	lt.startTestTxSending() //TODO: add go
+	//go lt.tryCallRandRpc()
+	println("Started tx sending")
 
+	// println("Generating blocks")
+	// var handledTxAmmount int
 	// var isAdded bool
-	// for lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 0 {
+	// for (lt.txAmmount != 0 || len(blockchain.Mempool) != 0 || len(blockchain.BlockForMining.Transactions) != 0) && (handledTxAmmount < lt.txAmmount) { //|| lt.rpcHandledAmmount < lt.rpcAmmount
 	// 	isAdded = lt.testAddBlock()
 
 	// 	if isAdded {
 	// 		lt.txHandled += len(blockchain.LastBlock.Transactions) - 1
-	// 		log.Printf("Block is added to blockchain. Current height: %d. Handled %d test transactions\n",
-	// 			blockchain.BcLength, len(blockchain.LastBlock.Transactions)-1)
-	// 		println(len(blockchain.Mempool))
+	// 		log.Printf("Block is added to blockchain. Current height: %d. Handled %d transactions\n",
+	// 			blockchain.BcLength, len(blockchain.LastBlock.Transactions))
+
+	// 		handledTxAmmount += len(blockchain.LastBlock.Transactions)
 	// 		blockchain.BlockForMining = blockchain.Block{}
+	// 	} else {
+	// 		println("Block is not added")
 	// 	}
 
-	// 	lt.tryCallRandRpc()
 	// }
+	//println(handledTxAmmount, lt.txAmmount, handledTxAmmount < lt.txAmmount)
+
+	println(len(blockchain.Mempool))
 
 	dbController.DB.CloseDb()
 	os.RemoveAll(dbController.DbPath)
 
 	lt.printResults()
-
 }

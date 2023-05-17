@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"time"
 )
 
 func GenTestAccounts(ammount int) {
@@ -26,10 +25,11 @@ func GenUtxo(i int, random *rand.Rand) {
 	outAddr.SetFromHexString(hashing.SHA1(account.Wallet[i].KeyPairList[0].PublKey), 20)
 
 	var outTxHash byteArr.ByteArr
-	outTxHash.SetFromHexString(hashing.SHA1(fmt.Sprint(i)+fmt.Sprint(time.Now().Unix())), 20)
+	outTxHash.SetFromHexString(hashing.SHA1(fmt.Sprint(i)+fmt.Sprint(rand.Int())), 20)
 
 	newTxo := txo.TXO{OutTxHash: outTxHash, Value: (random.Uint64()%700000 + 300000), OutAddress: outAddr}
 	txo.AddUtxo(newTxo.OutTxHash, newTxo.TxOutInd, newTxo.Value, newTxo.OutAddress, newTxo.BlockHeight)
+
 }
 
 func GenTestUtxo(ammount int, random *rand.Rand) {
@@ -78,7 +78,7 @@ func GenValidTx(currAccId int, randLocktime int, random *rand.Rand) transaction.
 	account.CurrAccount = account.Wallet[currAccId]
 	account.GetBalance()
 	var outAddr byteArr.ByteArr
-	outAddr.SetFromHexString(hashing.SHA1(account.Wallet[currAccId].KeyPairList[0].PublKey), 20)
+	outAddr.SetFromHexString(hashing.SHA1(account.CurrAccount.KeyPairList[0].PublKey), 20)
 
 	var outAddrTx []byteArr.ByteArr
 	outAddrTx = append(outAddrTx, outAddr)
@@ -108,7 +108,6 @@ func GenRandTxs(txAmmount, incorrectTxAmmount int, random *rand.Rand) ([]transac
 
 	for i := 0; i < txAmmount; i++ {
 		newTx := GenValidTx(i, 3, random)
-
 		if i == incTxInd && incTxCounter <= incorrectTxAmmount {
 			stStep := step * incTxCounter
 			if incorrectTxAmmount-1 == incTxCounter {
