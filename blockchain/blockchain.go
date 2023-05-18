@@ -91,7 +91,7 @@ func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 func VerifyBlock(block Block, height int, checkBits bool, allowCheckTxs bool) bool {
 	var lastBlockHashes []string
 	var prevBlocks []BlockChainId
-
+	println(height)
 	if height != 0 { //int(BcLength)
 		var isBlockFound bool
 		prevBlocks, isBlockFound = GetBlocksOnHeight((uint64(height) - 1) % 18446744073709551615)

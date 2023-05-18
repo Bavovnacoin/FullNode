@@ -8,7 +8,10 @@ import (
 	"bavovnacoin/node/node_controller"
 	"bavovnacoin/node/node_controller/command_executor"
 	"bavovnacoin/node/node_settings"
+	"bavovnacoin/txo"
 	"fmt"
+	"log"
+	"time"
 )
 
 func NodeProcess() {
@@ -56,36 +59,34 @@ func LaunchValidatorNode() {
 
 	networking_p2p.Peer.StartP2PCommunication()
 
+	StartRPC()
+	defer networking.StopRPCListener()
+	blockchain.InitBlockchain()
+	txo.RestoreCoinDatabase()
 	println("Node launched")
-	var inp string
-	fmt.Scan(&inp)
-	// StartRPC()
-	// defer networking.StopRPCListener()
-	// blockchain.InitBlockchain()
-	// txo.RestoreCoinDatabase()
 
-	// log.Println("Db synchronization...")
-	// syncRes := networking_p2p.Peer.StartSync()
+	log.Println("Db synchronization...")
+	syncRes := networking_p2p.Peer.StartSync()
 
-	// for !networking_p2p.IsSyncEnded && syncRes {
-	// 	time.Sleep(20 * time.Millisecond)
-	// }
+	for !networking_p2p.IsSyncEnded && syncRes {
+		time.Sleep(20 * time.Millisecond)
+	}
 
-	// if !syncRes {
-	// 	input := ""
-	// 	for true {
-	// 		log.Println("An error occured when synchronizing DB")
-	// 		log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
-	// 		fmt.Scan(&input)
-	// 		if input == "Yes" {
-	// 			break
-	// 		} else if input == "back" {
-	// 			return
-	// 		}
-	// 	}
-	// } else {
-	// 	log.Println("Db synchronization done")
-	// }
+	if !syncRes {
+		input := ""
+		for true {
+			log.Println("An error occured when synchronizing DB")
+			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
+			fmt.Scan(&input)
+			if input == "Yes" {
+				break
+			} else if input == "back" {
+				return
+			}
+		}
+	} else {
+		log.Println("Db synchronization done")
+	}
 
-	// BlockGen(true)
+	BlockGen(true)
 }

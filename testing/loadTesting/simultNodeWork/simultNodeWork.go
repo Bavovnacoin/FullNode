@@ -16,8 +16,9 @@ import (
 )
 
 type SimultaneousNodeWork struct {
-	NodesAmmount int
-	consoles     []*exec.Cmd
+	NodesAmmount        int
+	consoles            []*exec.Cmd
+	blocksToMineAmmount int
 
 	addresses [][]string
 
@@ -130,7 +131,8 @@ func (snw *SimultaneousNodeWork) LaunchTestNodes() {
 		snw.ManageConnections()
 
 		go snw.ExecCommand("cmd", "/c", "start", cwd+"\\main.exe -snw -l")
-		time.Sleep(100 * time.Millisecond)
+		//time.Sleep(100 * time.Millisecond)
+		time.Sleep(4 * time.Second)
 	}
 	time.Sleep(1 * time.Second)
 }
@@ -140,6 +142,7 @@ func (snw *SimultaneousNodeWork) Launch(nodesAmmount int) {
 	snw.peerConnAmmount = 2
 	snw.source = rand.NewSource(time.Now().Unix())
 	snw.random = rand.New(snw.source)
+	snw.blocksToMineAmmount = 10
 
 	snw.rootPath, _ = os.Getwd()
 	snw.pathToNodes = "data\\SimNodeWorkTest\\"
@@ -148,5 +151,9 @@ func (snw *SimultaneousNodeWork) Launch(nodesAmmount int) {
 	snw.InitSettingsFiles()
 	//defer os.RemoveAll(snw.pathToNodes)
 
-	snw.LaunchTestNodes()
+	//blockchain.STARTBITS
+	//snw.LaunchTestNodes()
+
+	// TODO: time wait?
+	// TODO: send tx via rpc
 }
