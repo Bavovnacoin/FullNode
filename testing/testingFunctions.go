@@ -140,3 +140,7 @@ func InitTestDb(allowLogging bool) {
 	}
 	dbController.DB.OpenDb()
 }
+
+func GetRandAddress(ip string) string {
+	return ip + fmt.Sprint(rand.Intn(9000)+1000)
+}

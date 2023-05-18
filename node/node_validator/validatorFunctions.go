@@ -7,10 +7,8 @@ import (
 	"bavovnacoin/networking_p2p"
 	"bavovnacoin/node/node_controller"
 	"bavovnacoin/node/node_controller/command_executor"
-	"bavovnacoin/txo"
+	"bavovnacoin/node/node_settings"
 	"fmt"
-	"log"
-	"time"
 )
 
 func NodeProcess() {
@@ -50,34 +48,44 @@ func LaunchValidatorNode() {
 	command_executor.ComContr.FullNodeWorking = true
 	dbController.DB.OpenDb()
 	defer dbController.DB.CloseDb()
+
+	if node_settings.Settings.MyAddress == "" {
+		node_settings.Settings.GetSettings()
+		node_settings.Settings.DecryptPrivKey("password")
+	}
+
 	networking_p2p.Peer.StartP2PCommunication()
-	StartRPC()
-	defer networking.StopRPCListener()
-	blockchain.InitBlockchain()
-	txo.RestoreCoinDatabase()
 
-	log.Println("Db synchronization...")
-	syncRes := networking_p2p.Peer.StartSync()
+	println("Node launched")
+	var inp string
+	fmt.Scan(&inp)
+	// StartRPC()
+	// defer networking.StopRPCListener()
+	// blockchain.InitBlockchain()
+	// txo.RestoreCoinDatabase()
 
-	for !networking_p2p.IsSyncEnded && syncRes {
-		time.Sleep(20 * time.Millisecond)
-	}
+	// log.Println("Db synchronization...")
+	// syncRes := networking_p2p.Peer.StartSync()
 
-	if !syncRes {
-		input := ""
-		for true {
-			log.Println("An error occured when synchronizing DB")
-			log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
-			fmt.Scan(&input)
-			if input == "Yes" {
-				break
-			} else if input == "back" {
-				return
-			}
-		}
-	} else {
-		log.Println("Db synchronization done")
-	}
+	// for !networking_p2p.IsSyncEnded && syncRes {
+	// 	time.Sleep(20 * time.Millisecond)
+	// }
 
-	BlockGen(true)
+	// if !syncRes {
+	// 	input := ""
+	// 	for true {
+	// 		log.Println("An error occured when synchronizing DB")
+	// 		log.Println("To continue enter \"Yes\". To back to the menu enter \"back\". ")
+	// 		fmt.Scan(&input)
+	// 		if input == "Yes" {
+	// 			break
+	// 		} else if input == "back" {
+	// 			return
+	// 		}
+	// 	}
+	// } else {
+	// 	log.Println("Db synchronization done")
+	// }
+
+	// BlockGen(true)
 }
