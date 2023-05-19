@@ -10,7 +10,7 @@ import (
 
 var BLOCK_DIFF_CHECK int = 480
 var BLOCK_CREATION_SEC int = 60
-var STARTBITS uint64 = 0xffff8 //0xffff12
+var STARTBITS uint64 = 0xffff12
 
 func GetCurrBitsValue() uint64 {
 	var bits uint64

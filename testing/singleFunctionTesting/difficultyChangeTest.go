@@ -6,6 +6,7 @@ package singleFunctionTesting
 
 import (
 	"bavovnacoin/blockchain"
+	"bavovnacoin/dbController"
 	"bavovnacoin/hashing"
 	"fmt"
 	"time"
@@ -61,6 +62,7 @@ func (dcht *DifficultyChangeTest) Launch() {
 	blockchain.LastBlock = blockchain.Block{}
 	blockchain.BcLength = 0
 	println()
+	dbController.DB.CloseDb()
 
 	InitTestDb(false)
 	println("Generating bc slower than expected")

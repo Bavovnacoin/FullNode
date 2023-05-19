@@ -47,6 +47,7 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 				data.nonce = nonce
 				ch <- data
 				AllowMining = false
+				println(nonce, command_executor.Pause)
 				return
 			}
 
@@ -74,7 +75,6 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool
 	resChan := make(chan ParMineData, thrcount)
 
 	var iterPerStep uint64 = 10000
-
 	var i uint64 = 0
 	for ; i < thrcount-1; i++ {
 		thrData := ParMineData{thrId: i, thrCount: thrcount, iterPerStep: iterPerStep,
@@ -93,6 +93,7 @@ func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool
 			block.Nonce = data.nonce
 			block.Time = data.block.Time
 			miningRes = true
+			break
 		}
 	}
 

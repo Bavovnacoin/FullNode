@@ -143,8 +143,10 @@ func (bvt *BlockchainVerifTest) genBlocks() {
 		}
 
 		block := blockchain.CreateBlock(rewAddress, prevHash, false)
-		block.Bits = 0xf00fff14
+		block.Bits = 0xffff14 //0xf00fff13
+		//fmt.Printf("%x\n", blockchain.BitsToTarget(0xf00fff14))
 		block.Chainwork = blockchain.GetChainwork(block, blockchain.LastBlock)
+
 		block, _ = blockchain.MineBlock(block, 1, false)
 		blockchain.RemoveTxsFromMempool(block.Transactions[1:])
 
@@ -211,7 +213,7 @@ func (bvt *BlockchainVerifTest) Launch(blockAmmount int, incorrectblockAmmount i
 	bvt.incorrectblockAmmount = incorrectblockAmmount
 	bvt.txPerBlockAmmount = txPerBlockAmmount
 
-	dbController.DbPath = "testing/testData"
+	dbController.DbPath = "\\testing\\testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {
 		os.RemoveAll(dbController.DbPath)
 		println("Removed test db from a previous test.")
@@ -221,14 +223,16 @@ func (bvt *BlockchainVerifTest) Launch(blockAmmount int, incorrectblockAmmount i
 	bvt.source = rand.NewSource(time.Now().Unix())
 	bvt.random = rand.New(bvt.source)
 	blockchain.STARTBITS = 0xffff14
+
 	bvt.genBlockTestAccounts(bvt.txPerBlockAmmount)
 	log.Printf("Gnerated %d accounts", bvt.txPerBlockAmmount)
 	log.Printf("Started generation of %d blocks (%d are incorrect)...", bvt.blockAmmount, bvt.incorrectblockAmmount)
 	if bvt.incorrectblockAmmount > bvt.blockAmmount {
 		log.Println("Wrong input")
 	}
+
 	bvt.genBlocks()
 	bvt.printResults()
 	dbController.DB.CloseDb()
-	os.RemoveAll(dbController.DbPath)
+	//os.RemoveAll(dbController.DbPath)
 }

@@ -109,10 +109,10 @@ func (ct *CommunicationTest) PrintResult() {
 	}
 }
 
-func (ct *CommunicationTest) Launch() {
+func (ct *CommunicationTest) Launch(otherPeerAmmount int) {
 	ct.source = rand.NewSource(time.Now().Unix())
 	ct.random = rand.New(ct.source)
-	ct.otherPeerAmmount = 1
+	ct.otherPeerAmmount = otherPeerAmmount
 
 	println("Starting main peer")
 	ct.mainPeer.Peer, _ = ct.startPeer()

@@ -17,8 +17,7 @@ import (
 type CryptoTest struct {
 	testHashData []string
 
-	Sha1TestAmmount  uint
-	EcdsaTestAmmount uint
+	testAmmount uint
 }
 
 func (ct *CryptoTest) genText(isLong bool) string {
@@ -34,7 +33,7 @@ func (ct *CryptoTest) sha1Test() {
 	var isPassed bool = true
 	var passedAmmount uint
 
-	for i := uint(0); i < ct.Sha1TestAmmount; i++ {
+	for i := uint(0); i < ct.testAmmount; i++ {
 		text := ct.genText(i%2 == 1)
 		var customAlgo byteArr.ByteArr
 
@@ -64,17 +63,17 @@ func (ct *CryptoTest) sha1Test() {
 		}
 	}
 
-	println("Mean time for short text (mcs):", int64(meanDuration[0])/int64(ct.Sha1TestAmmount)/2)
-	div := int64(ct.Sha1TestAmmount) / 2
-	if ct.Sha1TestAmmount%2 == 1 {
-		div = int64(ct.Sha1TestAmmount-1) / 2
+	println("Mean time for short text (mcs):", int64(meanDuration[0])/int64(ct.testAmmount)/2)
+	div := int64(ct.testAmmount) / 2
+	if ct.testAmmount%2 == 1 {
+		div = int64(ct.testAmmount-1) / 2
 	}
 	println("Mean time for long text (mcs):", int64(meanDuration[1])/div)
 
 	if isPassed {
-		fmt.Printf("Test passed (%d/%d)!\n", passedAmmount, ct.Sha1TestAmmount)
+		fmt.Printf("Test passed (%d/%d)!\n", passedAmmount, ct.testAmmount)
 	} else {
-		fmt.Printf("Test is not passed (%d/%d)!\n", passedAmmount, ct.Sha1TestAmmount)
+		fmt.Printf("Test is not passed (%d/%d)!\n", passedAmmount, ct.testAmmount)
 	}
 }
 
@@ -87,7 +86,7 @@ func (ct *CryptoTest) ecdsaTest() {
 	var passedAmmount uint
 
 	ecdsa.InitValues()
-	for i := uint(0); i < ct.Sha1TestAmmount; i++ {
+	for i := uint(0); i < ct.testAmmount; i++ {
 		kp := ecdsa.GenKeyPair()
 		hashText := hashing.SHA1(ct.genText(false))
 
@@ -111,26 +110,21 @@ func (ct *CryptoTest) ecdsaTest() {
 		}
 	}
 
-	println("Mean time for signing (mcs):", int64(meanSignTime)/int64(ct.EcdsaTestAmmount))
-	println("Mean time for verifying (mcs):", int64(meanVerifTime)/int64(ct.EcdsaTestAmmount))
+	println("Mean time for signing (mcs):", int64(meanSignTime)/int64(ct.testAmmount))
+	println("Mean time for verifying (mcs):", int64(meanVerifTime)/int64(ct.testAmmount))
 	if isPassed {
-		fmt.Printf("Test passed (%d/%d)!\n", passedAmmount, ct.Sha1TestAmmount)
+		fmt.Printf("Test passed (%d/%d)!\n", passedAmmount, ct.testAmmount)
 	} else {
-		fmt.Printf("Test is not passed (%d/%d)!\n", passedAmmount, ct.Sha1TestAmmount)
+		fmt.Printf("Test is not passed (%d/%d)!\n", passedAmmount, ct.testAmmount)
 	}
 }
 
-func (ct *CryptoTest) Launch(algoName string) {
-	if ct.Sha1TestAmmount <= 0 {
-		ct.Sha1TestAmmount = 6
-	}
-	if ct.EcdsaTestAmmount <= 0 {
-		ct.EcdsaTestAmmount = 6
-	}
+func (ct *CryptoTest) Launch(algoName string, testAmmount uint) {
+	ct.testAmmount = testAmmount
 
-	if algoName == "SHA1" {
+	if algoName == "sha1" {
 		ct.sha1Test()
-	} else if algoName == "ECDSA" {
+	} else if algoName == "ecdsa" {
 		ct.ecdsaTest()
 	} else {
 		println("Such an algorithm is not found")

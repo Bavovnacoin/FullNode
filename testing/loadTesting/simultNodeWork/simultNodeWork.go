@@ -153,7 +153,4 @@ func (snw *SimultaneousNodeWork) Launch(nodesAmmount int) {
 
 	//blockchain.STARTBITS
 	//snw.LaunchTestNodes()
-
-	// TODO: time wait?
-	// TODO: send tx via rpc
 }
