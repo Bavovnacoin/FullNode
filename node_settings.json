@@ -2,12 +2,17 @@
     "TxMinFee": 0,
     "MiningThreads": 0,
     "NodeType": 0,
-    "OtherNodesAddresses": null,
+    "OtherNodesAddresses": [
+        [
+            "/ip4/127.0.0.1/tcp/58818/16Uiu2HAmS5G75BtXJeXtdFoR9XymJmA6WJKx7SCcSRwJrsCPKZkj",
+            "localhost:25566"
+        ]
+    ],
     "MyAddress": "/ip4/127.0.0.1/tcp/3599",
     "PrivKey": "ZGIzYTczZTEyNWY1ZGU0NjZhM2VhN2MwMWZhMDc2ZTYyMDQ5MThiODNlNGFkNjYzZGJjOGU4MDg3Y2VhZWQyYmU2ZDg0NTZiZmFlM2QxNzIzMzVhY2IzODA1ZmQ1NzMxNWRhYjJlNTI4NDUxZTBkYWJjZDJhYWVkNjFmZjljY2U=",
     "HashPass": {
         "ByteArr": "NWoZK3kTsExUV00Ywo1G5jlUKKs="
     },
-    "RewardAddress": "2222222222222222222222222222222222222222",
+    "RewardAddress": "9e90c94ab3b2da7900bdc70680f4a9c8f2fe0375",
     "RPCip": "localhost:7332"
 }

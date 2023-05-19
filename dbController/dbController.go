@@ -12,7 +12,7 @@ type Database struct {
 	Db *leveldb.DB
 }
 
-var DbPath string = "\\data\\ValidatorNode"
+var DbPath string = "data\\ValidatorNode"
 
 func (database *Database) OpenDb() bool {
 	//cwd, _ := os.Getwd()

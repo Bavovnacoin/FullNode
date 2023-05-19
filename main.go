@@ -5,16 +5,22 @@ import (
 	"bavovnacoin/node/node_validator"
 	"bavovnacoin/testing/loadTesting"
 	"bavovnacoin/testing/loadTesting/simultNodeWork"
+	"bavovnacoin/testing/profiler"
 	"bavovnacoin/testing/singleFunctionTesting"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"runtime"
 	"strconv"
 )
 
+func handle(w http.ResponseWriter, req *http.Request) {
+	node.Launch()
+}
+
 func main() {
 	if len(os.Args) == 1 {
-		println("Node launch")
 		node.Launch()
 	} else if len(os.Args) == 3 && os.Args[1] == "-snw" && os.Args[2] == "-l" {
 		node_validator.LaunchValidatorNode()
@@ -56,7 +62,7 @@ func main() {
 		var bft singleFunctionTesting.BlockchainVerifTest
 		bft.Launch(blockAmmount, incblockAmmount, txAmmount)
 	} else if len(os.Args) == 4 && os.Args[1] == "-cat" {
-		testAmmount, err := strconv.Atoi(os.Args[3])
+		testAmmount, err := strconv.Atoi(os.Args[2])
 
 		if err != nil || testAmmount <= 0 {
 			println("Error: second parameter is invalid")
@@ -64,8 +70,8 @@ func main() {
 		}
 
 		var cat singleFunctionTesting.CryptoTest
-		if os.Args[2] == "ecdsa" || os.Args[2] == "sha1" {
-			cat.Launch(os.Args[2], uint(testAmmount))
+		if os.Args[3] == "ecdsa" || os.Args[3] == "sha1" {
+			cat.Launch(os.Args[3], uint(testAmmount))
 		}
 	} else if len(os.Args) == 2 && os.Args[1] == "-dct" {
 		var dct singleFunctionTesting.DifficultyChangeTest
@@ -118,7 +124,7 @@ func main() {
 		var ttv singleFunctionTesting.TransVerifTime
 		ttv.TransVerifTime()
 	} else if len(os.Args) == 3 && os.Args[1] == "-tmt" {
-		mcAmmount, err := strconv.Atoi(os.Args[3])
+		mcAmmount, err := strconv.Atoi(os.Args[2])
 
 		if err != nil || mcAmmount <= 0 {
 			println("Error: one of the parameters is anvalid")
@@ -136,10 +142,10 @@ func main() {
 		}
 		var mlt loadTesting.MempoolLoadTest
 		mlt.Launch(uint(corrTxAmmount), uint(incTxAmmount))
+	} else if len(os.Args) == 2 && os.Args[1] == "-prf" {
+		profiler.LaunchServer(profiler.HandleParMining)
+	} else {
+		println("Unknown parameter")
 	}
-
-	// else {
-	// 	println("Unknown parameter")
-	// }
 
 }
