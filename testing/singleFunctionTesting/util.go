@@ -127,7 +127,7 @@ func (ttch *TxoTestCheckRes) PrintTestResult() {
 	case 2:
 		println("Test failed. Wrong txo ammount.")
 	case 3:
-		println("Test failed. Wrong гtxo ammount.")
+		println("Test failed. Wrong txo ammount.")
 	case 4:
 		println("Test failed: incorrect txo value")
 	case 5:
@@ -211,7 +211,7 @@ func (sft *SingleFunctionTesting) CreateBlock(bits uint64, prevHash string, last
 }
 
 func InitTestDb(allowLogging bool) {
-	dbController.DbPath = "testing/testData"
+	dbController.DbPath = "testing\\testData"
 	if _, err := os.Stat(dbController.DbPath); err == nil {
 		os.RemoveAll(dbController.DbPath)
 

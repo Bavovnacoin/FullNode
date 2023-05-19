@@ -35,7 +35,6 @@ type MempoolLoadTest struct {
 	random *rand.Rand
 }
 
-// TODO: send to a peer (p2p)
 func (mlt *MempoolLoadTest) SendTxsToMempool() {
 	var conn networking.Connection
 	conn.Establish("localhost:25565")
@@ -110,12 +109,12 @@ func (mlt *MempoolLoadTest) printResult() {
 	println("Mean time (ms):", mean/int64(len(spentSections)))
 }
 
-func (mlt *MempoolLoadTest) Launch() {
+func (mlt *MempoolLoadTest) Launch(corrTx uint, incTx uint) {
 	println("Test started. Please, wait...")
 	mlt.testWorking = true
 
-	mlt.txAmmount = 100
-	mlt.incorrectTxAmmount = 96
+	mlt.txAmmount = corrTx
+	mlt.incorrectTxAmmount = incTx
 
 	testing.InitTestDb(false)
 	node_settings.Settings.RPCip = "localhost:25565"

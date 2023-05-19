@@ -7,6 +7,7 @@ package singleFunctionTesting
 import (
 	"bavovnacoin/blockchain"
 	"bavovnacoin/hashing"
+	"bavovnacoin/node/node_settings"
 	"fmt"
 	"log"
 	"math/big"
@@ -28,7 +29,7 @@ func (pmt *ParallelMiningTest) mineBlocks() {
 	log.Println("Test started")
 	for i := 0; i < pmt.TestsAmmount; i++ {
 		block.HashPrevBlock = hashing.SHA1(blockchain.BlockHeaderToString(block))
-		block, miningRes = blockchain.MineThreads(block, uint64(pmt.ThreadsCount), false)
+		block, miningRes = blockchain.MineThreads(block, false)
 
 		blockHash, _ := new(big.Int).SetString(hashing.SHA1(blockchain.BlockHeaderToString(block)), 16)
 		if miningRes && blockchain.BitsToTarget(block.Bits).Cmp(blockHash) == 1 {
@@ -46,14 +47,13 @@ func (pmt *ParallelMiningTest) mineBlocks() {
 	}
 }
 
-func (pmt *ParallelMiningTest) Launch() {
+func (pmt *ParallelMiningTest) Launch(testAmmount int) {
 	if pmt.ThreadsCount <= 1 {
 		pmt.ThreadsCount = runtime.NumCPU()
 	}
 
-	if pmt.TestsAmmount == 0 {
-		pmt.TestsAmmount = 5
-	}
+	pmt.TestsAmmount = testAmmount
 
+	node_settings.Settings.MiningThreads = uint(pmt.ThreadsCount)
 	pmt.mineBlocks()
 }

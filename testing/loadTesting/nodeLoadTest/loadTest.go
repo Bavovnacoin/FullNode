@@ -176,7 +176,7 @@ func (lt *LoadTest) Launch(txAmmount int, rpcAmmount int) {
 	testing.GenTestUtxo(lt.txAmmount, lt.random)
 	fmt.Printf("Generated %d test utxo\n", len(txo.CoinDatabase))
 
-	lt.startTestTxSending() //TODO: add go
+	lt.startTestTxSending() // add go
 	//go lt.tryCallRandRpc()
 	println("Started tx sending")
 

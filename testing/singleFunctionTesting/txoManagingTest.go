@@ -33,8 +33,8 @@ func (tmt *TxoManagingTest) genBlocks() {
 	node_validator.BlockGen(false)
 }
 
-func (tmt *TxoManagingTest) Launch() {
-	tmt.mcBlockAmmount = 10
+func (tmt *TxoManagingTest) Launch(mcBlockAmmount uint64) {
+	tmt.mcBlockAmmount = mcBlockAmmount
 
 	node_settings.Settings.GetSettings()
 	networking_p2p.Peer.StartP2PCommunication()

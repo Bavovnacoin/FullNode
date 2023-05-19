@@ -108,6 +108,11 @@ func reorganize(chainId uint64, altchHeight uint64) bool {
 
 func TryReorganize() bool {
 	lastBlocks, chainIds, heights := getAllLastBlocks()
+	// for i := 0; i < len(lastBlocks); i++ {
+	// 	println(chainIds[i])
+	// 	PrintBlockTitle(lastBlocks[i], heights[i])
+	// 	println()
+	// }
 	var mainchainArrId int = -1
 
 	// Select mainchain from all chains last blocks

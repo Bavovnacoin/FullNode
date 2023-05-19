@@ -118,10 +118,10 @@ func (st SynchronizationTest) printRes(syncRes bool, genChain [][]networking_p2p
 	}
 }
 
-func (st SynchronizationTest) Launch() {
+func (st SynchronizationTest) Launch(mcBlocksAmmount int, acBlocksAmmount int, acAmmount int) {
 	st.mcBlocksAmmount = 10
 	st.acBlocksAmmount = 3
-	st.acAmmount = 1
+	st.acAmmount = 2
 	blockchain.STARTBITS = 0xffff14
 
 	InitTestDb(true)

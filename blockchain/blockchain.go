@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -79,11 +78,8 @@ func GetBits(allowPrint bool) uint64 {
 func MineBlock(block Block, miningFlag int, allowPrint bool) (Block, bool) {
 	BlockForMining = block
 	miningRes := true
-	if miningFlag == 0 {
-		block, miningRes = MineThreads(block, 1, allowPrint)
-	} else if miningFlag == 1 {
-		block, miningRes = MineThreads(block, uint64(runtime.NumCPU()), allowPrint)
-	}
+
+	block, miningRes = MineThreads(block, allowPrint)
 
 	return block, miningRes
 }

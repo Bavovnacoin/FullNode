@@ -2,7 +2,6 @@ package dbController
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -16,8 +15,8 @@ type Database struct {
 var DbPath string = "\\data\\ValidatorNode"
 
 func (database *Database) OpenDb() bool {
-	cwd, _ := os.Getwd()
-	db, err := leveldb.OpenFile(cwd+DbPath, nil)
+	//cwd, _ := os.Getwd()
+	db, err := leveldb.OpenFile(DbPath, nil) //cwd+
 	if err != nil {
 		fmt.Println(err)
 		return false

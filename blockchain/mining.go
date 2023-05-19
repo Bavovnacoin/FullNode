@@ -47,7 +47,6 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 				data.nonce = nonce
 				ch <- data
 				AllowMining = false
-				println(nonce, command_executor.Pause)
 				return
 			}
 
@@ -63,7 +62,7 @@ func mineParTask(data ParMineData, ch chan ParMineData) {
 	}
 }
 
-func MineThreads(block Block, threadsCount uint64, allowPrint bool) (Block, bool) {
+func MineThreads(block Block, allowPrint bool) (Block, bool) {
 	if allowPrint {
 		log.Println("Mining started. Prev block header: ", block.HashPrevBlock)
 	}
